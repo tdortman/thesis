@@ -1,3 +1,10 @@
+# Template für Abschlussarbeiten - Informatik JGU
+Das Template basiert auf der Arbeit von https://github.com/derric/cleanthesis und wird in diesem Repository erweitert an die Bedürfnisse der JGU und des Instiuts für Informatik. 
+Insbesondere zählt dazu die Integration der JGU Farbe (rot) und des JGU Logos. 
+
+---
+
+
 # Clean Thesis
 *-- A Clean LaTeX Style for Thesis Documents --*
 
