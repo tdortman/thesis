@@ -1,5 +1,5 @@
 # Template für Abschlussarbeiten - Informatik JGU
-Das Template basiert auf der Arbeit von https://github.com/derric/cleanthesis und wird in diesem Repository erweitert an die Bedürfnisse der JGU und des Instiuts für Informatik. 
+Das Template basiert auf der Arbeit von https://github.com/derric/cleanthesis und wird in diesem Repository an die Bedürfnisse der JGU und des Instituts für Informatik angepasst. 
 Insbesondere zählt dazu die Integration der JGU Farbe (rot) und des JGU Logos. 
 
 ---
