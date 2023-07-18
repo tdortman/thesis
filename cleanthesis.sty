@@ -238,17 +238,19 @@
 \ifct@cthesis@sansserif
 	% Using sans-serif fonts
 	%
+	\RequirePackage{noto}	% Font:	Noto
 	%\RequirePackage{helvet}	% Font:	Helvetica
 	%\RequirePackage{nimbus}	% Font:	Nimbus Sans, a clone of the Helvetica
-	\RequirePackage{tgheros}	% Font:	TEX Gyre Heros
+% 	\RequirePackage{tgheros}	% Font:	TEX Gyre Heros
 	%\RequirePackage{libertine}	% Font:	Biolinum, the standard sans serif typeface with the Libertine package
 	%\RequirePackage[scaled]{berasans} % Font:	Bera Sans, a a version of Bitstream Vera Sans slightly enhanced
 	\renewcommand*\familydefault{\sfdefault}%
 \else
 	% Using serif fonts
 	%
-	\RequirePackage{lmodern}	% font set: Latin Modern
-	\RequirePackage{charter}	% font set: Charter
+	\RequirePackage{noto}	% font set: Noto
+	%\RequirePackage{lmodern}	% font set: Latin Modern
+	%\RequirePackage{charter}	% font set: Charter
 	%\RequirePackage{fourier}	% font set: (basically improved utopia)
 \fi
 
@@ -560,13 +562,13 @@
 }
 
 % own font definitions
-\newcommand{\helv}{\fontfamily{phv}\fontsize{9}{11}\selectfont}
-\newcommand{\book}{\fontfamily{pbk}\fontseries{m}\fontsize{11}{13}\selectfont}
-\newcommand{\tgherosfont}{\fontfamily{qhv}\selectfont}
+\newcommand{\helv}{\notosans\fontsize{9}{11}\selectfont}
+\newcommand{\book}{\notoserif\fontseries{m}\fontsize{11}{13}\selectfont}
+\newcommand{\tgherosfont}{\notosans}
 
 \newcommand{\thesispartlabelfont}{\color{ctcolorpartnum}\nobreak\book\fontsize{60}{60}\selectfont}
 \newcommand{\thesispartfont}{\color{ctcolorparttext}\nobreak\normalfont\huge \tgherosfont\selectfont}
-\newcommand{\thesischapterfont}{\color{ctcolorblack}\nobreak\normalfont\huge \fontfamily{phv}\selectfont}
+\newcommand{\thesischapterfont}{\color{ctcolorblack}\nobreak\normalfont\huge \sffamily\selectfont}
 %\newcommand{\thesissectionfont}{\color{ctcolormain}\nobreak\LARGE\bfseries \tgherosfont}
 \newcommand{\thesissectionfont}{\color{ctcolorsection}\nobreak\normalfont\LARGE \tgherosfont}
 \newcommand{\thesissubsectionfont}{\color{ctcolorsubsection}\nobreak\normalfont\Large \tgherosfont}
