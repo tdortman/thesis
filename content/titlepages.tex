@@ -17,56 +17,85 @@
 
 % ------------------------------------  --> main title page
 \begin{titlepage}
-	\pdfbookmark[0]{Titlepage}{Titlepage}
-	\tgherosfont
-	\centering
+    \ifthenelse{\equal{\thesisSubject}{Dissertation}}{
+        %% Titlepage Dissertation
+    	\pdfbookmark[0]{Titlepage}{Titlepage}
+        \tgherosfont
+    	\centering
 
-	% {\Large \thesisUniversity} \\[4mm]
-	\begin{tabularx}{\textwidth}{m{8cm}m{6cm}}
-			\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_EN} &
-			\includegraphics[width=6cm]{gfx/jgu}
-	\end{tabularx}
+    	\begin{tabularx}{\textwidth}{m{8cm}m{6cm}}
+    	        \IfLanguageName{english}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_EN}}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_DE}} &
+    			\includegraphics[width=6cm]{gfx/jgu}
+    	\end{tabularx}
 
-	\textsf{\thesisUniversityDepartment} \\
-	\textsf{\thesisUniversityInstitute} \\
-	\textsf{\thesisUniversityGroup} \\
+    	{\LARGE \color{ctcolortitle}\textbf{\thesisTitle} \\[10mm]}
 
-	\vfill
-	{\large \thesisSubject} \\[5mm]
-	{\LARGE \color{ctcolortitle}\textbf{\thesisTitle} \\[10mm]}
-	{\Large \thesisName} \\
+	    {\large \thesisSubject} \\[5mm]
+	    \IfLanguageName{english}{submitted for the award of the title}{zur Erlangung des Grades} \\[8mm]
+        {\large\IfLanguageName{english}{\enquote{Doctor of Natural Sciences}}{\setquotestyle[quotes]{german}\foreignquote{german}{Doktor der Naturwissenschaften}}} \\[8mm]
+        \IfLanguageName{english}{to the \thesisUniversityDepartmentLong}{am \thesisUniversityDepartmentLong}\\
+        \IfLanguageName{english}{of \thesisUniversity}{der \thesisUniversity}\\
+        in \thesisUniversityCity
 
-	\vfill
-	\begin{minipage}[t]{.27\textwidth}
-		\raggedleft
-		\textit{1. Reviewer}
-	\end{minipage}
-	\hspace*{15pt}
-	\begin{minipage}[t]{.65\textwidth}
-		{\Large \thesisFirstReviewer} \\ 
-	  	{\small \thesisFirstReviewerDepartment} \\[-1mm]
-		{\small \thesisFirstReviewerUniversity}
-	\end{minipage} \\[5mm]
-	\begin{minipage}[t]{.27\textwidth}
-		\raggedleft
-		\textit{2. Reviewer}
-	\end{minipage}
-	\hspace*{15pt}
-	\begin{minipage}[t]{.65\textwidth}
-		{\Large \thesisSecondReviewer} \\
-	  	{\small \thesisSecondReviewerDepartment} \\[-1mm]
-		{\small \thesisSecondReviewerUniversity}
-	\end{minipage} \\[10mm]
-	\begin{minipage}[t]{.27\textwidth}
-		\raggedleft
-		\textit{Supervisors}
-	\end{minipage}
-	\hspace*{15pt}
-	\begin{minipage}[t]{.65\textwidth}
-		\thesisFirstSupervisor\ and \thesisSecondSupervisor
-	\end{minipage} \\[10mm]
 
-	\thesisDate \\
+    	\vfill
+    	{\Large \thesisName} \\[2mm]
+    	\IfLanguageName{english}{Born in}{geb. in} \thesisBirthplace \\
+
+    	\vfill
+
+    	\thesisUniversityCity,\IfLanguageName{english}{ }{ den }\thesisDate \\
+
+    }{
+        %% Titlepage Bachelor- or Masterthesis
+        \pdfbookmark[0]{Titlepage}{Titlepage}
+        \tgherosfont
+    	\centering
+
+    	\begin{tabularx}{\textwidth}{m{8cm}m{6cm}}
+    	        \IfLanguageName{english}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_EN}}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_DE}} &    			\includegraphics[width=6cm]{gfx/jgu}
+    	\end{tabularx}
+    	\textsf{\thesisUniversityDepartment} \\
+    	\textsf{\thesisUniversityInstitute} \\
+    	\textsf{\thesisUniversityGroup} \\
+
+    	\vfill
+    	{\large \thesisSubject} \\[5mm]
+    	{\LARGE \color{ctcolortitle}\textbf{\thesisTitle} \\[10mm]}
+    	{\Large \thesisName} \\
+
+    	\vfill
+    	\begin{minipage}[t]{.27\textwidth}
+    		\raggedleft
+    		\textit{1. Reviewer}
+    	\end{minipage}
+    	\hspace*{15pt}
+    	\begin{minipage}[t]{.65\textwidth}
+    		{\Large \thesisFirstReviewer} \\
+    	  	{\small \thesisFirstReviewerDepartment} \\[-1mm]
+    		{\small \thesisFirstReviewerUniversity}
+    	\end{minipage} \\[5mm]
+    	\begin{minipage}[t]{.27\textwidth}
+    		\raggedleft
+    		\textit{2. Reviewer}
+    	\end{minipage}
+    	\hspace*{15pt}
+    	\begin{minipage}[t]{.65\textwidth}
+    		{\Large \thesisSecondReviewer} \\
+    	  	{\small \thesisSecondReviewerDepartment} \\[-1mm]
+    		{\small \thesisSecondReviewerUniversity}
+    	\end{minipage} \\[10mm]
+    	\begin{minipage}[t]{.27\textwidth}
+    		\raggedleft
+    		\textit{Supervisors}
+    	\end{minipage}
+    	\hspace*{15pt}
+    	\begin{minipage}[t]{.65\textwidth}
+    		\thesisFirstSupervisor\ and \thesisSecondSupervisor
+    	\end{minipage} \\[10mm]
+
+    	\thesisDate \\
+    }
 
 \end{titlepage}
 
@@ -79,8 +108,8 @@
 	\textbf{\thesisName} \\
 	\textit{\thesisTitle} \\
 	\thesisSubject, \thesisDate \\
-	Reviewers: \thesisFirstReviewer\ and \thesisSecondReviewer \\
-	Supervisors: \thesisFirstSupervisor\ and \thesisSecondSupervisor \\[1.5em]
+	Reviewers: \thesisFirstReviewer\ and \thesisSecondReviewer
+	\ifthenelse{\equal{\thesisSubject}{Dissertation}}{}{ \\ Supervisors: \thesisFirstSupervisor\ and \thesisSecondSupervisor} \\[1.5em]
 	\textbf{\thesisUniversity} \\
 	\textit{\thesisUniversityGroup} \\
 	\thesisUniversityInstitute \\
