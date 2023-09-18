@@ -39,18 +39,24 @@
 % rename document parts
 % --------------------------
 
+% > rename the title of the LOL, i.e. list of listings (default is "Listings")
+\IfLanguageName{english}{
+\renewcommand*{\lstlistlistingname}{List of Listings}
+}{
+\renewcommand*{\lstlistlistingname}{Programmausdrucksverzeichnis}
+}
+
 % > set short label names for floating environments figure and table
 \IfLanguageName{english}{
 \renewcaptionname{english}{\figurename}{Fig.}
 \renewcaptionname{english}{\tablename}{Tab.}
+\renewcommand{\lstlistingname}{Lst.}
 }
 {
 \renewcaptionname{ngerman}{\figurename}{Abb.}
 \renewcaptionname{ngerman}{\tablename}{Tab.}
+\renewcommand{\lstlistingname}{P.}
 }
-
-% > rename the title of the LOL, i.e. list of listings (default is "Listings")
-\renewcommand*{\lstlistlistingname}{List of Listings}
 
 % --------------------------
 % Front matter
@@ -64,8 +70,8 @@
 \input{content/abstract}		% INCLUDE: the abstracts (english and german)
 \cleardoublepage
 %
-\input{content/acknowledgement} % INCLUDE: acknowledgement
-\cleardoublepage
+% INPUT: acknowledgement only in Dissertation
+\ifthenelse{\equal{\thesisSubject}{Dissertation}}{\input{content/acknowledgement}\cleardoublepage}{}
 %
 \currentpdfbookmark{\contentsname}{toc}
 \setcounter{tocdepth}{2}		% define depth of toc
