@@ -94,7 +94,9 @@
     	\end{minipage}
     	\hspace*{15pt}
     	\begin{minipage}[t]{.65\textwidth}
-    		\thesisFirstSupervisor\ \IfLanguageName{english}{and}{und} \thesisSecondSupervisor
+
+	\thesisFirstSupervisor\ \thesisAnd\ \thesisSecondSupervisor
+
     	\end{minipage} \\[10mm]
 
     	\thesisDate \\
@@ -111,8 +113,8 @@
 	\textbf{\thesisName} \\
 	\textit{\thesisTitle} \\
 	\thesisSubject, \thesisDate \\
-	\IfLanguageName{english}{Reviewers}{Gutachter}: \thesisFirstReviewer\ \IfLanguageName{english}{and}{und} \thesisSecondReviewer
-	\ifthenelse{\equal{\thesisSubject}{Dissertation}}{}{ \\ \IfLanguageName{english}{Supervisors}{Betreuer}: \thesisFirstSupervisor\ \IfLanguageName{english}{and}{und} \thesisSecondSupervisor} \\[1.5em]
+	\IfLanguageName{english}{Reviewers}{Gutachter}: \thesisFirstReviewer \thesisAnd\ \thesisSecondReviewer
+	\ifthenelse{\equal{\thesisSubject}{Dissertation}}{}{ \\ \IfLanguageName{english}{Supervisors}{Betreuer}: \thesisFirstSupervisor\ \thesisAnd\ \thesisSecondSupervisor} \\[1.5em]
 	\textbf{\thesisUniversity} \\
 	\textit{\thesisUniversityGroup} \\
 	\thesisUniversityInstitute \\
