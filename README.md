@@ -2,6 +2,12 @@
 Das Template basiert auf der Arbeit von https://github.com/derric/cleanthesis und wird in diesem Repository an die Bedürfnisse der JGU und des Instituts für Informatik angepasst. 
 Insbesondere zählt dazu die Integration der JGU Farbe (rot) und des JGU Logos. 
 
+[![pipeline status](https://gitlab.rlp.net/institut-fur-informatik/cleanthesis-jgu/badges/main/pipeline.svg)](hhttps://gitlab.rlp.net/institut-fur-informatik/cleanthesis-jgu/-/jobs/artifacts/main/browse?job=build_pdf)
+
+[Link to the artifacts page of the last successful pipeline run with the final built thesis PDF](https://gitlab.rlp.net/institut-fur-informatik/cleanthesis-jgu/-/jobs/artifacts/main/browse?job=build_pdf)
+
+Bei jedem Commit wird das Dokument mit pdfLatex erstellt und kann von der Artifacts-Seite heruntergeladen werden.
+
 ## Hinweise
 - Bei mehreren Quellen mit gleichen Autoren werden mit dem Bibstyle `numeric` die zweite Nennung mit `-` eresetzt. Um die Autorenausgabe zu erzwingen, kann die Autorenauflistung in der `.bib` Datei mit `{{ }}` erzwungen werden oder es kann über die Option `bibstyle=<biblatex stil>` ein alternativer Zitierstil verwendet werden. Weitere Informationen im Issue #1. 
 

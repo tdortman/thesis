@@ -1,0 +1,22 @@
+stages:
+  - build
+
+build_pdf:
+  stage: build
+  image: texlive/texlive
+  script:
+    - apt-get update -qy
+    - export CI_COMMIT_DATE=$(date --date="${CI_COMMIT_TIME}" +%Y%m%d)
+    - export PROJECT_TITLE=$(echo "${CI_PROJECT_TITLE}" | sed 's/ /_/g')
+    - export FILE_NAME="${CI_COMMIT_DATE}_${PROJECT_TITLE}_${CI_COMMIT_SHORT_SHA}"
+
+    - pdflatex -jobname=my-thesis -interaction=nonstopmode my-thesis.tex
+    - biber my-thesis
+    - pdflatex -jobname=my-thesis -interaction=nonstopmode my-thesis.tex
+    - pdflatex -jobname=my-thesis -interaction=nonstopmode my-thesis.tex
+    - mv my-thesis.pdf "${FILE_NAME}.pdf"
+
+  artifacts:
+    paths:
+      - "*.pdf"
+    expire_in: 1 week
