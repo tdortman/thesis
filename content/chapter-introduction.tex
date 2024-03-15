@@ -19,7 +19,7 @@ Germany
 \section{Motivation and Problem Statement}
 \label{sec:intro:motivation}
 
-\Blindtext[3][1] \cite{Jurgens:2000,Jurgens:1995,Miede:2011,Kohm:2011,Apple:keynote:2010,Apple:numbers:2010,Apple:pages:2010}
+\Blindtext[3][1]~\cite{Jurgens:2000,Jurgens:1995,Miede:2011,Kohm:2011,Apple:keynote:2010,Apple:numbers:2010,Apple:pages:2010}
 
 \section{Results}
 \label{sec:intro:results}
@@ -40,20 +40,21 @@ Germany
 \paragraph{Strategy 1}
 \Blindtext[1][1]
 
-\begin{lstlisting}[language=Python, caption={This simple helloworld.py file prints Hello World.}\label{lst:pyhelloworld}]
+\begin{lstlisting}[language=Python, caption={This simple helloworld.py file prints Hello World.}, label={lst:pyhelloworld}]
 #!/usr/bin/env python
-print "Hello World"
+print("Hello World")
 \end{lstlisting}
+In \autoref{lst:pyhelloworld} some code is shown.
 
 \paragraph{Strategy 2}
 \Blindtext[1][1]
 
-\begin{lstlisting}[language=Python, caption={This is a bubble sort function.}\label{lst:pybubblesort}]
+\begin{lstlisting}[language=Python, caption={This is a bubble sort function.}, label={lst:pybubblesort}]
 #!/usr/bin/env python
 def bubble_sort(list):
-    for num in range(len(list)-1,0,-1):
+    for num in range(len(list)-1, 0, -1):
         for i in range(num):
-            if list[i]>list[i+1]:
+            if list[i] > list[i+1]:
                 tmp = list[i]
                 list[i] = list[i+1]
                 list[i+1] = tmp
@@ -62,6 +63,7 @@ alist = [34,67,2,4,65,16,17,95,20,31]
 bubble_sort(list)
 print(list)
 \end{lstlisting}
+In~\ref{lst:pybubblesort} some code is shown.
 
 \section{Thesis Structure}
 \label{sec:intro:structure}
