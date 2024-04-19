@@ -23,8 +23,10 @@
     \tgherosfont
     \centering
 
-    \begin{tabularx}{\textwidth}{m{8cm}m{3mm}m{1.3cm}}
-        \IfLanguageName{english}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_EN}}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_DE}} & \tikz\draw[thick,ctcolorgray] (0,0) -- (0,2.2cm); & \includegraphics[height=1.6cm]{gfx/jgu_logo_kasten}
+    \begin{tabularx}{\textwidth}{Xm{8cm}m{1.3cm}X}
+        & \IfLanguageName{english}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_EN}}{\includegraphics[height=2.2cm]{gfx/IFI_TEXT_COLOR_DE}} &
+        %\tikz\draw[thick,ctcolormain] (0,0.2cm) -- (0,1.8cm); &
+        \includegraphics[height=1.6cm]{gfx/jgu_logo_kasten} &
     \end{tabularx}
     \vfill
     
@@ -92,6 +94,14 @@
         \thesisDate \\
     }
 
+    \ifthenelse{\equal{\thesisTitlepageElement}{show}}{
+    % JGU lines left side
+        \begin{tikzpicture}[overlay, remember picture,xshift=-9.5cm,yshift=\thesisTitlepageStart]
+            \draw[thick,ctcolormain,line width=0.8cm] (0cm, 0cm) -- (0cm, \thesisTitlepageHeight);
+            \draw[thick,ctcolormain,line width=0.8cm,xshift=-2cm] (0cm, 0cm) -- (2.4cm, 0cm);
+            \draw[thick,ctcolormain,line width=0.8cm,xshift=-2cm] (0cm, \thesisTitlepageHeight) -- (2.4cm, \thesisTitlepageHeight);
+        \end{tikzpicture}}
+    {}
 \end{titlepage}
 
 
