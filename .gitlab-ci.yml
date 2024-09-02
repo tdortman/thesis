@@ -1,22 +1,43 @@
 stages:
+  - prepare
   - build
+
+variables:
+  GIT_DEPTH: 3
+
+get_project_properties:
+  stage: prepare
+  variables:
+    GIT_STRATEGY: none
+  script:
+    - export CI_COMMIT_DATE=$(echo "${CI_COMMIT_TIMESTAMP}" | awk -F 'T' '{print $1}' | sed 's/-//g')
+    - export PROJECT_TITLE=$(echo "${CI_PROJECT_TITLE}" | sed 's/ /_/g')
+    - export FILE_NAME="${CI_COMMIT_DATE}_${PROJECT_TITLE}"
+
+    - echo "${CI_COMMIT_TIMESTAMP}"
+    - echo "${CI_COMMIT_SHORT_SHA}"
+    - echo "${CI_PROJECT_TITLE}"
+    - echo "${FILE_NAME}"
+
+    - echo "FILE_NAME=$FILE_NAME" >> build.env
+  artifacts:
+    reports:
+      dotenv: build.env
 
 build_pdf:
   stage: build
   image: texlive/texlive
   script:
     - apt-get update -qy
-    - export CI_COMMIT_DATE=$(date --date="${CI_COMMIT_TIME}" +%Y%m%d)
-    - export PROJECT_TITLE=$(echo "${CI_PROJECT_TITLE}" | sed 's/ /_/g')
-    - export FILE_NAME="${CI_COMMIT_DATE}_${PROJECT_TITLE}_${CI_COMMIT_SHORT_SHA}"
-
-    - pdflatex -jobname=my-thesis -interaction=nonstopmode my-thesis.tex
+    - pdflatex -jobname=my-thesis -shell-escape -interaction=nonstopmode "\def\thesisVersion{${CI_COMMIT_SHORT_SHA}}\input{my-thesis.tex}"
     - biber my-thesis
-    - pdflatex -jobname=my-thesis -interaction=nonstopmode my-thesis.tex
-    - pdflatex -jobname=my-thesis -interaction=nonstopmode my-thesis.tex
+    - pdflatex -jobname=my-thesis -interaction=nonstopmode "\def\thesisVersion{${CI_COMMIT_SHORT_SHA}}\input{my-thesis.tex}"
+    - pdflatex -jobname=my-thesis -interaction=nonstopmode "\def\thesisVersion{${CI_COMMIT_SHORT_SHA}}\input{my-thesis.tex}"
     - mv my-thesis.pdf "${FILE_NAME}.pdf"
-
   artifacts:
     paths:
       - "*.pdf"
-    expire_in: 1 hour
+    expire_in: 1 second
+  needs:
+    - get_project_properties
+
