@@ -143,7 +143,7 @@
 	% -- sectioning colors
 	\colorlet{ctcolortitle}{ctcolormain}
 	\colorlet{ctcolorpartnum}{ctcolormain}
-	\colorlet{ctcolorpartline}{ctcolorblack}
+    \colorlet{ctcolorpartline}{ctcolormain}  % ctcolorblack
 	\colorlet{ctcolorparttext}{ctcolorblack}
 	\colorlet{ctcolorchapternum}{ctcolormain}
 	\colorlet{ctcolorchapterline}{ctcolormain}
@@ -563,11 +563,11 @@
 
 % own font definitions
 \newcommand{\helv}{\notosans\fontsize{9}{11}\selectfont}
-\newcommand{\book}{\notoserif\fontseries{m}\fontsize{11}{13}\selectfont}
+\newcommand{\book}{\notosans\fontseries{m}\fontsize{11}{13}\selectfont}  % \notoserif
 \newcommand{\tgherosfont}{\notosans}
 
-\newcommand{\thesispartlabelfont}{\color{ctcolorpartnum}\nobreak\book\fontsize{60}{60}\selectfont}
-\newcommand{\thesispartfont}{\color{ctcolorparttext}\nobreak\normalfont\huge \tgherosfont\selectfont}
+\newcommand{\thesispartlabelfont}{\color{ctcolorpartnum}\nobreak\book\fontsize{60}{60}\scshape\selectfont}
+\newcommand{\thesispartfont}{\color{ctcolorparttext}\nobreak\normalfont\huge\bfseries\scshape \tgherosfont\selectfont}
 \newcommand{\thesischapterfont}{\color{ctcolorblack}\nobreak\normalfont\huge \sffamily\selectfont}
 %\newcommand{\thesissectionfont}{\color{ctcolormain}\nobreak\LARGE\bfseries \tgherosfont}
 \newcommand{\thesissectionfont}{\color{ctcolorsection}\nobreak\normalfont\LARGE \tgherosfont}
@@ -608,13 +608,35 @@
 % > formats: \part
 % ---------------------------
 \renewcommand*{\partpagestyle}{empty}
-\renewcommand*{\raggedpart}{\raggedleft}
-\renewcommand*\partheadmidvskip{\par\vspace*{3em}}
+\renewcommand*\partheadmidvskip{\par\vspace*{2em}}
+\renewcommand*{\partheadstartvskip}{
+    \null\vskip-\baselineskip\vskip\@tempskipa
+    \vfill
+    \begin{tikzpicture}[]
+        \draw[color=ctcolorpartline, line width=0.8cm] (current page.north west) ++(-0.4cm,0) -- ++(\textwidth,0);
+        % Vertical line on the left side
+        \draw[color=ctcolorpartline, line width=0.8cm] (current page.north west) ++(0cm,0) -- ++(0,-2cm);
+        % Vertical line on the right side
+        \draw[color=ctcolorpartline, line width=0.8cm] (current page.north west) ++(\textwidth-0.8cm,0) -- ++(0,-2cm);
+    \end{tikzpicture}
+    \vspace*{3.2em}
+}
+\renewcommand*\partheadendvskip{
+    \vspace*{1.3em}
+    \begin{tikzpicture}[]
+        \draw[color=ctcolorpartline, line width=0.8cm] (current page.north west) ++(-0.4cm,0) -- ++(\textwidth,0);
+        % Vertical line on the left side
+        \draw[color=ctcolorpartline, line width=0.8cm] (current page.north west) ++(0cm,0) -- ++(0,2cm);
+        % Vertical line on the right side
+        \draw[color=ctcolorpartline, line width=0.8cm] (current page.north west) ++(\textwidth-0.8cm,0) -- ++(0,2cm);
+    \end{tikzpicture}
+    \vfill
+}
+
 \renewcommand*{\partformat}{%
     \usekomafont{part}%
     \thesispartlabelfont%
-    \partname\ \thepart\quad%
-    {\color{ctcolorpartline}\hspace*{-200pt}\rule[0pt]{600pt}{2pt}}%
+    \partname\ \thepart
 }
 %
 % ---------------------------
