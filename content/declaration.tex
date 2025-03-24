@@ -6,7 +6,7 @@
 %% Please refer to your regulations (Prüfungsordnung or Promotionsordnung)
 
 %\IfLanguageName{english}{\chapter*{Declaration of Authorship}}{\chapter*{Eigenständigkeitserklärung}}
-\selectlanguage{ngerman}
+{\selectlanguage{ngerman}
 \chapter*{Eigenständigkeitserklärung}
 \label{sec:declaration}
 \thispagestyle{empty}
@@ -19,7 +19,7 @@ Mit Abgabe der vorliegenden Leistung übernehme ich die Verantwortung für das e
 Ich habe die Arbeit nicht zum Erwerb eines anderen Leistungsnachweises in gleicher oder ähnlicher Form eingereicht. Von der Ordnung zur Sicherung guter wissenschaftlicher Praxis und zum Umgang mit wissenschaftlichem Fehlverhalten habe ich Kenntnis genommen.
     
 Mir ist bekannt, dass ein Verstoß gegen die genannten Punkte prüfungsrechtliche Konsequenzen hat und insbesondere dazu führen kann, dass die Studien- und Prüfungsleistung als mit "`nicht bestanden"' bewertet wird. Die Einschreibung kann für bis zu zwei Jahre widerrufen werden, wenn Studierende zweimal oder häufiger bei Prüfungsleistungen täuschen (§~69 Abs.~4 und 5 HochSchG).
-}
+}}
 
 
 %************************************************
@@ -81,26 +81,27 @@ Mir ist bekannt, dass ein Verstoß gegen die genannten Punkte prüfungsrechtlich
 
 \textbf{Hinweis:} Es wird im Falle von abweichenden Vereinbarungen mit den Prüferinnen und Prüfern empfohlen, jene im Vorfeld schriftlich festzuhalten und zusätzlich auch noch einmal in der eingereichten Arbeit zu benennen.
 
-%% FIXME uncomment new declaration if applicable
-%\ifthenelse{\equal{\thesisAIToolsAllowed}{true}}{
-%% AI Tools allowed
-%%% Table for AI tools
-%	\clearpage
-%	\begin{table}[h]
-%		\begin{tabular}{|m{2cm}|m{3.7cm}|m{3.15cm}|m{3.15cm}|}
-%			\hline
-%			\rowcolor{ctcolormain}
-%			{\color[HTML]{FFFFFF} \IfLanguageName{english}{AI Tool}{KI Tool}} & {\color[HTML]{FFFFFF} \IfLanguageName{english}{Used for}{Genutzt für}} & {\color[HTML]{FFFFFF} \IfLanguageName{english}{Reason}{Warum}} & {\color[HTML]{FFFFFF} \IfLanguageName{english}{Applied to}{Wann}} \\ \hline
-%			&                                 &                               &                                   \\ \hline
-%		\end{tabular}
-%		\caption*{\IfLanguageName{english}{Use of AI tools.}{Nutzung KI-Tools}}
-%		\label{tab:useofaitools:en}
-%	\end{table}
-%}
-%{
-%	% AI Tools not allowed
-%	% Table not necessary
-%}
+% FIXME uncomment new declaration if applicable
+\ifthenelse{\equal{\thesisAIToolsAllowed}{true}}{
+% AI Tools allowed
+%% Table for AI tools
+	%\clearpage
+    \vfill
+	\begin{table}[h]
+        \caption*{\IfLanguageName{english}{Use of AI tools.}{Nutzung von KI-Tools.}}
+		\begin{tabular}{|m{2cm}|m{3.7cm}|m{3.15cm}|m{3.15cm}|}
+			\hline
+			\rowcolor{ctcolormain}
+			{\color[HTML]{FFFFFF} \IfLanguageName{english}{AI Tool}{KI Tool}} & {\color[HTML]{FFFFFF} \IfLanguageName{english}{Used for}{Genutzt für}} & {\color[HTML]{FFFFFF} \IfLanguageName{english}{Reason}{Grund}} & {\color[HTML]{FFFFFF} \IfLanguageName{english}{When}{Wann}} \\ \hline
+			&                                 &                               &                                   \\ \hline
+		\end{tabular}
+		\label{tab:useofaitools:en}
+	\end{table}
+}
+{
+	% AI Tools not allowed
+	% Table not necessary
+}
 
 %*****************************************
 %*****************************************
