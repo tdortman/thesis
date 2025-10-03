@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/*.aux": true,
+        "**/*.bbl": true,
+        "**/*.fdb_latexmk": true,
+        "**/*.fls": true,
+        "**/*.bcf": true,
+        "**/*.lof": true,
+        "**/*.log": true,
+        "**/*.lot": true,
+        "**/*.synctex.gz": true,
+        "**/*.run.xml": true,
+        "**/*.lol": true,
+        "**/*.toc": true,
+    }
+}

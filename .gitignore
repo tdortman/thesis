@@ -4,6 +4,10 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=latex,latexmk
 
 temp/**
+.direnv
+my-thesis.pdf
+.clangd
+.envrc
 
 ### LaTeX ###
 ## Core latex/pdflatex auxiliary files:
