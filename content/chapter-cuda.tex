@@ -1,0 +1,61 @@
+\chapter{GPU Architecture and Parallel Programming with CUDA}
+
+This chapter introduces the fundamental concepts of Graphics Processing Unit (GPU) architectures and the CUDA programming model. An understanding of these principles is essential for contextualising the design decisions and performance optimizations discussed in the subsequent implementation of the parallel Cuckoo filter. While this thesis targets NVIDIA GPUs using the CUDA framework, the core concepts of massively parallel processing are applicable to other GPU architectures as well.
+
+\section{The GPU as a Parallel Computing Device}
+
+At its core, a GPU is a specialised processor designed for massive data parallelism. Historically developed for the computationally intensive task of rendering graphics, its architecture has proven highly effective for general-purpose computing tasks that can be broken down into many independent or semi-independent sub-problems.
+
+The primary architectural difference between a Central Processing Unit (CPU) and a GPU lies in their design philosophy, as illustrated in Figure \ref{fig:cpu-vs-gpu}. A CPU is optimised for low-latency access to single tasks. It dedicates a significant portion of its silicon to sophisticated control logic and large caches to execute a sequence of instructions (a thread) as fast as possible. In contrast, a GPU is designed for high-throughput computing. It dedicates far more of its transistors to arithmetic logic units (the actual compute cores), allowing it to execute tens of thousands of threads in parallel.
+
+The usual flow of a GPU-accelerated program is as follows:
+
+\begin{enumerate}
+  \item Allocate memory on the device (GPU)
+  \item Copy input data from host memory (RAM) to device memory (VRAM)
+  \item Launch a \textit{kernel} on the host, which is a function executed in parallel by many threads on the device
+  \item Copy the results from device memory back to host memory
+  \item Deallocate memory on the device
+\end{enumerate}
+
+This data transfer overhead means that GPUs are most effective for problems where the ratio of computational work to the amount of data transferred is high.
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=1\linewidth]{images/cpu-vs-gpu.png}
+  \caption{The GPU Devotes More Transistors to Data Processing \cite{nvidia_cuda_guide}}
+  \label{fig:cpu-vs-gpu}
+\end{figure*}
+
+\section{The CUDA Programming Model}
+
+To manage the immense parallelism of the hardware, NVIDIA developed CUDA (Compute Unified Device Architecture), a parallel computing platform and programming model. CUDA abstracts the hardware into a logical hierarchy that is more manageable for the programmer.
+
+The basic unit of execution in CUDA is a thread. When a function, or kernel, is launched from the host, it is executed by a vast number of these threads on the GPU. These threads are organized into a three-level hierarchy:
+
+\begin{itemize}
+  \item \textbf{Threads}: The smallest unit of execution. Each thread executes the same kernel code but operates on different data, identified by its unique ID.
+  \item \textbf{Blocks}: Threads are grouped into blocks. Threads within the same block can cooperate by sharing data through a fast, on-chip shared memory and can synchronise their execution.
+  \item \textbf{Grid}: Blocks are organized into a grid. All blocks in a grid execute the same kernel. However, blocks are assumed to execute independently and in any order, and there is no direct, guaranteed synchronisation mechanism between them during a single kernel launch.\footnote{Newer cards support Cooperative Groups, which allow this to an extent}
+\end{itemize}
+
+This hierarchy allows the programmer to structure a problem in a way that maps naturally to parallel execution. For example, when processing an image, one might assign a single thread to each pixel, group threads for a tile of the image into a block, and have the entire grid of blocks process the full image.
+
+Performance in GPU programming is directly linked to memory access patterns. Understanding the memory hierarchy is crucial for writing efficient code. Each memory space has different characteristics in terms of size, speed, and scope (which threads can access it).
+
+\begin{itemize}
+  \item \textbf{Registers}: The fastest memory on the GPU. Each thread has its own private set of registers. They are used for frequently accessed variables local to a thread.
+  \item \textbf{Shared Memory}: A small, low-latency memory space shared by all threads within a single block. It is essential for intra-block communication and can be used as a programmer-managed cache to reduce redundant reads from the much slower global memory.
+  \item \textbf{Global Memory}: This is the largest memory space on the GPU and is accessible by all threads in all blocks. However, it also has the highest latency. Data is transferred between the host and the device via global memory.
+  \item \textbf{Constant and Texture Memory}: Read-only memory spaces that are cached and optimised for specific access patterns where many threads read from the same location
+\end{itemize}
+
+The primary goal of many CUDA optimisations is to maximise the use of fast memory (registers and shared memory) and minimise traffic to the slower global memory.
+
+\section{Important Factors for Performance Optimisation}
+
+The massive parallelism of a GPU is managed by the hardware through a scheduler that groups threads into warps. A warp is a group of 32 threads that execute in a SIMT (Single Instruction, Multiple Threads) fashion. This means that at any given time, all threads in a warp execute the same instruction. This execution model results in two critical performance considerations.
+
+Access to global memory is one of the most significant performance bottlenecks. To mitigate this, the GPU hardware attempts to coalesce memory requests from threads in a warp into a single, large transaction. If all 32 threads in a warp request data from contiguous locations in global memory, the hardware can satisfy all requests with one transaction. However, if the memory accesses are scattered and random, the hardware may require 32 separate transactions, drastically reducing memory bandwidth and overall performance. Designing algorithms that promote coalesced memory access is therefore a primary optimisation goal.
+
+Since all threads in a warp execute the same instruction at the same time, control flow statements like `if-else` can pose a problem. If different threads in a warp need to take different paths based on a condition, the warp experiences branch divergence. The hardware handles this by serialising the execution: first, all threads that take the if path execute it while the others are idle, and then all threads that take the else path execute it while the first group is idle. This serialisation effectively negates the benefit of parallelism within the warp and should be minimised wherever possible.

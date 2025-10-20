@@ -23,6 +23,7 @@ my-thesis.pdf
 *.cb
 *.cb2
 .*.lb
+*.bbl-SAVE-ERROR
 
 ## Intermediate documents:
 *.dvi
