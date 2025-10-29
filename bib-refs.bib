@@ -5,3 +5,124 @@
   url    = {https://docs.nvidia.com/cuda/cuda-c-programming-guide/},
   note   = {Accessed: 2025-10-20}
 }
+
+@online{redis-docs,
+  author = {{Redis Ltd.}},
+  title  = {Redis Documentation},
+  year   = {2025},
+  url    = {https://redis.io/docs/latest/develop/data-types/probabilistic/cuckoo-filter/},
+  note   = {Accessed: 2025-10-29}
+}
+
+@software{cuCollections,
+  author  = {{NVIDIA Corporation}},
+  license = {Apache-2.0},
+  month   = oct,
+  title   = {{cuCollections}},
+  url     = {https://github.com/NVIDIA/cuCollections},
+  version = {3b9873a},
+  year    = {2025}
+}
+
+@article{counting-bloom,
+  author   = {Li Fan and Pei Cao and Almeida, J. and Broder, A.Z.},
+  journal  = {IEEE/ACM Transactions on Networking},
+  title    = {Summary cache: a scalable wide-area Web cache sharing protocol},
+  year     = {2000},
+  volume   = {8},
+  number   = {3},
+  pages    = {281-293},
+  keywords = {Cache memory;Internet;Bandwidth;Computer science;Routing protocols;Telecommunication traffic;Particle measurements;Virtual prototyping;Bit rate;Data analysis},
+  doi      = {10.1109/90.851975}
+}
+
+@article{packet-classification,
+  author   = {Reviriego, Pedro and Martínez, Jorge and Larrabeiti, David and Pontarelli, Salvatore},
+  journal  = {IEEE Transactions on Network and Service Management},
+  title    = {Cuckoo Filters and Bloom Filters: Comparison and Application to Packet Classification},
+  year     = {2020},
+  volume   = {17},
+  number   = {4},
+  pages    = {2690-2701},
+  keywords = {Electronic mail;Information filters;Optimization;Matched filters;Focusing;Indexes;Cuckoo filters;Bloom filters;packet classification;SDN},
+  doi      = {10.1109/TNSM.2020.3024680}
+}
+
+@inproceedings{og-cuckoo-filter,
+  author    = {Fan, Bin and Andersen, Dave G. and Kaminsky, Michael and Mitzenmacher, Michael D.},
+  title     = {Cuckoo Filter: Practically Better Than Bloom},
+  year      = {2014},
+  isbn      = {9781450332798},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/2674005.2674994},
+  doi       = {10.1145/2674005.2674994},
+  abstract  = {In many networking systems, Bloom filters are used for high-speed set membership tests. They permit a small fraction of false positive answers with very good space efficiency. However, they do not permit deletion of items from the set, and previous attempts to extend "standard" Bloom filters to support deletion all degrade either space or performance.We propose a new data structure called the cuckoo filter that can replace Bloom filters for approximate set membership tests. Cuckoo filters support adding and removing items dynamically while achieving even higher performance than Bloom filters. For applications that store many items and target moderately low false positive rates, cuckoo filters have lower space overhead than space-optimized Bloom filters. Our experimental results also show that cuckoo filters outperform previous data structures that extend Bloom filters to support deletions substantially in both time and space.},
+  booktitle = {Proceedings of the 10th ACM International on Conference on Emerging Networking Experiments and Technologies},
+  pages     = {75-88},
+  numpages  = {14},
+  keywords  = {bloom filters, compression, cuckoo hashing},
+  location  = {Sydney, Australia},
+  series    = {CoNEXT '14}
+}
+
+@article{bloom-network,
+  author    = {Andrei Broder and Michael Mitzenmacher},
+  title     = {Network Applications of Bloom Filters: A Survey},
+  journal   = {Internet Mathematics},
+  volume    = {1},
+  number    = {4},
+  pages     = {485-509},
+  year      = {2004},
+  publisher = {Taylor \& Francis},
+  doi       = {10.1080/15427951.2004.10129096},
+  url       = {https://doi.org/10.1080/15427951.2004.10129096},
+  eprint    = {https://doi.org/10.1080/15427951.2004.10129096}
+}
+
+
+@article{cuckoo-privacy-review,
+  author         = {Zhao, Yekang and Dai, Wangchen and Wang, Shiren and Xi, Liang and Wang, Shenqing and Zhang, Feng},
+  title          = {A Review of Cuckoo Filters for Privacy Protection and Their Applications},
+  journal        = {Electronics},
+  volume         = {12},
+  year           = {2023},
+  number         = {13},
+  article-number = {2809},
+  url            = {https://www.mdpi.com/2079-9292/12/13/2809},
+  issn           = {2079-9292},
+  abstract       = {As the global digitalization process continues, information is transformed into data and widely used, while the data are also at risk of serious privacy breaches. The Cuckoo filter is a data structure based on the Cuckoo hash. It encrypts data when it is used and can achieve privacy protection to a certain extent. The Cuckoo filter is an alternative to the Bloom filter, with advantages such as support for deleting elements and efficient space utilization. Cuckoo filters are widely used and developed in the fields of network engineering, storage systems, databases, file systems, distributed systems, etc., because they are often used to solve collection element query problems. In recent years, many variants of the Cuckoo filter have emerged based on ideas such as improving the structure and introducing new technologies in order to accommodate a variety of different scenarios, as well as a huge collection. With the development of the times, the improvement of the structure and operation logic of the Cuckoo filter itself has become an important direction for the research of aggregate element query.},
+  doi            = {10.3390/electronics12132809}
+}
+
+@inproceedings{li1995perf,
+  title     = {Perf join: An alternative to two-way semijoin and bloomjoin},
+  author    = {Li, Zhe and Ross, Kenneth A},
+  booktitle = {Proceedings of the fourth international conference on Information and knowledge management},
+  pages     = {137--144},
+  year      = {1995}
+}
+
+@article{mullin2002optimal,
+  title     = {Optimal semijoins for distributed database systems},
+  author    = {Mullin, James K.},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {16},
+  number    = {5},
+  pages     = {558--560},
+  year      = {2002},
+  publisher = {IEEE}
+}
+
+@article{gaia2019ngsreadstreatment,
+  title     = {NGSReadsTreatment--a Cuckoo Filter-based tool for removing duplicate reads in NGS data},
+  author    = {Gaia, Antonio S{\'e}rgio Cruz and de S{\'a}, Pablo Henrique Caracciolo Gomes and de Oliveira, M{\^o}nica Silva and Veras, Adonney Allan de Oliveira},
+  journal   = {Scientific reports},
+  volume    = {9},
+  number    = {1},
+  pages     = {11681},
+  year      = {2019},
+  publisher = {Nature Publishing Group UK London}
+}
+
+
