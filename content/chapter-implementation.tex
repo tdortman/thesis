@@ -80,10 +80,10 @@ To allow the GPU-accelerated Cuckoo filter to be used as a high-performance, sys
 The architecture is built upon two primary mechanisms: a shared memory queue for communication and CUDA's IPC API for data access. A fixed-size ring buffer, chosen for its superior performance and simplicity in a concurrent environment, is created in a POSIX shared memory segment to act as a command queue. The key is how input data is handled. Instead of sending buffers through the queue, a client performs the following steps:
 
 \begin{enumerate}
-  \item It allocates memory on its own GPU for the batch of items to be processed.
+  \item It allocates memory in its own GPU memory space for the batch of items to be processed.
   \item It obtains opaque memory handles to this device memory using \\
     \texttt{cudaIpcGetMemHandle}.
-  \item It places these handles inside a request message, which is then enqueued into the shared memory ring buffer.
+  \item It places these handles inside a request message alongside other metadata like the size of input and output buffers, which is then enqueued into the shared memory ring buffer.
 \end{enumerate}
 
 The server runs a single worker thread that continuously dequeues requests from this ring buffer. For each request, the server's thread uses \\ \texttt{cudaIpcOpenMemHandle} on the provided handle to obtain a direct, valid device pointer into the \textit{client's} GPU memory space. This allows the server to launch its kernels and read the input keys directly from the client's VRAM, completely avoiding the significant overhead of inter-process data copies and creating a highly efficient, low-latency communication pipeline.
