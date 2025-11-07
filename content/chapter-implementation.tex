@@ -60,7 +60,7 @@ This continues until a deletion is successful or both buckets have been fully tr
 \section{Optimisation Techniques}
 \label{sec:implementation:optimisation-techniques}
 
-Beyond the core algorithm design, several optimisation strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to find into the device's L2 cache or under high load factors.
+Beyond the core algorithm design, several optimisation strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
 
 \subsection{Sorted Insertion}
 \label{sec:implementation:optimisation-techniques:sorted}
@@ -93,7 +93,7 @@ The queue is blocking by design, meaning a client attempting to enqueue a reques
 To simplify its use, a client library abstracts away the low-level IPC details. An optional Thrust wrapper is also provided to allow for seamless interaction with \texttt{thrust::device\_vector}. This architecture could be enhanced in several ways in the future:
 
 \begin{itemize}
-  \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximize throughput in high-concurrency scenarios.
+  \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximise throughput in high-concurrency scenarios.
   \item Support could be added for multiple worker threads managing filters on different GPUs to enable further load balancing.
   \item The filter could be exposed over a network by leveraging technologies like RDMA (Remote Direct Memory Access) to preserve the zero-copy transfer properties.
 \end{itemize}
