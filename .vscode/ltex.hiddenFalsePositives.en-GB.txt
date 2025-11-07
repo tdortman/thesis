@@ -1,0 +1,7 @@
+{"rule":"CD_NN","sentence":"^\\QTwo Choice Filter.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QDissertation   toc\\E$"}
+{"rule":"WHITESPACE_RULE","sentence":"^\\QDissertation   toc\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QCoNEXT '14\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QPerf join: An alternative to two-way semijoin and bloomjoin\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QOptimal semijoins for distributed database systems\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QNGSReadsTreatment–a Cuckoo Filter-based tool for removing duplicate reads in NGS data\\E$"}

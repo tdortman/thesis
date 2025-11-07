@@ -17,5 +17,6 @@
         "**/*.run.xml": true,
         "**/*.lol": true,
         "**/*.toc": true,
-    }
+    },
+    "ltex.language": "en-GB",
 }

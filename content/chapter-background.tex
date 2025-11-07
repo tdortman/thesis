@@ -3,14 +3,14 @@
 \section{Probabilistic Data Structures}
 \label{sec:background:probabilistic-data-structures}
 
-Before diving into the design and implementation of the GPU-accelerated Cuckoo Filter, it is essential to establish a solid theoretical foundation. This chapter provides a comprehensive overview of the key data structures and algorithms that form the basis of this thesis. The discussion begins with the classic Bloom filter, the long-standing benchmark in approximate membership querying. We then introduce Cuckoo hashing, the foundational eviction scheme that gives the Cuckoo filter its name and unique properties. Finally, we detail the Cuckoo filter itself, explaining how it adapts these principles to create a more flexible and often more space-efficient alternative. Understanding these concepts is crucial for contextualising the design choices and performance trade-offs discussed in the subsequent chapters.
+Before diving into the design and implementation of the GPU-accelerated Cuckoo Filter, it is essential to establish a solid theoretical foundation. This chapter provides a comprehensive overview of the key data structures and algorithms that form the basis of this thesis. The discussion begins with the classic Bloom filter, the long-standing benchmark in approximate membership querying. We then introduce Cuckoo hashing, the foundational eviction scheme that gives the Cuckoo filter its name and unique properties. Finally, we detail the Cuckoo filter itself, explaining how it adapts these principles to create a more flexible and often more space-efficient alternative. Understanding these concepts is crucial for contextualizing the design choices and performance trade-offs discussed in the subsequent chapters.
 
 \subsection{Bloom Filters}
 \label{sec:background:bloom-filters}
 
 Invented in 1970, the Bloom filter has long been the dominant probabilistic data structure for approximate membership query (AMQ) problems. Its operation is based on a simple yet effective concept: a bit array of size $m$ and a set of $k$ independent hash functions. To insert an item, the item is hashed k times, and each resulting hash value is used as an index to set a bit in the array to 1. To query for an item's membership, the item is again hashed $k$ times. If all corresponding bits in the array are 1, the item is considered to possibly be in the set. However, if even one bit is 0, the item is definitively not in the set.
 
-For a given number of items $n$ and a filter size of $m$ bits, the optimal number of hash functions to minimise the false positive rate is given by $$k = \frac{m}{n} \ln 2$$
+For a given number of items $n$ and a filter size of $m$ bits, the optimal number of hash functions to minimize the false positive rate is given by $$k = \frac{m}{n} \ln 2$$
 Despite its widespread use, the classic Bloom filter has several notable disadvantages:
 
 \begin{itemize}
@@ -18,7 +18,7 @@ Despite its widespread use, the classic Bloom filter has several notable disadva
   \item \textbf{Linear Complexity}: Lookup and insertion performance is dependent on the number of hash functions, which scales linearly with the number of items. This can lead to performance bottlenecks in high-throughput scenarios.
   \item \textbf{Poor Memory Locality}: The $k$ hash functions produce indices that are typically scattered across the bit array, leading to poor cache performance. While variants like the Blocked Bloom Filter improve locality, they do so at the expense of a higher false positive rate.
   \item \textbf{Degrading Performance}: As the filter fills up and more bits are set to 1, the false positive rate steadily increases, eventually converging to a point where all queries yield a positive result.
-  \item \textbf{Sub-optimal Space Usage}: The optimal space usage for a Bloom filter is approximately $1.44 \log_2(1/\epsilon)$ bits per element for a desired false positive rate $\epsilon$, which is $44\%$ higher than the information theoretical lower bound.
+  \item \textbf{Suboptimal Space Usage}: The optimal space usage for a Bloom filter is approximately $1.44 \log_2(1/\epsilon)$ bits per element for a desired false positive rate $\epsilon$, which is $44\%$ higher than the information theoretical lower bound.
 \end{itemize}
 
 \subsection{Cuckoo Hashing}
@@ -45,7 +45,7 @@ Deletion is as simple as a lookup, followed by marking the item's slot as free.
 
 A Cuckoo filter is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter. It improves upon Cuckoo hashing with several important distinctions.
 
-First, instead of storing entire items, a Cuckoo filter only stores a small fingerprint for each item, which is a fixed-size chunk of bits from the item's hash. This significantly reduces the memory footprint. A direct consequence, however, is that rehashing is not an option, as the original items are not availablel. Therefore, the filter's size is static once created.
+First, instead of storing entire items, a Cuckoo filter only stores a small fingerprint for each item, which is a fixed-size chunk of bits from the item's hash. This significantly reduces the memory footprint. A direct consequence, however, is that rehashing is not an option, as the original items are not available. Therefore, the filter's size is static once created.
 
 Second, it replaces the standard Cuckoo hashing scheme with partial-key cuckoo hashing. This clever technique establishes a dependency between the two potential bucket locations and the item's fingerprint. A single hash function is used to compute an initial location $i_1$ and a fingerprint $f$. The alternate location $i_2$ is then derived using the XOR operation:
 
@@ -53,23 +53,23 @@ $$i_2 = i_1 \oplus hash(f)$$
 
 Thanks to the symmetric nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus hash(f)$. This allows an evicted fingerprint to calculate its alternate location from its current position and fingerprint alone, without needing the original item or a second hash function.
 
-Because the filter only stores fingerprints, it is possible for two different items to have the same fingerprint, leading to false positives. The probability of such a hash collision is $2^{-f}$,where $f$ is number of bits in the fingerprint. In practice, the actual false positive rate is slightly higher. For efficiency, the filter is implemented not as a flat array of slots but as an array of fixed-size buckets. Since a lookup requires checking all fingerprints in two potential buckets in the worst case, the false positive rate has an upper bound of apprixmately $\frac{2b}{2^f}$, where $b$ is the number of fingerprints stored per bucket.
+Because the filter only stores fingerprints, it is possible for two different items to have the same fingerprint, leading to false positives. The probability of such a hash collision is $2^{-f}$, where $f$ is the number of bits in the fingerprint. In practice, the actual false positive rate is slightly higher. For efficiency, the filter is implemented not as a flat array of slots but as an array of fixed-size buckets. Since a lookup requires checking all fingerprints in two potential buckets in the worst case, the false positive rate has an upper bound of approximately $\frac{2b}{2^f}$, where $b$ is the number of fingerprints stored per bucket.
 
-This reveals a fundamental trade-off in the design of a Cuckoo filters. Increasing the bucket size $b$ reduces the likelihood of insertion failures and allows for higher filter occupancy. However, a larger bucket size also increases the number of fingerprints that must be checked during a lookup, which in turn linearly increases the false positive rate. Therefore,the parameters of a Cuckoo filter must be carefully tuned to balance space utilisation against the acceptable rate of false positives.
+This reveals a fundamental trade-off in the design of a Cuckoo filters. Increasing the bucket size $b$ reduces the likelihood of insertion failures and allows for higher filter occupancy. However, a larger bucket size also increases the number of fingerprints that must be checked during a lookup, which in turn linearly increases the false positive rate. Therefore, the parameters of a Cuckoo filter must be carefully tuned to balance space utilization against the acceptable rate of false positives.
 
 \section{GPU Computing}
 \label{sec:background:gpu-computing}
 
-This section introduces the fundamental concepts of Graphics Processing Unit (GPU) architectures and the CUDA programming model. An understanding of these principles is essential for contextualising the design decisions and performance optimisations discussed in the subsequent implementation of the parallel Cuckoo filter. While this thesis targets NVIDIA GPUs using the CUDA framework, the core concepts of massively parallel processing are applicable to other GPU architectures and, to a large extent, modern multi-core CPUs as well.
+This section introduces the fundamental concepts of Graphics Processing Unit (GPU) architectures and the CUDA programming model. An understanding of these principles is essential for contextualizing the design decisions and performance optimizations discussed in the subsequent implementation of the parallel Cuckoo filter. While this thesis targets NVIDIA GPUs using the CUDA framework, the core concepts of massively parallel processing are applicable to other GPU architectures and, to a large extent, modern multicore CPUs as well.
 
 \subsection{The GPU as a Parallel Processor}
 \label{sec:background:gpu-parallel-processor}
 
-At its core, a GPU is a specialised processor designed for massive data parallelism. Originally developed to accelerate the computationally intensive task of rendering graphics, its architecture has evolved to become highly effective for general-purpose computing.
+At its core, a GPU is a specialized processor designed for massive data parallelism. Originally developed to accelerate the computationally intensive task of rendering graphics, its architecture has evolved to become highly effective for general-purpose computing.
 
-The primary architectural difference between a Central Processing Unit (CPU) and a GPU lies in their design philosophies. A CPU is optimised for low-latency execution of a single or a few sequential instruction streams (threads). It dedicates a significant portion of its silicon to sophisticated flow control and large data caches to minimize the execution time of a single task. In contrast, a GPU is designed for high-throughput computing. It makes up for slower single-thread performance by executing thousands of threads in parallel, dedicating far more of its transistors to data processing units (arithmetic logic units) rather than to data caching and flow control. Figure \ref{fig:cpu-vs-gpu} highlights this difference. For example, a modern NVIDIA Blackwell architecture GPU can feature over 24,000 cores. This design results in much higher instruction throughput and memory bandwidth, which is ideal for problems that can be broken down into many independent sub-problems.
+The primary architectural difference between a Central Processing Unit (CPU) and a GPU lies in their design philosophies. A CPU is optimized for low-latency execution of a single or a few sequential instruction streams (threads). It dedicates a significant portion of its silicon to sophisticated flow control and large data caches to minimize the execution time of a single task. In contrast, a GPU is designed for high-throughput computing. It makes up for slower single-thread performance by executing thousands of threads in parallel, dedicating far more of its transistors to data processing units (arithmetic logic units) rather than to data caching and flow control. Figure \ref{fig:cpu-vs-gpu} highlights this difference. For example, a modern NVIDIA Blackwell architecture GPU can feature over 24,000 cores. This design results in much higher instruction throughput and memory bandwidth, which is ideal for problems that can be broken down into many independent sub-problems.
 
-Not all parts of a program can be effectively parallelised. The portions that can are typically isolated and rewritten as kernels, which are functions compiled separately for the GPU's instruction set. The typical workflow for a GPU-accelerated program is as follows:
+Not all parts of a program can be effectively parallelized. The portions that can are typically isolated and rewritten as kernels, which are functions compiled separately for the GPU's instruction set. The typical workflow for a GPU-accelerated program is as follows:
 
 \begin{enumerate}
   \item Allocate memory on the device (GPU).
@@ -93,12 +93,12 @@ This data transfer overhead means that GPUs are most effective for problems wher
 
 To manage the immense parallelism of the hardware, NVIDIA developed CUDA (Compute Unified Device Architecture), a parallel computing platform and programming model. CUDA provides a set of extensions to the C++ language that allows developers to write host (CPU) and device (GPU) code within the same environment, simplifying the development process. It abstracts the hardware into a logical hierarchy that is more manageable for the programmer.
 
-The basic unit of execution in CUDA is a thread. When a kernel is launched, it is executed by a vast number of these threads on the GPU. These threads are organised into a three-dimensional hierarchy:
+The basic unit of execution in CUDA is a thread. When a kernel is launched, it is executed by a vast number of these threads on the GPU. These threads are organized into a three-dimensional hierarchy:
 
 \begin{itemize}
   \item \textbf{Threads}: The smallest execution unit. Each thread executes the same kernel code but operates on different data, identified by its unique coordinates within a block.
-  \item \textbf{Blocks}: Threads are grouped into blocks. Threads within the same block can cooperate by sharing data through a fast, on-chip shared memory and can synchronise their execution.
-  \item \textbf{Grid}: Blocks are organised into a grid. All blocks in a grid execute the same kernel. Blocks are assumed to execute independently and in any order, and there is no guaranteed synchronisation mechanism between them during a single kernel launch.\footnote{Newer cards support Cooperative Groups, which allow this to an extent}
+  \item \textbf{Blocks}: Threads are grouped into blocks. Threads within the same block can cooperate by sharing data through a fast, on-chip shared memory and can synchronize their execution.
+  \item \textbf{Grid}: Blocks are organized into a grid. All blocks in a grid execute the same kernel. Blocks are assumed to execute independently and in any order, and there is no guaranteed synchronization mechanism between them during a single kernel launch.\footnote{Newer cards support Cooperative Groups, which allow this to an extent}
 \end{itemize}
 
 This hierarchical grid structure makes it easy to map threads to data. For instance, when processing an image, one might assign a single thread to each pixel, group threads for a tile of the image into a block, and have the entire grid of blocks process the full image.
@@ -113,7 +113,7 @@ Each SM is a powerful parallel processor in its own right, containing several ke
 \begin{itemize}
   \item \textbf{CUDA Cores}: The basic arithmetic logic units (ALUs) that perform integer and floating-point calculations.
   \item \textbf{Warp Schedulers}: Decides which group of threads gets to execute on each clock cycle.
-  \item \textbf{Special Function Units (SFUs)}: Handle complex mathematical operations like trigonomety and square roots.
+  \item \textbf{Special Function Units (SFUs)}: Handle complex mathematical operations like trigonometry and square roots.
   \item \textbf{Register Files}: The fastest storage on the GPU, holding thread-specific data and intermediate results. While each thread has its own unlimited logical set of registers, the physical register file is a limited resource shared across all active threads on an SM.
   \item \textbf{Shared Memory/L1 Cache}: A low-latency memory space used for user-managed data sharing within a thread block.
   \item \textbf{Load/Store Units}: Manage the movement of data between memory spaces.
@@ -124,27 +124,27 @@ Threads are not only grouped into blocks but are also managed by the SM in group
 \subsection{Memory Hierarchy}
 \label{sec:background:memory-hierarchy}
 
-Performance in GPU programming is directly linked to memory access patterns. A deep understanding of the memory hierarchy is crucial for writing efficient code, as the primary goal of many CUDA optimisations is to maximize the use of fast memory and minimize traffic to slower memory.
+Performance in GPU programming is directly linked to memory access patterns. A deep understanding of the memory hierarchy is crucial for writing efficient code, as the primary goal of many CUDA optimizations is to maximize the use of fast memory and minimize traffic to slower memory.
 
 \begin{itemize}
   \item \textbf{Registers}: The fastest memory on the GPU. Each thread has its own private registers for its local variables.
   \item \textbf{Shared Memory}: A small, low-latency, user-programmable memory space shared by all threads within a single block. It is essential for intra-block communication and is primarily used as a user-managed cache to avoid redundant reads from the much slower global memory.
-  \item \textbf{Global Memory}: The largest memory space on the GPU (the device's VRAM), accessible to every running thread. It has the highest latency and serves as the medium for data transfer between the host and the device. Access to global memory should be minimized and carefully organised whenever possible.
-  \item \textbf{Constant and Texture Memory}: Small, read-only memory spaces that are cached and optimised for specific access patterns, such as when many threads in a warp read from the same location (constant memory) or from spatially local locations (texture memory).
+  \item \textbf{Global Memory}: The largest memory space on the GPU (the device's VRAM), accessible to every running thread. It has the highest latency and serves as the medium for data transfer between the host and the device. Access to global memory should be minimized and carefully organized whenever possible.
+  \item \textbf{Constant and Texture Memory}: Small, read-only memory spaces that are cached and optimized for specific access patterns, such as when many threads in a warp read from the same location (constant memory) or from spatially local locations (texture memory).
 \end{itemize}
 
-The primary goal of many CUDA optimisations is to maximise the use of fast memory (registers and shared memory) and minimise traffic to the slower global memory.
+The primary goal of many CUDA optimizations is to maximize the use of fast memory (registers and shared memory) and minimize traffic to the slower global memory.
 
 \subsection{Performance Considerations}
 \label{sec:background:performance-considerations}
 
 The SIMT execution model of warps and the tiered memory hierarchy lead to several critical performance considerations.
 
-Access to global memory is often the most significant performance bottleneck. To mitigate this, the GPU hardware attempts to coalesce memory requests. This is a technique to improve memory bandwidth utilisation by servicing multiple logical memory reads from a warp in a single physical memory transaction. This is possible because DRAM technology fetches data in bursts. Modern NVIDIA GPUs have a cache line size of 128 bytes. If the 32 threads in a warp access 32 consecutive 4-byte words in global memory, this 128-byte request can be satisfied with a single DRAM burst, achieving maximum bandwidth. Conversely, if the memory accesses are scattered and random, the hardware may require up to 32 separate transactions, drastically reducing performance.
+Access to global memory is often the most significant performance bottleneck. To mitigate this, the GPU hardware attempts to coalesce memory requests. This is a technique to improve memory bandwidth utilization by servicing multiple logical memory reads from a warp in a single physical memory transaction. This is possible because DRAM technology fetches data in bursts. Modern NVIDIA GPUs have a cache line size of 128 bytes. If the 32 threads in a warp access 32 consecutive 4-byte words in global memory, this 128-byte request can be satisfied with a single DRAM burst, achieving maximum bandwidth. Conversely, if the memory accesses are scattered and random, the hardware may require up to 32 separate transactions, drastically reducing performance.
 
-A similar principle applies to shared memory, which is organised into 32 memory banks. Each bank can service one request per cycle. If all 32 threads in a warp access data in different banks, the entire request is satisfied in a single cycle. However, if multiple threads access the same bank, a bank conflict occurs, and the accesses are serialised, reducing throughput.
+A similar principle applies to shared memory, which is organized into 32 memory banks. Each bank can service one request per cycle. If all 32 threads in a warp access data in different banks, the entire request is satisfied in a single cycle. However, if multiple threads access the same bank, a bank conflict occurs, and the accesses are serialized, reducing throughput.
 
-Since all threads in a warp execute the same instruction at the same time, control flow statements like if-else can degrade performance. If threads within a warp take different paths based on a condition, the warp experiences branch divergence. The hardware handles this by serialising execution: first, the threads that take one path execute while the others are idle, and then the threads that take the other path execute while the first group is idle. This serialization negates the benefit of parallelism within the warp and should be minimised.
+Since all threads in a warp execute the same instruction at the same time, control flow statements like if-else can degrade performance. If threads within a warp take different paths based on a condition, the warp experiences branch divergence. The hardware handles this by serializing execution: first, the threads that take one path execute while the others are idle, and then the threads that take the other path execute while the first group is idle. This serialization negates the benefit of parallelism within the warp and should be minimized.
 
 \section{Related Work}
 \label{sec:background:related-work}

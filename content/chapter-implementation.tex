@@ -14,7 +14,7 @@
 \section{Parallel Algorithms}
 \label{sec:implementation:parallel-algorithms}
 
-The core of this thesis is the design of parallel algorithms for the Cuckoo filter's primary operations: insertion, lookup, and deletion. These algorithms are designed to be launched as CUDA kernels, where a large number of threads cooperate to process batches of items simultaneously.
+The core of this thesis is the design of parallel algorithms for the Cuckoo filter's primary operations: insertion, lookup, and deletion. These algorithms are designed to be launched as CUDA kernels, where many threads cooperate to process batches of items simultaneously.
 
 \subsection{Insertion}
 \label{sec:implementation:insertion}
@@ -26,7 +26,7 @@ The parallel insertion algorithm is designed to handle a large batch of items in
 
   \item \textbf{Direct Insertion Attempt}: The thread first checks the two candidate buckets for an empty slot. The thread uses the item's fingerprint to generate a random starting offset within each bucket and performs a linear search from that point. If an empty slot is found in either bucket, the fingerprint is inserted via an atomic operation, and the insertion for that item succeeds.
 
-  \item \textbf{Eviction Process}: If both canditate buckets are full, the thread initiates the cuckoo process. It randomly selects one of the two buckets and a random occupied slot within it. It then atomically replaces the fingerprint (\texttt{tag\_old}) in that slot with its own fingerprint (\texttt{tag\_new}). The evicted fingerprint, \texttt{tag\_old}, now becomes the item that the thread must insert. The thread calculates \texttt{tag\_old}'s alternate bucket and continues this process in a loop.
+  \item \textbf{Eviction Process}: If both candidate buckets are full, the thread initiates the cuckoo process. It randomly selects one of the two buckets and a random occupied slot within it. It then atomically replaces the fingerprint (\texttt{tag\_old}) in that slot with its own fingerprint (\texttt{tag\_new}). The evicted fingerprint, \texttt{tag\_old}, now becomes the item that the thread must insert. The thread calculates \texttt{tag\_old}'s alternate bucket and continues this process in a loop.
 
   \item \textbf{Termination}: The eviction loop continues until either an empty slot is found or a predefined limit on the number of displacements is reached, at which point the insertion is reported as a failure.
 
@@ -37,11 +37,11 @@ To maintain an accurate count of the total items in the filter without creating 
 \subsection{Lookup}
 \label{sec:implementation:lookup}
 
-The parallel lookup algorithm is similar to insertion but is a read-only operation, allowing for more aggressive memory access optimisations. Each thread is assigned an item to look for.
+The parallel lookup algorithm is similar to insertion but is a read-only operation, allowing for more aggressive memory access optimizations. Each thread is assigned an item to look for.
 
 The thread calculates the item's fingerprint and its two candidate bucket indices, just as in the insertion process. It then searches both buckets for a matching fingerprint, again using the fingerprint to determine a random starting point for a linear probe.
 
-The key optimisation in the lookup kernel is the use of vectorised, non-atomic memory loads. Since it can be guaranteed that no other kernel is writing to the filter during a lookup operation, thread safety is not a concern. Modern GPU hardware can load 128 bits (or 16 bytes) in a single instruction. The kernel leverages this by loading two 64-bit words at a time, allowing a thread to check multiple fingerprints with a single memory transaction. As most lookups will find their item (or determine its absence) within the first few slots checked, this approach ensures that the average lookup requires only a single memory access per item, dramatically increasing throughput. The results of the lookup (found or not found) are written to a user-provided output array.
+The key optimization in the lookup kernel is the use of vectorized, non-atomic memory loads. Since it can be guaranteed that no other kernel is writing to the filter during a lookup operation, thread safety is not a concern. Modern GPU hardware can load 128 bits (or 16 bytes) in a single instruction. The kernel leverages this by loading two 64-bit words at a time, allowing a thread to check multiple fingerprints with a single memory transaction. As most lookups will find their item (or determine its absence) within the first few slots checked, this approach ensures that the average lookup requires only a single memory access per item, dramatically increasing throughput. The results of the lookup (found or not found) are written to a user-provided output array.
 
 \subsection{Deletion}
 \label{sec:implementation:deletion}
@@ -55,22 +55,22 @@ The outcome of this atomic operation dictates the thread's next action:
   \item \textbf{If the CAS fails}, it implies that another thread has modified that specific slot in the brief moment after it was found (e.g., by deleting a different item that happened to have the same fingerprint). In this event, the thread's deletion is not yet complete, and it must continue its linear scan through the rest of the bucket(s) to find another instance of the fingerprint to attempt to remove.
 \end{itemize}
 
-This continues until a deletion is successful or both buckets have been fully traversed. This ensures that each deletion request is handled independently and correctly, even in the presence of duplicate fingerprints. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, we again utilise a hierarchical reduction on the success values to minimise contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
+This continues until a deletion is successful, or both buckets have been fully traversed. This ensures that each deletion request is handled independently and correctly, even in the presence of duplicate fingerprints. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, we again utilize a hierarchical reduction on the success values to minimize contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
 
-\section{Optimisation Techniques}
+\section{Optimization Techniques}
 \label{sec:implementation:optimisation-techniques}
 
-Beyond the core algorithm design, several optimisation strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
+Beyond the core algorithm design, several optimization strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
 
 \subsection{Sorted Insertion}
 \label{sec:implementation:optimisation-techniques:sorted}
 
-One version of the insertion algorithm was implemented to enhance memory locality. Before the main insertion kernel is launched, the items are first packed into a temporary structure where the upper bits represent the primary bucket index and the lower bits contain the fingerprint. This array is then sorted in parallel on the GPU using CUB's high-performance radix sort. This ensures that consecutive threads in the subsequent insertion kernel are likely to be working on items that map to the same or nearby buckets. This approach led to a measurable performance increase once the filter size exceeded the GPU's L2 cache, as the random memory accesses of the standard approach were more heavily penalised. However, for filters that fit entirely within the L2 cache (which has a hit rate of over 90\% in these cases), the overhead of the initial packing and sorting pass made this version considerably slower and not worth using.
+One version of the insertion algorithm was implemented to enhance memory locality. Before the main insertion kernel is launched, the items are first packed into a temporary structure where the upper bits represent the primary bucket index and the lower bits contain the fingerprint. This array is then sorted in parallel on the GPU using CUB's high-performance radix sort. Doing this ensures that consecutive threads in the subsequent insertion kernel are likely to be working on items that map to the same or nearby buckets. This approach led to a measurable performance increase once the filter size exceeded the GPU's L2 cache, as the random memory accesses of the standard approach were more heavily penalized. However, for filters that fit entirely within the L2 cache (which has a hit rate of over 90\% in these cases), the overhead of the initial packing and sorting pass made this version considerably slower and not worth using.
 
 \subsection{Alternative Eviction Strategy}
 \label{sec:implementation:optimisation-techniques:eviction}
 
-The standard eviction process uses a greedy, depth-first-search (DFS) approach, where a thread immediately follows the eviction chain of a single displaced item. An alternative strategy was implemented to reduce the average length of these chains. When an eviction is necessary, instead of picking one random item to displace, the thread first inspects a configurable number of candidate fingerprints from the bucket (e.g., half the bucket size). For each candidate, it checks if its alternate bucket has an empty slot. If such a "safe" eviction is found, the swap is performed, and the insertion completes in a single step. If all candidates lead to full alternate buckets, the algorithm falls back to the original DFS-style greedy eviction. This method was found to have a negligible impact when inserting into an empty filter, but it provided a moderate speedup of 15-20\% when inserting into a filter with a high load factor (e.g., 70\% or more), where long eviction chains are more common.
+The standard eviction process uses a greedy, depth-first-search (DFS) approach, where a thread immediately follows the eviction chain of a single displaced item. An alternative strategy was implemented to reduce the average length of these chains. When an eviction is necessary, instead of picking one random item to displace, the thread first inspects a configurable number of candidate fingerprints from the bucket (e.g., half the bucket size). For each candidate, it checks if its alternate bucket has an empty slot. If such a "safe" eviction is found, the swap is performed, and the insertion completes in a single step. If all candidates lead to full alternate buckets, the algorithm falls back to the original DFS-style greedy eviction. This method was found to have a negligible impact when inserting into an empty filter, but it provided a moderate speed-up of 15-20\% when inserting into a filter with a high load factor (e.g., 70\% or more), where long eviction chains are more common.
 
 \section{IPC Wrapper}
 \label{sec:implementation:ipc-wrapper}
@@ -80,10 +80,10 @@ To allow the GPU-accelerated Cuckoo filter to be used as a high-performance, sys
 The architecture is built upon two primary mechanisms: a shared memory queue for communication and CUDA's IPC API for data access. A fixed-size ring buffer, chosen for its superior performance and simplicity in a concurrent environment, is created in a POSIX shared memory segment to act as a command queue. The key is how input data is handled. Instead of sending buffers through the queue, a client performs the following steps:
 
 \begin{enumerate}
-  \item It allocates memory in its own GPU memory space for the batch of items to be processed.
-  \item It obtains opaque memory handles to this device memory using \\
+  \item Allocate memory in its own GPU memory space for the batch of items to be processed.
+  \item Obtain opaque memory handles to this device memory using \\
     \texttt{cudaIpcGetMemHandle}.
-  \item It places these handles inside a request message alongside other metadata like the size of input and output buffers, which is then enqueued into the shared memory ring buffer.
+  \item Place these handles inside a request message alongside other metadata like the size of input and output buffers, which is then enqueued into the shared memory ring buffer.
 \end{enumerate}
 
 The server runs a single worker thread that continuously dequeues requests from this ring buffer. For each request, the server's thread uses \\ \texttt{cudaIpcOpenMemHandle} on the provided handle to obtain a direct, valid device pointer into the \textit{client's} GPU memory space. This allows the server to launch its kernels and read the input keys directly, completely avoiding the significant overhead of inter-process data copies and creating a highly efficient, low-latency communication pipeline.
@@ -93,7 +93,7 @@ The queue is blocking by design, meaning a client attempting to enqueue a reques
 To simplify its use, a client library abstracts away the low-level IPC details. An optional Thrust wrapper is also provided to allow for seamless interaction with \texttt{thrust::device\_vector}. This architecture could be enhanced in several ways in the future:
 
 \begin{itemize}
-  \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximise throughput in high-concurrency scenarios.
+  \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximize throughput in high-concurrency scenarios.
   \item Support could be added for multiple worker threads managing filters on different GPUs to enable further load balancing.
   \item The filter could be exposed over a network by leveraging technologies like RDMA (Remote Direct Memory Access) to preserve the zero-copy transfer properties.
 \end{itemize}
