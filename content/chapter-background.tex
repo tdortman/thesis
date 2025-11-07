@@ -16,9 +16,9 @@ Despite its widespread use, the classic Bloom filter has several notable disadva
 \begin{itemize}
   \item \textbf{No Deletion}: The standard implementation does not support the removal of items, as clearing a bit could inadvertently remove other items that hash to the same location. Variants like the Counting Bloom Filter address this by using counters instead of single bits, but at a significant cost to space efficiency.
   \item \textbf{Linear Complexity}: Lookup and insertion performance is dependent on the number of hash functions, which scales linearly with the number of items. This can lead to performance bottlenecks in high-throughput scenarios.
-  \item \textbf{Poor Memory Locations}: The $k$ hash functions produce indices that are typically scattered across the bit array, leading to poor cache performance. While variants like the Blocked Bloom Filter improve locality, they do so at the expense of a higher false positive rate.
+  \item \textbf{Poor Memory Locality}: The $k$ hash functions produce indices that are typically scattered across the bit array, leading to poor cache performance. While variants like the Blocked Bloom Filter improve locality, they do so at the expense of a higher false positive rate.
   \item \textbf{Degrading Performance}: As the filter fills up and more bits are set to 1, the false positive rate steadily increases, eventually converging to a point where all queries yield a positive result.
-  \item \textbf{Sub-optimal Space}: The optimal space usage for a Bloomfilter is approximately $1.44 \log_2(1/\epsilon)$ bits per element for a desired false positive rate $\epsilon$. While this is efficient, it is not the most space-efficient option available, especially for low false positive rates.
+  \item \textbf{Sub-optimal Space Usage}: The optimal space usage for a Bloom filter is approximately $1.44 \log_2(1/\epsilon)$ bits per element for a desired false positive rate $\epsilon$, which is $44\%$ higher than the information theoretical lower bound.
 \end{itemize}
 
 \subsection{Cuckoo Hashing}
