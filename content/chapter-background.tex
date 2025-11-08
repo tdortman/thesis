@@ -5,16 +5,24 @@
 
 Before diving into the design and implementation of the GPU-accelerated Cuckoo Filter, it is essential to establish a solid theoretical foundation. This chapter provides a comprehensive overview of the key data structures and algorithms that form the basis of this thesis. The discussion begins with the classic Bloom filter, the long-standing benchmark in approximate membership querying. We then introduce Cuckoo hashing, the foundational eviction scheme that gives the Cuckoo filter its name and unique properties. Finally, we detail the Cuckoo filter itself, explaining how it adapts these principles to create a more flexible and often more space-efficient alternative. Understanding these concepts is crucial for contextualizing the design choices and performance trade-offs discussed in the subsequent chapters.
 
-\subsection{Bloom Filters}
-\label{sec:background:bloom-filters}
+\subsection{Bloom Filter}
+\label{sec:background:bloom-filter}
 
 Invented in 1970, the Bloom filter has long been the dominant probabilistic data structure for approximate membership query (AMQ) problems. Its operation is based on a simple yet effective concept: a bit array of size $m$ and a set of $k$ independent hash functions. To insert an item, the item is hashed $k$ times, and each resulting hash value is used as an index to set a bit in the array to 1. To query for an item's membership, the item is again hashed $k$ times. If all corresponding bits in the array are 1, the item is considered to possibly be in the set. However, if even one bit is 0, the item is definitively not in the set.
 
 For a given number of items $n$ and a filter size of $m$ bits, the optimal number of hash functions to minimize the false positive rate is given by
-$$k = \frac{m}{n} \ln 2$$
-and given a false positive rate $\epsilon$, a space-optimized Bloom filter uses
-$$k = \log_2\!\left(\frac{1}{\epsilon}\right)$$
-hash functions. Such a Bloom filter uses $1.44 \log_2(1/\epsilon)$ bits per element.
+
+\begin{equation}
+  k = \frac{m}{n} \ln 2
+\end{equation}
+
+and given a false positive rate $\epsilon$, the number of hash functions used by a space-optimized Bloom filter is given by
+
+\begin{equation}
+  k = \log_2\!\left(\frac{1}{\epsilon}\right)
+\end{equation}
+
+Such a Bloom filter uses $1.44 \log_2(1/\epsilon)$ bits per element.
 
 Despite its widespread use, the classic Bloom filter has several notable disadvantages:
 
@@ -45,8 +53,8 @@ The insertion process is more involved and follows a distinct "cuckoo" eviction 
 
 Deletion is as simple as a lookup, followed by marking the item's slot as free.
 
-\subsection{Cuckoo Filters}
-\label{sec:background:cuckoo-filters}
+\subsection{Cuckoo Filter}
+\label{sec:background:cuckoo-filter}
 
 A Cuckoo filter is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter. It improves upon Cuckoo hashing with several important distinctions.
 
@@ -54,13 +62,16 @@ First, instead of storing entire items, a Cuckoo filter only stores a small fing
 
 Second, it replaces the standard Cuckoo hashing scheme with partial-key cuckoo hashing. This clever technique establishes a dependency between the two potential bucket locations and the item's fingerprint. A single hash function is used to compute an initial location $i_1$ and a fingerprint $f$. The alternate location $i_2$ is then derived using the XOR operation:
 
-$$i_2 = i_1 \oplus hash(f)$$
+\begin{equation}
+  i_2 = i_1 \oplus \mathrm{hash}(f)
+  \label{eq:partial-cuckoo-hashing}
+\end{equation}
 
 Thanks to the symmetric nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus hash(f)$. This allows an evicted fingerprint to calculate its alternate location from its current position and fingerprint alone, without needing the original item or a second hash function.
 
 Because the filter only stores fingerprints, it is possible for two different items to have the same fingerprint, leading to false positives. The probability of such a hash collision is $2^{-f}$, where $f$ is the number of bits in the fingerprint. In practice, the actual false positive rate is slightly higher. For efficiency, the filter is implemented not as a flat array of slots but as an array of fixed-size buckets. Since a lookup requires checking all fingerprints in two potential buckets in the worst case, the false positive rate has an upper bound of approximately $2b * 2^{-f}$, where $b$ is the number of fingerprints stored per bucket.
 
-This reveals a fundamental trade-off in the design of a Cuckoo filters. Increasing the bucket size $b$ reduces the likelihood of insertion failures and allows for higher filter occupancy. However, a larger bucket size also increases the number of fingerprints that must be checked during a lookup, which in turn linearly increases the false positive rate. Therefore, the parameters of a Cuckoo filter must be carefully tuned to balance space utilization against the acceptable rate of false positives.
+This reveals an important trade-off in the design of a Cuckoo filter. Increasing the bucket size $b$ reduces the likelihood of insertion failures and allows for higher filter occupancy. However, a larger bucket size also increases the number of fingerprints that must be checked during a lookup, which in turn linearly increases the false positive rate. Therefore, the parameters must be carefully tuned to balance space utilization against the acceptable rate of false positives.
 
 \section{GPU Computing}
 \label{sec:background:gpu-computing}

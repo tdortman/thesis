@@ -22,7 +22,7 @@ The core of this thesis is the design of parallel algorithms for the Cuckoo filt
 The parallel insertion algorithm is designed to handle a large batch of items in parallel, with each CUDA thread being responsible for inserting a single item. The process for each thread is as follows:
 
 \begin{enumerate}
-  \item \textbf{Hashing and Key Generation}: Each item is first hashed into a 64-bit value using the xxHash64 algorithm, chosen for its high speed and excellent statistical properties. This hash is then split: the upper 32 bits serve as the item's fingerprint, while the lower 32 bits are used as the basis for its primary bucket index. A crucial initial finding was that using the same bits for both the fingerprint and the primary index led to a high probability of identical fingerprints clustering in the same buckets, causing a severe degradation in performance. Thus, distinct parts of the hash are used for each. The alternate bucket index is then calculated using the partial-key cuckoo hashing scheme, which is described in detail in Section \ref{sec:background:cuckoo-filters}.
+  \item \textbf{Hashing and Key Generation}: Each item is first hashed into a 64-bit value using the xxHash64 algorithm, chosen for its high speed and excellent statistical properties. This hash is then split: the upper 32 bits serve as the item's fingerprint, while the lower 32 bits are used as the basis for its primary bucket index. A crucial initial finding was that using the same bits for both the fingerprint and the primary index led to a high probability of identical fingerprints clustering in the same buckets, causing a severe degradation in performance. Thus, distinct parts of the hash are used for each. The alternate bucket index is then calculated using the partial-key cuckoo hashing scheme, which is described in detail in Section \ref{sec:background:cuckoo-filter}.
 
   \item \textbf{Direct Insertion Attempt}: The thread first checks the two candidate buckets for an empty slot. The thread uses the item's fingerprint to generate a random starting offset within each bucket and performs a linear search from that point. If an empty slot is found in either bucket, the fingerprint is inserted via an atomic operation, and the insertion for that item succeeds.
 
@@ -34,6 +34,39 @@ The parallel insertion algorithm is designed to handle a large batch of items in
 
 To maintain an accurate count of the total items in the filter without creating a bottleneck on a single atomic counter, a hierarchical reduction is employed. Each thread that successfully inserts an item contributes a +1. These values are first summed efficiently at the warp level using shuffle instructions, then aggregated at the block level using shared memory, and finally, a single atomic addition per block is performed on the global counter in device memory.
 
+% FIXME: I don't really like this formatting but that's okay, can always change it later
+% tex-fmt: off
+\begin{algorithm}[H]
+  \caption{Parallel Insertion}
+  \label{alg:parallel-insertion}
+\begin{algorithmic}[0]
+  \Function{Insert}{key}
+    \State $h = \mathrm{hash}(\text{key})$
+    \State $fp = \mathrm{upper32}(h)$
+    \State $i_1 = \mathrm{lower32}(h) \bmod N_{\text{buckets}}$
+    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod N_{\text{buckets}}$
+    \If{there is an empty slot in bucket $i_1$ or $i_2$}
+      \State insert $fp$ into an empty slot (atomic)
+      \State \textbf{return} \texttt{Success}
+    \Else
+      \State $\text{tag} = fp$
+      \State $b$ = randomly pick $i_1$ or $i_2$
+      \For{$n = 1$ \textbf{to} \text{maxEvictions}}
+        \State $s$ = random slot in bucket $b$
+        \State $\text{tag} = \text{atomic\_exchange}(buckets[b][s],\ \text{tag})$
+        \State $b = \text{alt\_bucket}(b, \text{tag})$
+        \If{there is an empty slot in bucket $b$}
+          \State insert \text{tag} into an empty slot (atomic)
+          \State \textbf{return} \texttt{Success}
+        \EndIf
+      \EndFor
+      \State \textbf{return} \texttt{Failure}
+    \EndIf
+  \EndFunction
+\end{algorithmic}
+\end{algorithm}
+% tex-fmt: on
+
 \subsection{Lookup}
 \label{sec:implementation:lookup}
 
@@ -43,6 +76,41 @@ The thread calculates the item's fingerprint and its two candidate bucket indice
 
 The key optimization in the lookup kernel is the use of vectorized, non-atomic memory loads. Since it can be guaranteed that no other kernel is writing to the filter during a lookup operation, thread safety is not a concern. Modern GPU hardware can load 128 bits (or 16 bytes) in a single instruction. The kernel leverages this by loading two 64-bit words at a time, allowing a thread to check multiple fingerprints with a single memory transaction. As most lookups will find their item (or determine its absence) within the first few slots checked, this approach ensures that the average lookup requires only a single memory access per item, dramatically increasing throughput. The results of the lookup (found or not found) are written to a user-provided output array.
 
+% tex-fmt: off
+\begin{algorithm}[H]
+  \caption{Parallel Lookup}
+  \label{alg:parallel-lookup}
+\begin{algorithmic}[0]
+  \Function{Contains}{key}
+    \State $h = \mathrm{hash}(\text{key})$
+    \State $fp = \mathrm{upper32}(h)$
+    \State $i_1 = \mathrm{lower32}(h) \bmod N_{\text{buckets}}$
+    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod N_{\text{buckets}}$
+    \State \textbf{return} FindSlot(bucket $i_1$, $fp$) \textbf{or} FindSlot(bucket $i_2$, $fp$)
+  \EndFunction
+  \Statex
+  \Function{FindSlot}{bucket, tag}
+    \State startSlot = tag $\bmod$ bucketSize
+    \State startWord = startSlot / tagsPerWord
+    \State startPair = floorToEven(startWord)
+
+    \For{$i = 0$ \textbf{to} wordCount / 2}
+        \State pairIdx = (startPair + i * 2) $\bmod$ wordCount
+        \State word1, word2 = loadTwoWordsAt(bucket.tags, pairIdx)
+
+        \For{each word \textbf{in} \{word1, word2\}}
+            \For{$j = 0$ \textbf{to} tagsPerWord}
+                \If{extractTag(word, $j$) == tag}
+                    \State \textbf{return} \texttt{Success}
+                \EndIf
+            \EndFor
+        \EndFor
+    \EndFor
+    \State \textbf{return} \texttt{Failure}
+  \EndFunction
+\end{algorithmic}
+\end{algorithm}
+% tex-fmt: on
 \subsection{Deletion}
 \label{sec:implementation:deletion}
 
@@ -56,6 +124,36 @@ The outcome of this atomic operation dictates the thread's next action:
 \end{itemize}
 
 This continues until a deletion is successful, or both buckets have been fully traversed. This ensures that each deletion request is handled independently and correctly, even in the presence of duplicate fingerprints. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, we again utilize a hierarchical reduction on the success values to minimize contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
+
+% tex-fmt: off
+\begin{algorithm}[H]
+  \caption{Parallel Deletion}
+  \label{alg:parallel-deletion}
+\begin{algorithmic}[0]
+  \Function{Remove}{key}
+    \State $h = \mathrm{hash}(\text{key})$
+    \State $fp = \mathrm{fingerprint}(h)$
+    \State $i_1, i_2 = \mathrm{candidate\_buckets}(h, fp)$
+    \State \textbf{return} TryRemove(bucket $i_1$, $fp$) \textbf{or} TryRemove(bucket $i_2$, $fp$)
+  \EndFunction
+  \Statex
+  \Function{TryRemove}{bucket, tag}
+    \State startWord $= (\text{tag} \bmod \text{bucketSize}) / \text{tagsPerWord}$
+    \For{$i = 0$ \textbf{to} wordCount - 1}
+        \State currWord $= (\text{startWord} + i) \bmod \text{wordCount}$
+        \For{$j = 0$ \textbf{to} tagsPerWord - 1}
+            \If{tag at slot $j$ in currWord == tag}
+                \If{atomically replace tag at slot $j$ with EMPTY}
+                    \State \textbf{return} \texttt{Success}
+                \EndIf
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \textbf{return} \texttt{Failure}
+  \EndFunction
+\end{algorithmic}
+\end{algorithm}
+% tex-fmt: on
 
 \section{Optimization Techniques}
 \label{sec:implementation:optimisation-techniques}

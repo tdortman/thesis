@@ -5,3 +5,6 @@
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QPerf join: An alternative to two-way semijoin and bloomjoin\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QOptimal semijoins for distributed database systems\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QNGSReadsTreatment–a Cuckoo Filter-based tool for removing duplicate reads in NGS data\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qeach word word1, word2 \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q to tagsPerWord extractTag(word, \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q) == tag currentWordIdx = pairIdx + (word == word2) return currentWordIdx * tagsPerWord + \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q return -1 Deletion.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qeach word word1, word2 \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q to tagsPerWord extractTag(word, \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q) == tag return Success return -1 Deletion.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qeach word word1, word2 \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q to tagsPerWord extractTag(word, \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q) == tag return Success return Failure Deletion.\\E$"}
