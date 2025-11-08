@@ -102,7 +102,7 @@ The basic unit of execution in CUDA is a thread. When a kernel is launched, it i
 
 \begin{itemize}
   \item \textbf{Threads}: The smallest execution unit. Each thread executes the same kernel code but operates on different data, identified by its unique coordinates within a block.
-  \item \textbf{Blocks}: Threads are grouped into blocks. Threads within the same block can cooperate by sharing data through a fast, on-chip shared memory and can synchronize their execution.
+  \item \textbf{Blocks}: Each block can contain up to 1024 threads, which can work together by sharing data through fast on-chip shared memory and synchronizing their progress.
   \item \textbf{Grid}: Blocks are organized into a grid. All blocks in a grid execute the same kernel. Blocks are assumed to execute independently and in any order, and there is no guaranteed synchronization mechanism between them during a single kernel launch.\footnote{Newer cards support Cooperative Groups, which allow this to an extent}
 \end{itemize}
 
