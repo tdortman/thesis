@@ -86,7 +86,7 @@ The architecture is built upon two primary mechanisms: a shared memory queue for
   \item Place these handles inside a request message alongside other metadata like the size of input and output buffers, which is then enqueued into the shared memory ring buffer.
 \end{enumerate}
 
-The server runs a single worker thread that continuously dequeues requests from this ring buffer. For each request, the server's thread uses \\ \texttt{cudaIpcOpenMemHandle} on the provided handle to obtain a direct, valid device pointer into the \textit{client's} GPU memory space. This allows the server to launch its kernels and read the input keys directly, completely avoiding the significant overhead of inter-process data copies and creating a highly efficient, low-latency communication pipeline.
+The server runs a single worker thread that continuously dequeues requests from this ring buffer. For each request, the server's thread uses \\ \texttt{cudaIpcOpenMemHandle} on the provided handle to obtain a direct, valid device pointer into the \textit{client's} GPU memory space. This allows the server to launch its kernels and read the input keys directly, completely avoiding the significant overhead of inter-process data copies.
 
 The queue is blocking by design, meaning a client attempting to enqueue a request into a full queue will wait until a slot becomes available. The server supports both a graceful shutdown, where it stops accepting new requests but processes all outstanding items, and a forced shutdown that cancels all pending requests.
 
