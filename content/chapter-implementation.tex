@@ -96,7 +96,7 @@ The key optimization in the lookup kernel is the use of vectorized, non-atomic m
 
     \For{$i = 0$ \textbf{to} wordCount / 2}
         \State pairIdx = (startPair + i * 2) $\bmod$ wordCount
-        \State word1, word2 = loadTwoWordsAt(bucket.tags, pairIdx)
+        \State word1, word2 = loadTwoWordsAt(bucket, pairIdx)
 
         \For{each word \textbf{in} \{word1, word2\}}
             \For{$j = 0$ \textbf{to} tagsPerWord}
