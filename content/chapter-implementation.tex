@@ -60,6 +60,8 @@ To maintain an accurate count of the total items in the filter without creating 
           \State \textbf{return} \texttt{Success}
         \EndIf
       \EndFor
+      \LComment{Filter is considered full}
+      \LComment{Caller will have to increase its capacity}
       \State \textbf{return} \texttt{Failure}
     \EndIf
   \EndFunction
