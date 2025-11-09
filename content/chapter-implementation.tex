@@ -149,7 +149,7 @@ The parallel lookup algorithm is similar to insertion but is a read-only operati
 
 The thread calculates the item's fingerprint and its two candidate bucket indices, just as in the insertion process. It then searches both buckets for a matching fingerprint, again using the fingerprint to determine a random starting point for a linear probe.
 
-The key optimization in the lookup kernel is the use of vectorized, non-atomic memory loads. Since it can be guaranteed that no other kernel is writing to the filter during a lookup operation, thread safety is not a concern. Modern GPU hardware can load 128 bits (or 16 bytes) in a single instruction. The kernel leverages this by loading two 64-bit words at a time, allowing a thread to check multiple fingerprints with a single memory transaction. As most lookups will find their item (or determine its absence) within the first few slots checked, this approach ensures that the average lookup requires only a single memory access per item, dramatically increasing throughput. The results of the lookup (found or not found) are written to a user-provided output array.
+The key optimization in the lookup kernel is the use of vectorized, non-atomic memory loads. Since it can be guaranteed that no other kernel is writing to the filter during a lookup operation, thread safety is not a concern. Modern GPU hardware can load 128 bits (or 16 bytes) in a single instruction. The kernel leverages this by loading two 64-bit words at a time, allowing a thread to check multiple fingerprints with a single memory transaction and dramatically increasing throughput. The results of the lookup (found or not found) are written to a user-provided output array.
 
 % tex-fmt: off
 \begin{algorithm}[H]
