@@ -39,15 +39,19 @@ Despite its widespread use, the classic Bloom filter has several notable disadva
 
 Cuckoo hashing is a hashing scheme that provides $O(1)$ worst-case lookup time. Its name is derived from the cuckoo bird, which is known for laying its eggs in the nests of other birds, often forcing the original occupants out.
 
-The scheme uses two independent hash functions, $h_1$ and $h_2$, which map any given item $x$ to two potential locations in a hash table. A lookup operation is therefore guaranteed to be $O(1)$, as one only needs to check the positions $h_1(x)$ and $h_2(x)$.
+The scheme operates on a hash table with $m$ slots and uses two independent hash functions, $h_1$ and $h_2$, which map any given item $x$ to two potential locations in a hash table. A lookup operation is therefore guaranteed to be $O(1)$, as one only needs to check the positions $h_1(x) \bmod m$ and $h_2(x) \bmod m$.
 
 The insertion process is more involved and follows a distinct "cuckoo" eviction protocol:
 
 \begin{enumerate}
-  \item For a new item $x$, its two potential locations $i_1 = h_1(x)$ and $i_2 = h_2(x)$ are computed.
+  \item For a new item $x$, its two potential locations $i_1 = h_1(x) \bmod m$ and \\ $i_2 = h_2(x) \bmod m$ are computed.
+
   \item If either location is empty, the item is placed there and the insertion is complete.
+
   \item If both slots are occupied, an existing item (say $y$) is evicted from one of the locations (e.g., $i_1$), and $x$ is placed there.
-  \item The evicted item $y$ is then reinserted into its alternate location $i_2 = h_2(y)$. If that location is also occupied, the process repeats, potentially leading to a chain of evictions.
+
+  \item The evicted item $y$ is then reinserted into its alternate location \\ $i_2 = h_2(y) \bmod m$. If that location is also occupied, the process repeats, potentially leading to a chain of evictions.
+
   \item To prevent infinite loops, a maximum number of evictions is set. If this limit is reached, the table is resized, and all items are rehashed.
 \end{enumerate}
 
