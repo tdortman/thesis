@@ -42,17 +42,17 @@ To maintain an accurate count of the total items in the filter without creating 
 \begin{algorithmic}[0]
   \Function{Insert}{key}
     \State $h = \mathrm{hash}(\text{key})$
-    \State $fp = \mathrm{upper32}(h)$
-    \State $i_1 = \mathrm{lower32}(h) \bmod N_{\text{buckets}}$
-    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod N_{\text{buckets}}$
+    \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
+    \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
+    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
     \If{there is an empty slot in bucket $i_1$ or $i_2$}
       \State insert $fp$ into an empty slot (atomic)
       \State \textbf{return} \texttt{Success}
     \Else
       \State $\text{tag} = fp$
-      \State $b$ = randomly pick $i_1$ or $i_2$
+      \State $b =$ randomly pick $i_1$ or $i_2$
       \For{$n = 1$ \textbf{to} \text{maxEvictions}}
-        \State $s$ = random slot in bucket $b$
+        \State $s =$ random slot in bucket $b$
         \State $\text{tag} = \text{atomic\_exchange}(buckets[b][s],\ \text{tag})$
         \State $b = \text{alt\_bucket}(b, \text{tag})$
         \If{there is an empty slot in bucket $b$}
@@ -85,20 +85,20 @@ The key optimization in the lookup kernel is the use of vectorized, non-atomic m
 \begin{algorithmic}[0]
   \Function{Contains}{key}
     \State $h = \mathrm{hash}(\text{key})$
-    \State $fp = \mathrm{upper32}(h)$
-    \State $i_1 = \mathrm{lower32}(h) \bmod N_{\text{buckets}}$
-    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod N_{\text{buckets}}$
+    \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
+    \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
+    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
     \State \textbf{return} FindSlot(bucket $i_1$, $fp$) \textbf{or} FindSlot(bucket $i_2$, $fp$)
   \EndFunction
   \Statex
   \Function{FindSlot}{bucket, tag}
-    \State startSlot = tag $\bmod$ bucketSize
-    \State startWord = startSlot / tagsPerWord
-    \State startPair = floorToEven(startWord)
+    \State startSlot $=$ tag $\bmod$ bucketSize
+    \State startWord $=$ startSlot / tagsPerWord
+    \State startPair $=$ floorToEven(startWord)
 
     \For{$i = 0$ \textbf{to} wordCount / 2}
-        \State pairIdx = (startPair + i * 2) $\bmod$ wordCount
-        \State word1, word2 = loadTwoWordsAt(bucket, pairIdx)
+        \State pairIdx $=$ (startPair + i * 2) $\bmod$ wordCount
+        \State word1, word2 $=$ loadTwoWordsAt(bucket, pairIdx)
 
         \For{each word \textbf{in} \{word1, word2\}}
             \For{$j = 0$ \textbf{to} tagsPerWord}
@@ -134,8 +134,9 @@ This continues until a deletion is successful, or both buckets have been fully t
 \begin{algorithmic}[0]
   \Function{Remove}{key}
     \State $h = \mathrm{hash}(\text{key})$
-    \State $fp = \mathrm{fingerprint}(h)$
-    \State $i_1, i_2 = \mathrm{candidate\_buckets}(h, fp)$
+    \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
+    \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
+    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
     \State \textbf{return} TryRemove(bucket $i_1$, $fp$) \textbf{or} TryRemove(bucket $i_2$, $fp$)
   \EndFunction
   \Statex
@@ -144,7 +145,7 @@ This continues until a deletion is successful, or both buckets have been fully t
     \For{$i = 0$ \textbf{to} wordCount - 1}
         \State currWord $= (\text{startWord} + i) \bmod \text{wordCount}$
         \For{$j = 0$ \textbf{to} tagsPerWord - 1}
-            \If{tag at slot $j$ in currWord == tag}
+            \If{tag at slot $j$ in currWord $==$ tag}
                 \If{atomically replace tag at slot $j$ with EMPTY}
                     \State \textbf{return} \texttt{Success}
                 \EndIf
