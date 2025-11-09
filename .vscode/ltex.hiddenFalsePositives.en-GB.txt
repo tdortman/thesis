@@ -8,3 +8,24 @@
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qeach word word1, word2 \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q to tagsPerWord extractTag(word, \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q) == tag currentWordIdx = pairIdx + (word == word2) return currentWordIdx * tagsPerWord + \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q return -1 Deletion.\\E$"}
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qeach word word1, word2 \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q to tagsPerWord extractTag(word, \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q) == tag return Success return -1 Deletion.\\E$"}
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qeach word word1, word2 \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q to tagsPerWord extractTag(word, \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q) == tag return Success return Failure Deletion.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qexplicit CuckooFilter(sizet capacity).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qexplicit CuckooFilter(sizet capacity).\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet insertMany(const T* dkeys, const sizet n).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qsizet insertMany(const T* dkeys, const sizet n).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QThis function attempts to insert a batch of n items from a buffer in device memory pointed to by dkeys.\\E$"}
+{"rule":"COMMA_COMPOUND_SENTENCE_2","sentence":"^\\QIt is the caller's responsibility to ensure the pointer is valid and the buffer is sufficiently large.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet insertManySorted(const T* dkeys, const sizet n).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qsizet insertManySorted(const T* dkeys, const sizet n).\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QThis approach generally outperforms the standard insertMany when the filter is too large to fit into the GPU's L2 cache.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QThis approach generally outperforms the standard insertMany when the filter is too large to fit into the GPU's L2 cache.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qvoid containsMany(const T* dkeys, const sizet n, bool* doutput).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qvoid containsMany(const T* dkeys, const sizet n, bool* doutput).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QThe results are written to the doutput device buffer, where the boolean at each index corresponds to whether the item at the same index in dkeys was found.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet deleteMany(const T* dkeys, const sizet n, bool* doutput = nullptr).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qsizet deleteMany(const T* dkeys, const sizet n, bool* doutput = nullptr).\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QIf the optional doutput buffer is provided, the success or failure of each individual deletion is reported in the same manner as the lookup operation.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qvoid clear().\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qfloat loadFactor().\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qfloat loadFactor().\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet countOccupiedSlots().\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qsizet countOccupiedSlots().\\E$"}

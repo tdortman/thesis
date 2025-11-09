@@ -9,7 +9,80 @@
 \section{Data Structure Design}
 \label{sec:implementation:data-structure-design}
 
-\blindtext
+The design of the GPU-accelerated Cuckoo filter emphasizes compile-time configuration and a memory layout optimized for parallel access patterns. This section details these design choices, from the high-level configuration structure down to the public-facing API.
+
+\subsection{Compile-Time Configuration}
+\label{sec:implementation:data-structure-design:comptime-config}
+
+To maximize performance by allowing the compiler to generate highly specialized code, the filter's core parameters are defined at compile-time as template arguments. These parameters are consolidated into a single configuration structure, \texttt{CuckooConfig}, which provides a clean and explicit way to instantiate the filter. The primary configuration options are:
+
+\begin{itemize}
+  \item \texttt{bitsPerTag}: Defines the size of each fingerprint in bits. The implementation is specialized for values of 8, 16, or 32, which align well with standard integer types.
+
+  \item \texttt{bucketSize}: Specifies the number of fingerprints stored in each bucket. A smaller bucket size generally leads to a lower false positive rate but can negatively impact insertion performance and overall occupancy. A default of 16 was chosen through empirical performance testing.
+
+  \item \texttt{maxEvictions}: Sets the maximum number of displacements a single thread is allowed to perform during an insertion attempt before it gives up and reports a failure. The default value of 500 was determined empirically.
+
+  \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels. This parameter can be tuned to optimize GPU occupancy for different hardware architectures.
+
+  \item \texttt{HashStrategy}: A template parameter that accepts a strategy class. This class encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket from its primary one. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but an alternative "Additive and Subtractive Cuckoo Filter" strategy has also been implemented to demonstrate this flexibility.
+\end{itemize}
+
+Throughout the implementation, \texttt{static\_assert} statements are used to enforce critical invariants at compile time, such as ensuring that certain parameters are powers of two to allow for efficient bitwise AND operations instead of more costly modulo arithmetic.
+
+\subsection{Memory Layout and State Management}
+\label{sec:implementation:mem-layout-state}
+
+The filter's primary data storage is a single, contiguous linear array of fixed-size buckets allocated in the GPU's global memory. To maximize memory bandwidth and avoid misaligned access, the internal layout is carefully structured:
+
+\begin{itemize}
+  \item Each bucket is composed of an array of 64-bit unsigned integer words.
+
+  \item Fingerprints (\texttt{tags}) are tightly packed within these 64-bit words. For example, a 64-bit word can hold eight 8-bit fingerprints or four 16-bit fingerprints.
+\end{itemize}
+
+This packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints. However, the computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off.
+
+The filter's state is maintained by a single global atomic counter that tracks the total number of occupied slots. This counter resides in device memory and is updated atomically by the insertion and deletion kernels. Its value is only lazily copied to the host when an explicit query is made, minimizing host-device communication.
+
+Due to a limitation of CUDA C++ where kernels cannot be class members, the implementation passes a pointer to the filter's class instance (\texttt{this}) to each launched kernel. This allows the threads to access the filter's configuration and state, such as data pointers and capacity, as needed.
+
+\subsection{Public API}
+\label{sec:implementation:api}
+
+The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a "traditional" C-style API that operates on raw device pointers and item counts, and, if the Thrust library is available, a set of convenience wrappers that accept \texttt{thrust::device\_vector} objects.
+
+\subsubsection{\texttt{explicit CuckooFilter(size\_t capacity)}}
+
+The constructor takes a single argument for the desired capacity in terms of the number of items. It guarantees that at least this many items can be stored. Depending on the chosen \texttt{HashStrategy}, the actual allocated capacity may be larger. For example, the default XOR-based strategy requires the number of buckets to be a power of two, so the requested capacity is rounded up to the next suitable size.
+
+\subsubsection{\texttt{size\_t insertMany(const T* d\_keys, const size\_t n)}}
+
+This function attempts to insert a batch of \texttt{n} items from a buffer in device memory pointed to by \texttt{d\_keys}. It is the caller's responsibility to ensure the pointer is valid and the buffer is sufficiently large. The function returns the updated total number of occupied slots in the filter after the insertion attempt.
+
+\subsubsection{\texttt{size\_t insertManySorted(const T* d\_keys, const size\_t n)}}
+
+This variant offers an alternative insertion strategy focused on improving memory locality. Before insertion, it first computes each item's primary bucket index and packs it with its fingerprint. This array of packed tags is then sorted on the GPU using CUB's radix sort. This ensures that threads with adjacent indices are highly likely to be accessing the same memory region. This approach generally outperforms the standard \texttt{insertMany} when the filter is too large to fit into the GPU's L2 cache. However, it incurs higher peak memory usage and is slower for smaller, cache-resident filters due to the overhead of the packing and sorting steps.
+
+\subsubsection{\texttt{void containsMany(const T* d\_keys, const size\_t n, bool* d\_output)}}
+
+Performs a batch lookup for \texttt{n} items. The results are written to the \texttt{d\_output} device buffer, where the boolean at each index corresponds to whether the item at the same index in \texttt{d\_keys} was found.
+
+\subsubsection{\texttt{size\_t deleteMany(const T* d\_keys, const size\_t n, bool* d\_output = nullptr)}}
+
+Performs a batch deletion of \texttt{n} items. If the optional \texttt{d\_output} buffer is provided, the success or failure of each individual deletion is reported in the same manner as the lookup operation.
+
+\subsubsection{\texttt{void clear()}}
+
+Resets the internal state of the filter by setting all buckets and the occupancy counter to zero. This operation does not deallocate any device memory.
+
+\subsubsection{\texttt{float loadFactor()}}
+
+Returns the current load factor of the filter, calculated as the number of occupied slots divided by the total capacity.
+
+\subsubsection{\texttt{size\_t countOccupiedSlots()}}
+
+A debugging utility that provides a ground-truth count of occupied slots. It operates by copying the entire filter data to the host and manually counting every non-zero fingerprint. As this is an extremely slow, synchronous operation, it should only be used for verification purposes if the internal atomic counter is suspected to be inaccurate.
 
 \section{Parallel Algorithms}
 \label{sec:implementation:parallel-algorithms}
@@ -161,7 +234,7 @@ This continues until a deletion is successful, or both buckets have been fully t
 \section{Optimization Techniques}
 \label{sec:implementation:optimisation-techniques}
 
-Beyond the core algorithm design, several optimization strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
+Beyond the core algorithm design, some noteworthy optimization strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
 
 \subsection{Sorted Insertion}
 \label{sec:implementation:optimisation-techniques:sorted}
