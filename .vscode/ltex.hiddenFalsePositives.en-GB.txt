@@ -29,3 +29,4 @@
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qfloat loadFactor().\\E$"}
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet countOccupiedSlots().\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qsizet countOccupiedSlots().\\E$"}
+{"rule":"A_INFINITIVE","sentence":"^\\QFor example, the GPU can be copying the next chunk of data from the host while simultaneously processing the current chunk, effectively hiding the latency of the PCIe bus transfer and keeping the compute cores busy.\\E$"}
