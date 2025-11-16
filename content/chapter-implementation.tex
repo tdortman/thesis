@@ -272,6 +272,43 @@ To simplify its use, a client library abstracts away the low-level IPC details. 
   \item The filter could be exposed over a network by leveraging technologies like RDMA (Remote Direct Memory Access) to preserve the zero-copy transfer properties.
 \end{itemize}
 
+\section{Multi-GPU}
+\label{sec:implementation:multi-gpu}
+
+To handle datasets that exceed the memory capacity of a single graphics card, a multi-GPU version of the Cuckoo filter was implemented. This version transparently partitions the data and workload across all available devices, presenting a unified interface to the user. This approach, however, necessitates a shift in the public API, as the input and output buffers must now reside in host memory to accommodate their potentially massive size.
+
+\subsection{Architectural Design}
+\label{sec:implementation:multi-gpu-arch}
+
+The core design choice was to instantiate a completely independent Cuckoo filter instance on each GPU, each managing its own dedicated device memory. While a single, logically distributed filter was considered, the practical overhead of managing eviction chains across the high-latency interconnect between GPUs was deemed prohibitive, as it would severely compromise insertion performance.
+
+To distribute items across these independent filters, a deterministic partitioning scheme is used. Each key is assigned to a specific GPU based on the result of $hash(key) \bmod n$, where $n$ is the number of GPUs. While a uniform hash function would distribute keys evenly, minor variances are expected in practice. To account for this and prevent premature insertion failures on one device, each GPU's filter is allocated slightly more capacity (2\%) than its proportional share.
+
+\subsection{Data Distribution and Processing}
+\label{sec:implementation:multi-gpu-distribution}
+
+Distributing the input data from the host to the correct GPU partition is a critical and complex challenge. A naive approach involving a single "primary" GPU that partitions and distributes all data creates a severe load imbalance, leaving other GPUs idle. Therefore, a fully parallelized, multi-stage workflow was implemented:
+
+\begin{enumerate}
+  \item \textbf{Initial Data Scatter}: The host-side input array is processed in large chunks. Each GPU copies a distinct and proportional sub-chunk from the host into its own device memory in parallel.
+
+  \item \textbf{Local Partitioning}: Each GPU processes its local sub-chunk, hashing each key to determine its target GPU partition.
+
+  \item \textbf{Communication and Exchange}: To efficiently exchange data, the NVIDIA Collective Communications Library (NCCL) is utilized. The GPUs first perform a collective communication to share the sizes of each partition they hold. This allows every GPU to allocate a sufficiently large buffer to receive all the keys destined for it. Following this, a single, highly optimized All-to-All communication is performed, where each GPU sends its locally computed partitions to their target GPUs. NCCL automatically leverages the fastest available interconnects (like NVLink) to make this exchange as efficient as possible.
+
+  \item \textbf{Parallel Processing}: Once the All-to-All exchange is complete, each GPU holds all the keys that belong to its partition. At this point, each GPU can proceed to execute the standard single-GPU insertion, lookup, or deletion kernel on its local data, fully in parallel with the other devices.
+\end{enumerate}
+
+\subsection{Result Consolidation}
+\label{sec:implementation:multi-gpu-results}
+
+For lookup and deletion operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order. To solve this efficiently, the results are sent back to the GPUs that originally held the keys (pre-partitioning). This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order. This avoids numerous small, inefficient memory copies and preserves the parallelism of the overall process.
+
+\subsection{Challenges and Overheads}
+\label{sec:implementation:multi-gpu-challenges}
+
+The multi-GPU implementation, while powerful, introduces its own set of overheads. The data partitioning stage on each GPU requires at least one sorting pass, a reduction, and an exclusive prefix-sum to manage the data. These operations are accelerated using the Thrust library, which itself requires significant temporary storage. This increased memory pressure on each GPU means that the processable chunk size must be carefully managed to avoid running out of device memory during the partitioning phase.
+
 \section{Testing and Verification}
 \label{sec:implementation:testing-and-verification}
 
