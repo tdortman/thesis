@@ -9,10 +9,10 @@ Beyond the baseline algorithms, some advanced optimization techniques are explor
 
 Finally, two major extensions are presented that elevate the filter from a single-GPU data structure to a system-level component. An Inter-Process Communication (IPC) wrapper is detailed, which enables zero-copy sharing of the filter between multiple processes on the same machine. To address datasets larger than a single GPU's memory, the following section then describes a multi-GPU implementation that partitions the workload and data across multiple devices, using high-speed interconnects for efficient communication.
 
-\section{Implementation Challenges}
+\section{Challenges}
 \label{sec:implementation:challenges}
 
-Based on the GPU architecture and programming principles discussed in Chapter 2, translating the Cuckoo filter algorithm into a performant parallel implementation presents several specific technical hurdles. The following challenges directly influenced the design and optimization of the kernels detailed in this chapter:
+Based on the GPU architecture and programming principles discussed in Chapter \ref{sec:background}, translating the Cuckoo filter algorithm into a performant parallel implementation presents several specific technical hurdles. The following challenges directly influenced the design and optimization of the kernels detailed in this chapter:
 
 \begin{itemize}
   \item \textbf{Managing Concurrency and Race Conditions}: A naive parallel implementation where thousands of GPU threads attempt to read and write to the same buckets simultaneously would lead to race conditions and data corruption. Designing an efficient, lock-free mechanism using atomic operations to handle these concurrent memory accesses is one of the primary challenges.
