@@ -1,10 +1,28 @@
 \chapter{Implementation}
 \label{sec:implementation}
 
-\section{Overview}
-\label{sec:implementation:overview}
+This chapter details the complete software implementation of the GPU-accelerated Cuckoo filter, translating the theoretical concepts from the previous chapter into a concrete, high-performance software artifact. The primary goal of the implementation is to provide a library that is not only fast but also robust, configurable, and scalable.
 
-\blindtext
+The chapter begins by outlining the fundamental design of the data structure itself, covering its compile-time configuration options via a flexible template-based system, its memory layout optimized for parallel hardware, and its comprehensive public-facing API. Following this, the chapter dives into the core of the implementation: the parallel algorithms for insertion, lookup, and deletion. Each operation is presented as a CUDA kernel, with detailed explanations of the logic used to handle concurrency, manage the eviction process, and ensure correctness.
+
+Beyond the baseline algorithms, some advanced optimization techniques are explored. These include a sorted insertion strategy to improve memory locality for large, out-of-cache filters, and an alternative eviction method designed to reduce the amount of necessary evictions at high load factors.
+
+Finally, two major extensions are presented that elevate the filter from a single-GPU data structure to a system-level component. An Inter-Process Communication (IPC) wrapper is detailed, which enables zero-copy sharing of the filter between multiple processes on the same machine. To address datasets larger than a single GPU's memory, the following section then describes a multi-GPU implementation that partitions the workload and data across multiple devices, using high-speed interconnects for efficient communication.
+
+\section{Implementation Challenges}
+\label{sec:implementation:challenges}
+
+Based on the GPU architecture and programming principles discussed in Chapter 2, translating the Cuckoo filter algorithm into a performant parallel implementation presents several specific technical hurdles. The following challenges directly influenced the design and optimization of the kernels detailed in this chapter:
+
+\begin{itemize}
+  \item \textbf{Managing Concurrency and Race Conditions}: A naive parallel implementation where thousands of GPU threads attempt to read and write to the same buckets simultaneously would lead to race conditions and data corruption. Designing an efficient, lock-free mechanism using atomic operations to handle these concurrent memory accesses is one of the primary challenges.
+
+  \item \textbf{Parallelizing the Eviction Path}: During an insertion, if both candidate buckets are full, an existing item must be evicted and reinserted into its alternate location. This eviction process can cascade, leading to multiple displacements. Parallelizing this inherently path-dependent process is complex, as it requires careful coordination to ensure that threads do not interfere with each other's operations or create deadlocks.
+
+  \item \textbf{Optimizing for Coalesced Memory Access}: GPUs are highly sensitive to memory access patterns. Coalesced memory accesses, where threads in a warp access contiguous memory locations, are crucial for achieving high throughput. The random-access nature of Cuckoo filter operations can lead to scattered, uncoalesced memory accesses, which severely degrade performance. Developing strategies like data sorting to improve memory locality is essential.
+
+  \item \textbf{Balancing Occupancy and Register Pressure}: Achieving a high and balanced occupancy across the filter is key to its space efficiency. However, complex insertion logic can increase the number of registers used per thread. High register usage can limit the number of active warps on a Streaming Multiprocessor (SM), thereby reducing occupancy and the hardware's ability to hide memory latency.
+\end{itemize}
 
 \section{Data Structure Design}
 \label{sec:implementation:data-structure-design}
@@ -198,7 +216,7 @@ The outcome of this atomic operation dictates the thread's next action:
   \item \textbf{If the CAS fails}, it implies that another thread has modified that specific slot in the brief moment after it was found (e.g., by deleting a different item that happened to have the same fingerprint). In this event, the thread's deletion is not yet complete, and it must continue its linear scan through the rest of the bucket(s) to find another instance of the fingerprint to attempt to remove.
 \end{itemize}
 
-This continues until a deletion is successful, or both buckets have been fully traversed. This ensures that each deletion request is handled independently and correctly, even in the presence of duplicate fingerprints. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, we again utilize a hierarchical reduction on the success values to minimize contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
+This continues until a deletion is successful, or both buckets have been fully traversed. This ensures that each deletion request is handled independently and correctly, even in the presence of duplicate fingerprints. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, a hierarchical reduction on the success values is used to minimize contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
 
 % tex-fmt: off
 \begin{algorithm}[H]
