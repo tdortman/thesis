@@ -22,7 +22,7 @@ For a given number of items $n$ and a filter size of $m$ bits, the optimal numbe
 and given a false positive rate $\epsilon$, the number of hash functions used by a space-optimized Bloom filter is given by
 
 \begin{equation}
-  k = \log_2\!\left(\frac{1}{\epsilon}\right)
+  k = \log_2(1/\epsilon)
 \end{equation}
 
 Such a filter uses $1.44 \log_2(1/\epsilon)$ bits per element.
@@ -46,7 +46,7 @@ Instead of a single monolithic bit array, the Blocked Bloom Filter partitions th
 
 The primary advantage of this design is a dramatic improvement in memory locality. All $k$ memory accesses for a single item are now confined to a small, contiguous memory region. This is highly beneficial for modern CPU caches and, more importantly for this thesis, is extremely well-suited to the parallel memory access patterns of GPUs. When multiple threads in a warp process items that map to the same block, their memory requests can be coalesced into a single transaction, significantly improving memory bandwidth utilization.
 
-However, this performance gain comes at the cost of a higher false positive rate for the same amount of memory. By partitioning the filter, the Blocked Bloom Filter loses the "averaging" effect of the classic design. If an unlucky distribution of items causes one block to become heavily saturated, its local false positive rate will increase dramatically, and this "hot spot" can dominate the overall false positive rate of the entire structure. Therefore, the Blocked Bloom Filter represents a direct trade-off: it sacrifices some statistical efficiency for significantly better memory system performance, making it a crucial and highly relevant baseline for evaluating cache-aware and GPU-accelerated data structures.
+However, this performance gain comes at the cost of a higher false positive rate for the same amount of memory. By partitioning the filter, the Blocked Bloom Filter loses the "averaging" effect of the classic design. If an unlucky distribution of items causes one block to become heavily saturated, its local false positive rate will increase dramatically, and this "hotspot" can dominate the overall false positive rate of the entire structure. Therefore, the Blocked Bloom Filter represents a direct trade-off: it sacrifices some statistical efficiency for significantly better performance, making it a crucial and highly relevant baseline for evaluating cache-aware and GPU-accelerated data structures.
 
 \subsection{Cuckoo Hashing}
 \label{sec:background:cuckoo-hashing}
@@ -60,7 +60,7 @@ The insertion process is more involved and follows a distinct "cuckoo" eviction 
 \begin{enumerate}
   \item For a new item $x$, its two potential locations $i_1 = h_1(x) \bmod r$ and \\ $i_2 = h_2(x) \bmod r$ are computed.
 
-  \item If either $\mathrm{T}_1[\mathrm{i}_1]$ or $\mathrm{T}_2[\mathrm{i}]$ is empty, the item is placed there, and the insertion is complete.
+  \item If either $\mathrm{T}_1[\mathrm{i}_1]$ or $\mathrm{T}_2[\mathrm{i}_2]$ is empty, the item is placed there, and the insertion is complete.
 
   \item If both slots are occupied, an existing item (say $y$) is evicted from one of the location (e.g. $i_1$) and $x$ is placed there.
 
@@ -102,7 +102,7 @@ Second, it replaces the standard Cuckoo hashing scheme with partial-key cuckoo h
   \label{eq:partial-cuckoo-hashing}
 \end{equation}
 
-Thanks to the symmetric nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus hash(f)$. This allows an evicted fingerprint to calculate its alternate location from its current position and its own fingerprint alone, a crucial feature since the original item is not stored.
+Thanks to the symmetric nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus \mathrm{hash}(f)$. This allows an evicted fingerprint to calculate its alternate location from its current position and its own fingerprint alone, a crucial feature since the original item is not stored.
 
 \subsubsection{Core Operations}
 \label{sec:background:cuckoo-filter:operations}
@@ -112,9 +112,9 @@ The Cuckoo filter is implemented as an array of buckets, where each bucket can s
 \begin{itemize}
   \item \textbf{Insertion}: To insert an item $x$, its fingerprint $f$ and two candidate buckets $i_1$ and $i_2$ are calculated. If there is an empty slot in either bucket, $f$ is placed here. If both buckets are full, one of the existing fingerprints is randomly chosen as a victim, evicted from its slot, and replaced by $f$. This victim fingerprint is then re-inserted into its own alternate bucket, which may in turn cause another eviction. This process repeats for a fixed maximum number of kicks. If the chain of evictions exceeds this limit, insertion fails, and the table is considered full.
 
-  \item \textbf{Lookup}: To check for an item $x$, its fingerprint $f$ and two candidate buckets, $i_1$ and $i_2$, are calculated. The algorithm then reads both buckets and checks if any of the stored fingerprints match $f$. If a match is found, it returns true; otherwise, it returns false.
+  \item \textbf{Lookup}: To check for an item $x$, its fingerprint $f$ and two candidate buckets $i_1$ and $i_2$ are calculated. The algorithm then reads both buckets and checks if any of the stored fingerprints match $f$. If a match is found, it returns true. Otherwise, it returns false.
 
-  \item \textbf{Deletion}: To delete an item $x$, its fingerprint $f$ and candidate buckets $i_1$ and $i_2$ are calculated. The algorithm searches both buckets, and if a matching fingerprint is found, one copy of it is removed. A key requirement for safe deletion is that the item must have been previously inserted; attempting to delete a non-existent item could accidentally remove a different item that happens to have the same fingerprint and maps to the same buckets.
+  \item \textbf{Deletion}: To delete an item $x$, its fingerprint $f$ and candidate buckets $i_1$ and $i_2$ are calculated. The algorithm searches both buckets, and if a matching fingerprint is found, one copy of it is removed. A key requirement for safe deletion is that the item must have been previously inserted. Attempting to delete a non-existent item could accidentally remove a different item that happens to have the same fingerprint and maps to the same buckets.
 \end{itemize}
 
 \subsubsection{Design and Performance Characteristics}
