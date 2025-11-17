@@ -30,3 +30,10 @@
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet countOccupiedSlots().\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qsizet countOccupiedSlots().\\E$"}
 {"rule":"A_INFINITIVE","sentence":"^\\QFor example, the GPU can be copying the next chunk of data from the host while simultaneously processing the current chunk, effectively hiding the latency of the PCIe bus transfer and keeping the compute cores busy.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QProceedings of the 28th ACM SIGPLAN Annual Symposium on Principles and Practice of Parallel Programming\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QPPoPP '23\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QSTOC '94\\E$"}
+{"rule":"EN_SPECIFIC_CASE","sentence":"^\\QRobin hood hashing\\E$"}
+{"rule":"SMALL_NUMBER_OF","sentence":"^\\QOperations on the quotient filter require only a small number of contiguous accesses.\\E$"}
+{"rule":"SENTENCE_WHITESPACE","sentence":"^\\QThe paper then gives two data structures, the buffered quotient filter and the cascade filter, which exploit the quotient filter advantages and thus serve as SSD-optimized alternatives to the Bloom filter.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QProc.\\E$"}
