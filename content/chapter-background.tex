@@ -53,18 +53,18 @@ However, this performance gain comes at the cost of a higher false positive rate
 
 Cuckoo hashing, introduced by Pagh and Rodler in 2004 \cite{pagh2004cuckoo}, is a powerful hashing scheme that provides a significant advantage over many others: a worst-case $O(1)$ lookup time \cite{pagh2004cuckoo}. Its name is derived from the cuckoo bird, which is known for laying its eggs in the nests of other birds, often forcing the original occupants out. The scheme's elegance lies in its conceptual simplicity compared to previous methods that also offered worst-case constant lookup guarantees.
 
-In its original formulation, the scheme uses two independent hash tables, $T_1$ and $T_2$, each of size $r$, and two independent hash functions $h_1$ and $h_2$. The core invariant of Cuckoo hashing is that for any given item $x$, it is stored in one of two possible locations: either $\mathrm{T}_1[\mathrm{h}_1(x)]$ or $\mathrm{T}_2[\mathrm{h}_2(x)]$. A lookup operation is therefore guaranteed to be $O(1)$, as it only requires checking these two specific locations. A crucial feature highlighted by the authors is that these two memory accesses are independent and can be performed in parallel, a property that is highly relevant for a GPU implementation.
+In its original formulation, the scheme uses two independent hash tables, $T_1$ and $T_2$, each of size $r$, and two independent hash functions $h_1$ and $h_2$. The core invariant of Cuckoo hashing is that for any given item $x$, it is stored in one of two possible locations: either $\mathrm{T}_1[\mathrm{h}_1(x) \bmod r]$ or $\mathrm{T}_2[\mathrm{h}_2(x) \bmod r]$. A lookup operation is therefore guaranteed to be $O(1)$, as it only requires checking these two specific locations. A crucial feature highlighted by the authors is that these two memory accesses are independent and can be performed in parallel, a property that is highly relevant for a GPU implementation.
 
 The insertion process is more involved and follows a distinct "cuckoo" eviction protocol:
 
 \begin{enumerate}
-  \item For a new item $x$, its two potential locations $i_1 = h_1(x) \bmod m$ and \\ $i_2 = h_2(x) \bmod m$ are computed.
+  \item For a new item $x$, its two potential locations $i_1 = h_1(x) \bmod r$ and \\ $i_2 = h_2(x) \bmod r$ are computed.
 
-  \item If either $\mathrm{T}_1[\mathrm{h}_1(x)]$ or $\mathrm{T}_2[\mathrm{h}_2(x)]$ is empty, the item is placed there, and the insertion is complete.
+  \item If either $\mathrm{T}_1[\mathrm{i}_1]$ or $\mathrm{T}_2[\mathrm{i}]$ is empty, the item is placed there, and the insertion is complete.
 
   \item If both slots are occupied, an existing item (say $y$) is evicted from one of the location (e.g. $i_1$) and $x$ is placed there.
 
-  \item The evicted item $y$ is then reinserted into its alternate location. If $y$ was in $T_1$, it now attempts to move to $\mathrm{T}_2[\mathrm{h}_2(x)]$. This move may, in turn, cause another eviction, leading to a chain of displacements.
+  \item The evicted item $y$ is then reinserted into its alternate location. If $y$ was in $T_1$, it now attempts to move to $\mathrm{T}_2[\mathrm{i}_2]$. This move may, in turn, cause another eviction, leading to a chain of displacements.
 
   \item To prevent infinite loops, a maximum number of evictions is set. If this limit is reached, the table is considered full, and all items must be rehashed with a new pair of hash functions, potentially into larger tables.
 \end{enumerate}
