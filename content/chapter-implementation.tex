@@ -43,7 +43,7 @@ To maximize performance by allowing the compiler to generate highly specialized 
 
   \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels. This parameter can be tuned to optimize GPU occupancy for different hardware architectures.
 
-  \item \texttt{AltBucketPolicy}: A template parameter that accepts a strategy class. This class encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket from its primary one. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but an alternative based on the "Additive and Subtractive" Cuckoo filter \cite{add-sub-cuckoo-filter} has also been implemented to demonstrate this flexibility.
+  \item \texttt{AltBucketPolicy}: A template parameter that accepts a class. This class encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket from its primary one. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but an alternative based on the "Additive and Subtractive" Cuckoo filter \cite{add-sub-cuckoo-filter} has also been implemented to demonstrate this flexibility.
 \end{itemize}
 
 Throughout the implementation, \texttt{static\_assert} statements are used to enforce critical invariants at compile time, such as ensuring that certain parameters are powers of two to allow for efficient bitwise AND operations instead of more costly modulo arithmetic.
