@@ -68,3 +68,5 @@ iscontinuation
 isshifted
 logn
 SFCS
+artifacts
+Googletest
