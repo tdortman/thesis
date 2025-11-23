@@ -1,101 +1,3 @@
-@article{pagh2004cuckoo,
-  title     = {Cuckoo hashing},
-  author    = {Pagh, Rasmus and Rodler, Flemming Friche},
-  journal   = {Journal of Algorithms},
-  volume    = {51},
-  number    = {2},
-  pages     = {122--144},
-  year      = {2004},
-  publisher = {Elsevier}
-}
-
-@inproceedings{pagh2001cell,
-  title     = {On the cell probe complexity of membership and perfect hashing},
-  author    = {Pagh, Rasmus},
-  booktitle = {Proceedings of the thirty-third annual ACM symposium on Theory of computing},
-  pages     = {425--432},
-  year      = {2001}
-}
-
-@inproceedings{tcf,
-  author    = {McCoy, Hunter and Hofmeyr, Steven and Yelick, Katherine and Pandey, Prashant},
-  title     = {High-Performance Filters for GPUs},
-  year      = {2023},
-  isbn      = {9798400700156},
-  publisher = {Association for Computing Machinery},
-  address   = {New York, NY, USA},
-  url       = {https://doi.org/10.1145/3572848.3577507},
-  doi       = {10.1145/3572848.3577507},
-  abstract  = {Filters approximately store a set of items while trading off accuracy for space-efficiency and can address the limited memory on accelerators, such as GPUs. However, there is a lack of high-performance and feature-rich GPU filters as most advancements in filter research has focused on CPUs. In this paper, we explore the design space of filters with a goal to develop massively parallel, high performance, and feature rich filters for GPUs. We evaluate various filter designs in terms of performance, usability, and supported features and identify two filter designs that offer the right trade off in terms of performance, features, and usability. We present two new GPU-based filters, the TCF and GQF, that can be employed in various high performance data analytics applications. The TCF is a set membership filter and supports faster inserts and queries, whereas the GQF supports counting which comes at an additional performance cost. Both the GQF and TCF provide point and bulk insertion API and are designed to exploit the massive parallelism in the GPU without sacrificing usability and necessary features. The TCF and GQF are up to 4.4\texttimes{} and 1.4\texttimes{} faster than the previous GPU filters in our benchmarks and at the same time overcome the fundamental constraints in performance and usability in current GPU filters.},
-  booktitle = {Proceedings of the 28th ACM SIGPLAN Annual Symposium on Principles and Practice of Parallel Programming},
-  pages     = {160-173},
-  numpages  = {14},
-  location  = {Montreal, QC, Canada},
-  series    = {PPoPP '23}
-}
-
-@inproceedings{potc,
-  author    = {Azar, Yossi and Broder, Andrei Z. and Karlin, Anna R. and Upfal, Eli},
-  title     = {Balanced allocations (extended abstract)},
-  year      = {1994},
-  isbn      = {0897916638},
-  publisher = {Association for Computing Machinery},
-  address   = {New York, NY, USA},
-  url       = {https://doi.org/10.1145/195058.195412},
-  doi       = {10.1145/195058.195412},
-  booktitle = {Proceedings of the Twenty-Sixth Annual ACM Symposium on Theory of Computing},
-  pages     = {593-602},
-  numpages  = {10},
-  location  = {Montreal, Quebec, Canada},
-  series    = {STOC '94}
-}
-
-@inproceedings{gpu-qf,
-  author    = {Geil, Afton and Farach-Colton, Martin and Owens, John D.},
-  booktitle = {2018 IEEE International Parallel and Distributed Processing Symposium (IPDPS)},
-  title     = {Quotient Filters: Approximate Membership Queries on the GPU},
-  year      = {2018},
-  volume    = {},
-  number    = {},
-  pages     = {451-462},
-  keywords  = {Graphics processing units;Data structures;Standards;Metadata;Throughput;Filtering algorithms;Merging;GPU computing;algorithms;data structures;approximate membership queries;Bloom filter},
-  doi       = {10.1109/IPDPS.2018.00055}
-}
-
-@inproceedings{robin-hood-hashing,
-  author    = {Celis, Pedro and Larson, Per-Ake and Munro, J. Ian},
-  title     = {Robin hood hashing},
-  year      = {1985},
-  isbn      = {0818608444},
-  publisher = {IEEE Computer Society},
-  address   = {USA},
-  url       = {https://doi.org/10.1109/SFCS.1985.48},
-  doi       = {10.1109/SFCS.1985.48},
-  abstract  = {This paper deals with hash tables in which conflicts are resolved by open addressing. The initial contribution is a very simple insertion procedure which (in comparison to the standard approach) has the effect of dramatically reducing the variance of the number of probes required for a search. This leads to a new search procedure which requires only a constant number of probes, on average, even for full tables. Finally, an extension to these methods yields a new, simple way of performing deletions and subsequent insertions. Experimental results strongly indicate little degeneration in search time. In particular deletions and successful searches appear to require constant time (< 2.57 probes) and insertions and unsuccessful searches, O(logn).},
-  booktitle = {Proceedings of the 26th Annual Symposium on Foundations of Computer Science},
-  pages     = {281-288},
-  numpages  = {8},
-  series    = {SFCS '85}
-}
-
-@article{og-qf,
-  author     = {Bender, Michael A. and Farach-Colton, Martin and Johnson, Rob and Kraner, Russell and Kuszmaul, Bradley C. and Medjedovic, Dzejla and Montes, Pablo and Shetty, Pradeep and Spillane, Richard P. and Zadok, Erez},
-  title      = {Don't thrash: how to cache your hash on flash},
-  year       = {2012},
-  issue_date = {July 2012},
-  publisher  = {VLDB Endowment},
-  volume     = {5},
-  number     = {11},
-  issn       = {2150-8097},
-  url        = {https://doi.org/10.14778/2350229.2350275},
-  doi        = {10.14778/2350229.2350275},
-  abstract   = {This paper presents new alternatives to the well-known Bloom filter data structure. The Bloom filter, a compact data structure supporting set insertion and membership queries, has found wide application in databases, storage systems, and networks. Because the Bloom filter performs frequent random reads and writes, it is used almost exclusively in RAM, limiting the size of the sets it can represent. This paper first describes the quotient filter, which supports the basic operations of the Bloom filter, achieving roughly comparable performance in terms of space and time, but with better data locality. Operations on the quotient filter require only a small number of contiguous accesses. The quotient filter has other advantages over the Bloom filter: it supports deletions, it can be dynamically resized, and two quotient filters can be efficiently merged.The paper then gives two data structures, the buffered quotient filter and the cascade filter, which exploit the quotient filter advantages and thus serve as SSD-optimized alternatives to the Bloom filter. The cascade filter has better asymptotic I/O performance than the buffered quotient filter, but the buffered quotient filter outperforms the cascade filter on small to medium data sets. Both data structures significantly outperform recently-proposed SSD-optimized Bloom filter variants, such as the elevator Bloom filter, buffered Bloom filter, and forest-structured Bloom filter. In experiments, the cascade filter and buffered quotient filter performed insertions 8.6--11 times faster than the fastest Bloom filter variant and performed lookups 0.94--2.56 times faster.},
-  journal    = {Proc. VLDB Endow.},
-  month      = jul,
-  pages      = {1627-1637},
-  numpages   = {11}
-}
-
 @inproceedings{add-sub-cuckoo-filter,
   author    = {Huang, Kun and Yang, Tong},
   booktitle = {2020 IEEE/ACM 28th International Symposium on Quality of Service (IWQoS)},
@@ -108,31 +10,29 @@
   doi       = {10.1109/IWQoS49365.2020.9213014}
 }
 
-
-@online{nvidia_cuda_guide,
-  author = {{NVIDIA Corporation}},
-  title  = {CUDA C Programming Guide},
-  year   = {2025},
-  url    = {https://docs.nvidia.com/cuda/cuda-c-programming-guide/},
-  note   = {Accessed: 2025-10-20}
+@article{bloom-network,
+  author    = {Andrei Broder and Michael Mitzenmacher},
+  title     = {Network Applications of Bloom Filters: A Survey},
+  journal   = {Internet Mathematics},
+  volume    = {1},
+  number    = {4},
+  pages     = {485-509},
+  year      = {2004},
+  publisher = {Taylor \& Francis},
+  doi       = {10.1080/15427951.2004.10129096},
+  url       = {https://doi.org/10.1080/15427951.2004.10129096},
+  eprint    = {https://doi.org/10.1080/15427951.2004.10129096}
 }
 
-@online{redis-docs,
-  author = {{Redis Ltd.}},
-  title  = {Redis Documentation},
-  year   = {2025},
-  url    = {https://redis.io/docs/latest/develop/data-types/probabilistic/cuckoo-filter/},
-  note   = {Accessed: 2025-10-29}
-}
-
-@software{cuCollections,
-  author  = {{NVIDIA Corporation}},
-  license = {Apache-2.0},
-  month   = oct,
-  title   = {{cuCollections}},
-  url     = {https://github.com/NVIDIA/cuCollections},
-  version = {3b9873a},
-  year    = {2025}
+@article{chang2008bigtable,
+  title     = {Bigtable: A distributed storage system for structured data},
+  author    = {Chang, Fay and Dean, Jeffrey and Ghemawat, Sanjay and Hsieh, Wilson C and Wallach, Deborah A and Burrows, Mike and Chandra, Tushar and Fikes, Andrew and Gruber, Robert E},
+  journal   = {ACM Transactions on Computer Systems (TOCS)},
+  volume    = {26},
+  number    = {2},
+  pages     = {1--26},
+  year      = {2008},
+  publisher = {ACM New York, NY, USA}
 }
 
 @article{counting-bloom,
@@ -147,16 +47,98 @@
   doi      = {10.1109/90.851975}
 }
 
-@article{packet-classification,
-  author   = {Reviriego, Pedro and Martínez, Jorge and Larrabeiti, David and Pontarelli, Salvatore},
-  journal  = {IEEE Transactions on Network and Service Management},
-  title    = {Cuckoo Filters and Bloom Filters: Comparison and Application to Packet Classification},
-  year     = {2020},
-  volume   = {17},
-  number   = {4},
-  pages    = {2690-2701},
-  keywords = {Electronic mail;Information filters;Optimization;Matched filters;Focusing;Indexes;Cuckoo filters;Bloom filters;packet classification;SDN},
-  doi      = {10.1109/TNSM.2020.3024680}
+
+
+@article{cuckoo-privacy-review,
+  author         = {Zhao, Yekang and Dai, Wangchen and Wang, Shiren and Xi, Liang and Wang, Shenqing and Zhang, Feng},
+  title          = {A Review of Cuckoo Filters for Privacy Protection and Their Applications},
+  journal        = {Electronics},
+  volume         = {12},
+  year           = {2023},
+  number         = {13},
+  article-number = {2809},
+  url            = {https://www.mdpi.com/2079-9292/12/13/2809},
+  issn           = {2079-9292},
+  abstract       = {As the global digitalization process continues, information is transformed into data and widely used, while the data are also at risk of serious privacy breaches. The Cuckoo filter is a data structure based on the Cuckoo hash. It encrypts data when it is used and can achieve privacy protection to a certain extent. The Cuckoo filter is an alternative to the Bloom filter, with advantages such as support for deleting elements and efficient space utilization. Cuckoo filters are widely used and developed in the fields of network engineering, storage systems, databases, file systems, distributed systems, etc., because they are often used to solve collection element query problems. In recent years, many variants of the Cuckoo filter have emerged based on ideas such as improving the structure and introducing new technologies in order to accommodate a variety of different scenarios, as well as a huge collection. With the development of the times, the improvement of the structure and operation logic of the Cuckoo filter itself has become an important direction for the research of aggregate element query.},
+  doi            = {10.3390/electronics12132809}
+}
+
+@software{cuCollections,
+  author  = {{NVIDIA Corporation}},
+  license = {Apache-2.0},
+  month   = oct,
+  title   = {{cuCollections}},
+  url     = {https://github.com/NVIDIA/cuCollections},
+  version = {3b9873a},
+  year    = {2025}
+}
+
+@inproceedings{deng2006approximately,
+  title     = {Approximately detecting duplicates for streaming data using stable bloom filters},
+  author    = {Deng, Fan and Rafiei, Davood},
+  booktitle = {Proceedings of the 2006 ACM SIGMOD international conference on Management of data},
+  pages     = {25--36},
+  year      = {2006}
+}
+
+@article{gaia2019ngsreadstreatment,
+  title     = {NGSReadsTreatment--a Cuckoo Filter-based tool for removing duplicate reads in NGS data},
+  author    = {Gaia, Antonio S{\'e}rgio Cruz and de S{\'a}, Pablo Henrique Caracciolo Gomes and de Oliveira, M{\^o}nica Silva and Veras, Adonney Allan de Oliveira},
+  journal   = {Scientific reports},
+  volume    = {9},
+  number    = {1},
+  pages     = {11681},
+  year      = {2019},
+  publisher = {Nature Publishing Group UK London}
+}
+
+@inproceedings{gpu-qf,
+  author    = {Geil, Afton and Farach-Colton, Martin and Owens, John D.},
+  booktitle = {2018 IEEE International Parallel and Distributed Processing Symposium (IPDPS)},
+  title     = {Quotient Filters: Approximate Membership Queries on the GPU},
+  year      = {2018},
+  volume    = {},
+  number    = {},
+  pages     = {451-462},
+  keywords  = {Graphics processing units;Data structures;Standards;Metadata;Throughput;Filtering algorithms;Merging;GPU computing;algorithms;data structures;approximate membership queries;Bloom filter},
+  doi       = {10.1109/IPDPS.2018.00055}
+}
+
+@inproceedings{grashofer2018towards,
+  title        = {Towards application of cuckoo filters in network security monitoring},
+  author       = {Grash{\"o}fer, Jan and Jacob, Florian and Hartenstein, Hannes},
+  booktitle    = {2018 14th International Conference on Network and Service Management (CNSM)},
+  pages        = {373--377},
+  year         = {2018},
+  organization = {IEEE}
+}
+
+@inproceedings{li1995perf,
+  title     = {Perf join: An alternative to two-way semijoin and bloomjoin},
+  author    = {Li, Zhe and Ross, Kenneth A},
+  booktitle = {Proceedings of the fourth international conference on Information and knowledge management},
+  pages     = {137--144},
+  year      = {1995}
+}
+
+
+@article{mullin2002optimal,
+  title     = {Optimal semijoins for distributed database systems},
+  author    = {Mullin, James K.},
+  journal   = {IEEE Transactions on Software Engineering},
+  volume    = {16},
+  number    = {5},
+  pages     = {558--560},
+  year      = {2002},
+  publisher = {IEEE}
+}
+
+@online{nvidia_cuda_guide,
+  author = {{NVIDIA Corporation}},
+  title  = {CUDA C Programming Guide},
+  year   = {2025},
+  url    = {https://docs.nvidia.com/cuda/cuda-c-programming-guide/},
+  note   = {Accessed: 2025-10-20}
 }
 
 @inproceedings{og-cuckoo-filter,
@@ -177,63 +159,111 @@
   series    = {CoNEXT '14}
 }
 
-@article{bloom-network,
-  author    = {Andrei Broder and Michael Mitzenmacher},
-  title     = {Network Applications of Bloom Filters: A Survey},
-  journal   = {Internet Mathematics},
-  volume    = {1},
-  number    = {4},
-  pages     = {485-509},
+@article{og-qf,
+  author     = {Bender, Michael A. and Farach-Colton, Martin and Johnson, Rob and Kraner, Russell and Kuszmaul, Bradley C. and Medjedovic, Dzejla and Montes, Pablo and Shetty, Pradeep and Spillane, Richard P. and Zadok, Erez},
+  title      = {Don't thrash: how to cache your hash on flash},
+  year       = {2012},
+  issue_date = {July 2012},
+  publisher  = {VLDB Endowment},
+  volume     = {5},
+  number     = {11},
+  issn       = {2150-8097},
+  url        = {https://doi.org/10.14778/2350229.2350275},
+  doi        = {10.14778/2350229.2350275},
+  abstract   = {This paper presents new alternatives to the well-known Bloom filter data structure. The Bloom filter, a compact data structure supporting set insertion and membership queries, has found wide application in databases, storage systems, and networks. Because the Bloom filter performs frequent random reads and writes, it is used almost exclusively in RAM, limiting the size of the sets it can represent. This paper first describes the quotient filter, which supports the basic operations of the Bloom filter, achieving roughly comparable performance in terms of space and time, but with better data locality. Operations on the quotient filter require only a small number of contiguous accesses. The quotient filter has other advantages over the Bloom filter: it supports deletions, it can be dynamically resized, and two quotient filters can be efficiently merged.The paper then gives two data structures, the buffered quotient filter and the cascade filter, which exploit the quotient filter advantages and thus serve as SSD-optimized alternatives to the Bloom filter. The cascade filter has better asymptotic I/O performance than the buffered quotient filter, but the buffered quotient filter outperforms the cascade filter on small to medium data sets. Both data structures significantly outperform recently-proposed SSD-optimized Bloom filter variants, such as the elevator Bloom filter, buffered Bloom filter, and forest-structured Bloom filter. In experiments, the cascade filter and buffered quotient filter performed insertions 8.6--11 times faster than the fastest Bloom filter variant and performed lookups 0.94--2.56 times faster.},
+  journal    = {Proc. VLDB Endow.},
+  month      = jul,
+  pages      = {1627-1637},
+  numpages   = {11}
+}
+
+@article{packet-classification,
+  author   = {Reviriego, Pedro and Martínez, Jorge and Larrabeiti, David and Pontarelli, Salvatore},
+  journal  = {IEEE Transactions on Network and Service Management},
+  title    = {Cuckoo Filters and Bloom Filters: Comparison and Application to Packet Classification},
+  year     = {2020},
+  volume   = {17},
+  number   = {4},
+  pages    = {2690-2701},
+  keywords = {Electronic mail;Information filters;Optimization;Matched filters;Focusing;Indexes;Cuckoo filters;Bloom filters;packet classification;SDN},
+  doi      = {10.1109/TNSM.2020.3024680}
+}
+
+@inproceedings{pagh2001cell,
+  title     = {On the cell probe complexity of membership and perfect hashing},
+  author    = {Pagh, Rasmus},
+  booktitle = {Proceedings of the thirty-third annual ACM symposium on Theory of computing},
+  pages     = {425--432},
+  year      = {2001}
+}
+
+@article{pagh2004cuckoo,
+  title     = {Cuckoo hashing},
+  author    = {Pagh, Rasmus and Rodler, Flemming Friche},
+  journal   = {Journal of Algorithms},
+  volume    = {51},
+  number    = {2},
+  pages     = {122--144},
   year      = {2004},
-  publisher = {Taylor \& Francis},
-  doi       = {10.1080/15427951.2004.10129096},
-  url       = {https://doi.org/10.1080/15427951.2004.10129096},
-  eprint    = {https://doi.org/10.1080/15427951.2004.10129096}
+  publisher = {Elsevier}
 }
 
 
-@article{cuckoo-privacy-review,
-  author         = {Zhao, Yekang and Dai, Wangchen and Wang, Shiren and Xi, Liang and Wang, Shenqing and Zhang, Feng},
-  title          = {A Review of Cuckoo Filters for Privacy Protection and Their Applications},
-  journal        = {Electronics},
-  volume         = {12},
-  year           = {2023},
-  number         = {13},
-  article-number = {2809},
-  url            = {https://www.mdpi.com/2079-9292/12/13/2809},
-  issn           = {2079-9292},
-  abstract       = {As the global digitalization process continues, information is transformed into data and widely used, while the data are also at risk of serious privacy breaches. The Cuckoo filter is a data structure based on the Cuckoo hash. It encrypts data when it is used and can achieve privacy protection to a certain extent. The Cuckoo filter is an alternative to the Bloom filter, with advantages such as support for deleting elements and efficient space utilization. Cuckoo filters are widely used and developed in the fields of network engineering, storage systems, databases, file systems, distributed systems, etc., because they are often used to solve collection element query problems. In recent years, many variants of the Cuckoo filter have emerged based on ideas such as improving the structure and introducing new technologies in order to accommodate a variety of different scenarios, as well as a huge collection. With the development of the times, the improvement of the structure and operation logic of the Cuckoo filter itself has become an important direction for the research of aggregate element query.},
-  doi            = {10.3390/electronics12132809}
+@inproceedings{potc,
+  author    = {Azar, Yossi and Broder, Andrei Z. and Karlin, Anna R. and Upfal, Eli},
+  title     = {Balanced allocations (extended abstract)},
+  year      = {1994},
+  isbn      = {0897916638},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/195058.195412},
+  doi       = {10.1145/195058.195412},
+  booktitle = {Proceedings of the Twenty-Sixth Annual ACM Symposium on Theory of Computing},
+  pages     = {593-602},
+  numpages  = {10},
+  location  = {Montreal, Quebec, Canada},
+  series    = {STOC '94}
 }
 
-@inproceedings{li1995perf,
-  title     = {Perf join: An alternative to two-way semijoin and bloomjoin},
-  author    = {Li, Zhe and Ross, Kenneth A},
-  booktitle = {Proceedings of the fourth international conference on Information and knowledge management},
-  pages     = {137--144},
-  year      = {1995}
+@online{redis-docs,
+  author = {{Redis Ltd.}},
+  title  = {Redis Documentation},
+  year   = {2025},
+  url    = {https://redis.io/probabilistic/},
+  note   = {Accessed: 2025-11-23}
 }
 
-@article{mullin2002optimal,
-  title     = {Optimal semijoins for distributed database systems},
-  author    = {Mullin, James K.},
-  journal   = {IEEE Transactions on Software Engineering},
-  volume    = {16},
-  number    = {5},
-  pages     = {558--560},
-  year      = {2002},
-  publisher = {IEEE}
+@inproceedings{robin-hood-hashing,
+  author    = {Celis, Pedro and Larson, Per-Ake and Munro, J. Ian},
+  title     = {Robin hood hashing},
+  year      = {1985},
+  isbn      = {0818608444},
+  publisher = {IEEE Computer Society},
+  address   = {USA},
+  url       = {https://doi.org/10.1109/SFCS.1985.48},
+  doi       = {10.1109/SFCS.1985.48},
+  abstract  = {This paper deals with hash tables in which conflicts are resolved by open addressing. The initial contribution is a very simple insertion procedure which (in comparison to the standard approach) has the effect of dramatically reducing the variance of the number of probes required for a search. This leads to a new search procedure which requires only a constant number of probes, on average, even for full tables. Finally, an extension to these methods yields a new, simple way of performing deletions and subsequent insertions. Experimental results strongly indicate little degeneration in search time. In particular deletions and successful searches appear to require constant time (< 2.57 probes) and insertions and unsuccessful searches, O(logn).},
+  booktitle = {Proceedings of the 26th Annual Symposium on Foundations of Computer Science},
+  pages     = {281-288},
+  numpages  = {8},
+  series    = {SFCS '85}
 }
 
-@article{gaia2019ngsreadstreatment,
-  title     = {NGSReadsTreatment--a Cuckoo Filter-based tool for removing duplicate reads in NGS data},
-  author    = {Gaia, Antonio S{\'e}rgio Cruz and de S{\'a}, Pablo Henrique Caracciolo Gomes and de Oliveira, M{\^o}nica Silva and Veras, Adonney Allan de Oliveira},
-  journal   = {Scientific reports},
-  volume    = {9},
-  number    = {1},
-  pages     = {11681},
-  year      = {2019},
-  publisher = {Nature Publishing Group UK London}
+@inproceedings{tcf,
+  author    = {McCoy, Hunter and Hofmeyr, Steven and Yelick, Katherine and Pandey, Prashant},
+  title     = {High-Performance Filters for GPUs},
+  year      = {2023},
+  isbn      = {9798400700156},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3572848.3577507},
+  doi       = {10.1145/3572848.3577507},
+  abstract  = {Filters approximately store a set of items while trading off accuracy for space-efficiency and can address the limited memory on accelerators, such as GPUs. However, there is a lack of high-performance and feature-rich GPU filters as most advancements in filter research has focused on CPUs. In this paper, we explore the design space of filters with a goal to develop massively parallel, high performance, and feature rich filters for GPUs. We evaluate various filter designs in terms of performance, usability, and supported features and identify two filter designs that offer the right trade off in terms of performance, features, and usability. We present two new GPU-based filters, the TCF and GQF, that can be employed in various high performance data analytics applications. The TCF is a set membership filter and supports faster inserts and queries, whereas the GQF supports counting which comes at an additional performance cost. Both the GQF and TCF provide point and bulk insertion API and are designed to exploit the massive parallelism in the GPU without sacrificing usability and necessary features. The TCF and GQF are up to 4.4\texttimes{} and 1.4\texttimes{} faster than the previous GPU filters in our benchmarks and at the same time overcome the fundamental constraints in performance and usability in current GPU filters.},
+  booktitle = {Proceedings of the 28th ACM SIGPLAN Annual Symposium on Principles and Practice of Parallel Programming},
+  pages     = {160-173},
+  numpages  = {14},
+  location  = {Montreal, QC, Canada},
+  series    = {PPoPP '23}
 }
 
 

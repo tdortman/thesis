@@ -37,3 +37,7 @@
 {"rule":"SMALL_NUMBER_OF","sentence":"^\\QOperations on the quotient filter require only a small number of contiguous accesses.\\E$"}
 {"rule":"SENTENCE_WHITESPACE","sentence":"^\\QThe paper then gives two data structures, the buffered quotient filter and the cascade filter, which exploit the quotient filter advantages and thus serve as SSD-optimized alternatives to the Bloom filter.\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QProc.\\E$"}
+{"rule":"A_RB_NN","sentence":"^\\QWhile CPU-based dynamic filters exist, many modern applications generate data at a rate or scale that creates a performance bottleneck, motivating the need for a massively parallel, GPU-accelerated solution.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QBigtable: A distributed storage system for structured data\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QACM Transactions on Computer Systems (TOCS)\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QProceedings of the 2006 ACM SIGMOD international conference on Management of data\\E$"}

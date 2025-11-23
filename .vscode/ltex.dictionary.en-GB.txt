@@ -70,3 +70,4 @@ logn
 SFCS
 artifacts
 Googletest
+RocksDB
