@@ -76,15 +76,35 @@ The experiments in Figure \ref{fig:bucket-size} identify distinct optimal config
   \item \textbf{Lookup (DRAM-Resident)}: Once the filter size exceeds the L2 cache capacity, the bottleneck shifts to global memory bandwidth. In this case, a bucket size of 16 becomes favourable again. Since fetching data from DRAM creates a significant latency penalty, it is more efficient to process a larger "middle ground" bucket size that maximizes the utility of the data fetched in a standard 128-byte DRAM burst.
 \end{itemize}
 
-\begin{figure}[h!]
+\begin{figure}[ht]
   \centering
-  \includegraphics[width=1\textwidth]{images/bucket-size.png}
+  \includegraphics[width=1.0\textwidth]{images/bucket-size.png}
   \caption{Normalized throughput of the GPU Cuckoo filter for different bucket sizes.}
   \label{fig:bucket-size}
 \end{figure}
 
+\FloatBarrier
 \section{False Positive Rate (FPR)}
 \label{sec:eval:fpr}
+
+To evaluate the reliability of the implemented filters, the empirical false-positive rate was measured across a range of filter capacities. For each test, the filters were populated to a constant 95\% load factor using random keys. The total memory size was varied from $2^{15}$ to $2^{30}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint. The results are presented in \ref{fig:fpr-vs-memory}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/fpr.png}
+  \caption{Comparison of False Positive Rates (FPR) versus total memory size for various filter implementations at a 95\% load factor.}
+  \label{fig:fpr-vs-memory}
+\end{figure}
+
+\subsection{Analysis}
+
+\begin{itemize}
+  \item \textbf{Blocked Bloom Filter}: The Blocked Bloom filter demonstrates the highest false-positive rate among all tested structures. This is a known characteristic of the blocked design, partitioning the bit array into small, fixed-size blocks prevents the "averaging" of hash collisions across the entire filter. As a result, a few heavily congested blocks can disproportionately skew the overall error rate. Notably, it is the only filter where the false-positive rate actively degrades as the total memory size increases, indicating poor scalability in terms of accuracy for massive datasets.
+
+  \item \textbf{CPU vs. GPU Cuckoo Filters}: A clear distinction is visible between the CPU and GPU Cuckoo filter implementations. The CPU versions (both standard and partitioned) achieve the lowest false-positive rates, hovering near 0.005\% and 0.01\% respectively. The GPU Cuckoo filter, while still highly accurate, exhibits a higher rate of approximately 0.045\%. This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}. To maximize parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4. As established in Equation \ref{eq:cuckoo-space-bound}, a larger bucket size linearly increases the collision probability for a fixed fingerprint size.
+
+  \item \textbf{Comparison with Other GPU Filters}: Despite the trade-off required for throughput, the GPU Cuckoo filter maintains the lowest false-positive rate among the GPU-accelerated candidates. It significantly outperforms the Bulk Two-Choice Filter (TCF), which exhibits an error rate an order of magnitude higher (around 0.7\% - 1.1\%). This confirms that the Cuckoo filter's design offers a superior balance of speed and accuracy for high-performance GPU applications.
+\end{itemize}
 
 \section{Cache Efficiency}
 \label{sec:eval:cache}
