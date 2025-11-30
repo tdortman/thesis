@@ -83,7 +83,7 @@ The insertion process is more involved and follows the distinct "cuckoo" evictio
 
   \item If both slots are occupied, an existing item (say $y$) is evicted from one of the location (e.g. $i_1$) and $x$ is placed there.
 
-  \item The evicted item $y$ is then reinserted into its alternate location. If $y$ was in $T_1$, it now attempts to move to $\mathrm{T}_2[\mathrm{i}_2]$. This move may, in turn, cause another eviction, leading to a chain of displacements.
+  \item The evicted item $y$ is then reinserted into its alternate location. If $y$ was in $T_1$, it now attempts to move to $\mathrm{T}_2[\mathrm{i}_2]$. This move may, in turn, cause another eviction, leading to a chain of evictions.
 
   \item To prevent infinite loops, a maximum number of evictions is set. If this limit is reached, the table is considered full, and all items must be rehashed with a new pair of hash functions, potentially into larger tables.
 \end{enumerate}

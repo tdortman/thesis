@@ -17,7 +17,7 @@ Based on the GPU architecture and programming principles discussed in Chapter \r
 \begin{itemize}
   \item \textbf{Managing Concurrency and Race Conditions}: A naive parallel implementation where thousands of GPU threads attempt to read and write to the same buckets simultaneously would lead to race conditions and data corruption. Designing an efficient, lock-free mechanism using atomic operations to handle these concurrent memory accesses is one of the primary challenges.
 
-  \item \textbf{Parallelizing the Eviction Path}: During an insertion, if both candidate buckets are full, an existing item must be evicted and reinserted into its alternate location. This eviction process can cascade, leading to multiple displacements. Parallelizing this inherently path-dependent process is complex, as it requires careful coordination to ensure that threads do not interfere with each other's operations or create deadlocks.
+  \item \textbf{Parallelizing the Eviction Path}: During an insertion, if both candidate buckets are full, an existing item must be evicted and reinserted into its alternate location. This eviction process can cascade, leading to multiple evictions. Parallelizing this inherently path-dependent process is complex, as it requires careful coordination to ensure that threads do not interfere with each other's operations or create deadlocks.
 
   \item \textbf{Optimizing for Coalesced Memory Access}: GPUs are highly sensitive to memory access patterns. Coalesced memory accesses, where threads in a warp access contiguous memory locations, are crucial for achieving high throughput. The random-access nature of Cuckoo filter operations can lead to scattered, uncoalesced memory accesses, which severely degrade performance. Developing strategies like data sorting to improve memory locality is essential.
 
@@ -39,7 +39,7 @@ To maximize performance by allowing the compiler to generate highly specialized 
 
   \item \texttt{bucketSize}: Specifies the number of fingerprints stored in each bucket. A smaller bucket size generally leads to a lower false positive rate but can negatively impact insertion performance and overall occupancy. A default of 16 was chosen through empirical performance testing.
 
-  \item \texttt{maxEvictions}: Sets the maximum number of displacements a single thread is allowed to perform during an insertion attempt before it gives up and reports a failure. The default value of 500 was determined empirically.
+  \item \texttt{maxEvictions}: Sets the maximum number of evictions a single thread is allowed to perform during an insertion attempt before it gives up and reports a failure. The default value of 500 was determined empirically.
 
   \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels. This parameter can be tuned to optimize GPU occupancy for different hardware architectures.
 
@@ -119,7 +119,7 @@ The parallel insertion algorithm is designed to handle a large batch of items in
 
   \item \textbf{Eviction Process}: If both candidate buckets are full, the thread initiates the cuckoo process. It randomly selects one of the two buckets and a random occupied slot within it. It then atomically replaces the fingerprint (\texttt{tag\_old}) in that slot with its own fingerprint (\texttt{tag\_new}). The evicted fingerprint, \texttt{tag\_old}, now becomes the item that the thread must insert. The thread calculates \texttt{tag\_old}'s alternate bucket and continues this process in a loop.
 
-  \item \textbf{Termination}: The eviction loop continues until either an empty slot is found or a predefined limit on the number of displacements is reached, at which point the insertion is reported as a failure.
+  \item \textbf{Termination}: The eviction loop continues until either an empty slot is found or a predefined limit on the number of evictions is reached, at which point the insertion is reported as a failure.
 
 \end{enumerate}
 
@@ -262,7 +262,7 @@ One version of the insertion algorithm was implemented to enhance memory localit
 \subsection{Alternative Eviction Strategy}
 \label{sec:implementation:optimisation-techniques:eviction}
 
-The standard eviction process uses a greedy, depth-first-search (DFS) approach, where a thread immediately follows the eviction chain of a single displaced item. An alternative strategy was implemented to reduce the average length of these chains. When an eviction is necessary, instead of picking one random item to displace, the thread first inspects a configurable number of candidate fingerprints from the bucket (e.g., half the bucket size). For each candidate, it checks if its alternate bucket has an empty slot. If such a "safe" eviction is found, the swap is performed, and the insertion completes in a single step. If all candidates lead to full alternate buckets, the algorithm falls back to the original DFS-style greedy eviction. This method was found to have a negligible impact when inserting into an empty filter, but it provided a moderate speed-up of 15-20\% when inserting into a filter with a high load factor (e.g., 70\% or more), where long eviction chains are more common.
+The standard eviction process uses a greedy, depth-first-search (DFS) approach, where a thread immediately follows the eviction chain of a single evicted item. An alternative strategy was implemented to reduce the average length of these chains. When an eviction is necessary, instead of picking one random item to evict, the thread first inspects a configurable number of candidate fingerprints from the bucket (e.g., half the bucket size). For each candidate, it checks if its alternate bucket has an empty slot. If such a "safe" eviction is found, the swap is performed, and the insertion completes in a single step. If all candidates lead to full alternate buckets, the algorithm falls back to the original DFS-style greedy eviction. This method was found to have a negligible impact when inserting into an empty filter, but it provided a moderate speed-up of 15-20\% when inserting into a filter with a high load factor (e.g., 70\% or more), where long eviction chains are more common.
 
 \section{IPC Wrapper}
 \label{sec:implementation:ipc-wrapper}
