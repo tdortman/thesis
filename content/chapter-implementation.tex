@@ -133,7 +133,7 @@ To maintain an accurate count of the total items in the filter without creating 
 \begin{algorithmic}[0]
   \Function{Insert}{key}
     \State $h = \mathrm{hash}(\text{key})$
-    \State $fp = \mathrm{upper32}(h) \bmod \text{numBuckets}$
+    \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
     \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
     \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
     \If{there is an empty slot in bucket $i_1$ or $i_2$}
@@ -176,7 +176,7 @@ The key optimization in the lookup kernel is the use of vectorized, non-atomic m
 \begin{algorithmic}[0]
   \Function{Contains}{key}
     \State $h = \mathrm{hash}(\text{key})$
-    \State $fp = \mathrm{upper32}(h) \bmod \text{numBuckets}$
+    \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
     \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
     \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
     \State \textbf{return} FindSlot(bucket $i_1$, $fp$) \textbf{or} FindSlot(bucket $i_2$, $fp$)
@@ -225,7 +225,7 @@ This continues until a deletion is successful, or both buckets have been fully t
 \begin{algorithmic}[0]
   \Function{Remove}{key}
     \State $h = \mathrm{hash}(\text{key})$
-    \State $fp = \mathrm{upper32}(h) \bmod \text{numBuckets}$
+    \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
     \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
     \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
     \State \textbf{return} TryRemove(bucket $i_1$, $fp$) \textbf{or} TryRemove(bucket $i_2$, $fp$)
@@ -236,8 +236,8 @@ This continues until a deletion is successful, or both buckets have been fully t
     \For{$i = 0$ \textbf{to} wordCount - 1}
         \State currWord $= (\text{startWord} + i) \bmod \text{wordCount}$
         \For{$j = 0$ \textbf{to} tagsPerWord - 1}
-            \If{tag at slot $j$ in currWord $==$ tag}
-                \If{atomically replace tag at slot $j$ with EMPTY}
+            \If{currWord[$j$] $==$ tag}
+                \If{atomic\_exchange(currWord[$j$], \text{EMPTY}) $==$ tag}
                     \State \textbf{return} \texttt{Success}
                 \EndIf
             \EndIf

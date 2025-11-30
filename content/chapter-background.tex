@@ -1,4 +1,4 @@
-\chapter{Background}
+\chapter{Background and Related Work}
 \label{sec:background}
 
 Having established the motivation and objectives for designing a GPU-accelerated Cuckoo filter, this chapter provides the necessary background from its two foundational domains: probabilistic data structures and parallel computing. The discussion first traces the algorithmic lineage of the Cuckoo filter, beginning with the Bloom filter, progressing to the Cuckoo hashing scheme, and culminating in the Cuckoo filter itself. Subsequently, the focus shifts to the hardware and software paradigm with an introduction to the GPU architecture, the CUDA programming model, and the key performance considerations essential for developing efficient parallel algorithms. A firm grasp of both these areas is crucial for understanding the design choices and implementation challenges addressed in the remainder of this thesis.
@@ -268,3 +268,47 @@ At a higher level, a modern GPU can execute multiple operations concurrently, su
 The physical resources on each SM are finite, and their management directly impacts performance. While the programming model exposes what seems like a nearly unlimited number of registers to each thread, in reality, there is a limited, physical register file that all threads active on an SM must share. High register usage by a kernel can have two detrimental effects. Firstly, if a single thread requires more registers than the hardware can allocate, some of its variables will "spill" into the much slower global memory, incurring high latency penalties on every access. Secondly, even if there is no spilling, if the collective register demand of all threads in a block is too high, the hardware scheduler will be forced to launch fewer concurrent warps on the SM. This reduction in occupancy (the ratio of active warps to the maximum supported warps) hurts the SM's ability to hide memory latency by switching to other warps, leading to lower overall utilization.
 
 Finally, any operation that forces parallel threads to execute sequentially undermines the benefits of parallelism and degrades performance. Branch divergence is a classic example: since all threads in a warp execute the same instruction, if-else statements can cause serialization. If threads in a warp take different paths, the hardware executes each path serially while idling the threads on the other path, negating the benefit of parallelism. A similar and often more severe bottleneck arises from atomic contention. When many threads in a block attempt to perform an atomic operation on the same memory location simultaneously, the hardware is forced to serialize these requests. In cases of extreme contention, the performance can degrade to the point where a traditional lock-based critical section might even been faster. Therefore, minimizing both control-flow divergence and high-contention atomic operations is critical for writing efficient, scalable GPU code.
+
+\section{Related Work}
+\label{sec:related-work}
+\subsection{Two Choice Filter}
+\label{sec:related-work:two-choice-filter}
+
+Recent work by McCoy et al. introduced the Two-Choice Filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs \cite{tcf}. The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter that is optimized for the architectural constraints of a GPU.
+
+Structurally, the TCF is similar to a Cuckoo filter. It organizes fingerprints into blocks that are sized to fit within a GPU cache line to ensure high memory locality. Furthermore, unlike a Cuckoo filter, it uses two hash functions to map each item to two candidate blocks.
+
+The fundamental difference lies in the insertion strategy. Whereas a Cuckoo filter employs an eviction-based scheme, the TCF uses a simpler placement-based strategy derived from the "power-of-two-choices" paradigm to help with load balancing \cite{potc}. The insertion logic is as follows:
+
+\begin{itemize}
+  \item To insert an item, the TCF inspects both candidate blocks.
+  \item The new fingerprint is then placed in the block that is currently less full.
+  \item Crucially, there is no kicking or eviction. If both candidate blocks are completely full, the insertion fails.
+\end{itemize}
+
+This approach avoids the complex, potentially sequential logic of managing eviction chains, which is a major challenge when parallelizing a Cuckoo filter. However, it introduces a new problem: insertions can fail long before the filter reaches a high load factor. To overcome this, the TCF introduces a backing store, a small secondary hash table that stores the items that could not be placed in the main table \cite{tcf}. This two-level architecture allows the TCF to maintain a high overall occupancy while keeping the insertion logic in the primary store very simple. For intra-block operations, the TCF leverages CUDA Cooperative Groups to coordinate threads within a warp. This enables efficient, lock-free insertions and queries within a single block.
+
+In summary, the Two-Choice Filter represents a different design trade-off for achieving the same goal. It prioritizes a simpler, non-evicting parallel insertion logic at the cost of requiring an additional backing data structure to handle overflows. This contrasts with the Cuckoo filter's approach of using a more complex, but single-structure, eviction-based algorithm.
+
+\subsection{Quotient Filter}
+\label{sec:related-work:quotient-filter}
+
+The Quotient Filter (QF) is another modern, high-performance probabilistic data structure that, like the Cuckoo filter, improves upon the Bloom filter by supporting dynamic deletions and offering superior space efficiency in many common configurations \cite{og-qf}. It compactly stores small fingerprints of items in a set using a scheme based on Robin Hood hashing \cite{robin-hood-hashing}. For a target false positive rate $\epsilon$, a QF uses approximately $1.053(2.125 + \log_2(1/\epsilon))$ bits per item \cite{tcf}. This makes it more space-efficient than a space-optimized Bloom filter whenever $\epsilon \le 1/64$, a condition met by a wide range of practical applications \cite{tcf}.
+
+The core mechanism of a QF is different from the eviction-based strategy of Cuckoo hashing. A $p$-bit hash of an item is split into a $q$-bit quotient and an $r$-bit remainder. The quotient determines an item's "canonical slot" in a table of $2^q$ slots, while the remainder is the value actually stored. If the canonical slot is occupied, the filter uses linear probing to find the next empty slot. All remainders sharing the same quotient form a contiguous run, and sequences of runs form clusters. Three metadata bits per entry \texttt{(is\_occupied, is\_continuation, is\_shifted)} are used to encode the structure of these runs, allowing for the reconstruction of the original hash during a lookup.
+
+From a GPU design perspective, the Quotient Filter presents a compelling but challenging trade-off. Its linear-probing nature results in high cache locality, which is an appropriate choice for achieving the high memory coherence that GPUs favour.
+
+However, its primary drawback is the insertion process. Inserting a new remainder may require shifting a long sequence of subsequent remainders to maintain the integrity of a run or cluster. This shifting operation is difficult to parallelize efficiently, makes it hard to use simple atomic operations, and results in high thread divergence, all of which are detrimental to GPU performance.
+
+The challenge of adapting this structure to a parallel architecture was first addressed by Geil et al. \cite{gpu-qf}. Their work explored methods for parallelizing the QF, with a particular focus on the complex bulk build operation, which they identified as requiring a non-trivial parallel scan with a non-associative operator. However, this preliminary implementation has several significant limitations:
+
+\begin{itemize}
+  \item It was adapted from an earlier version of the Quotient filter and lacks modern features like counting.
+
+  \item It suffers from higher space overhead compared to more recent designs.
+
+  \item The implementation has specific constraints, such as a fixed false-positive rate and a maximum size of $2^{26}$ items, which result in poor performance and limited scalability for larger, more demanding applications.
+\end{itemize}
+
+Thus, while the Quotient filter is a powerful and flexible data structure in theory, its efficient implementation on a GPU remains a significant challenge, particularly with respect to its complex and inherently sequential insertion mechanics.

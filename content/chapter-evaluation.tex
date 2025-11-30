@@ -1,1 +1,87 @@
 \chapter{Evaluation}
+\label{sec:evaluation}
+
+The performance of the GPU-accelerated Cuckoo filter is evaluated to demonstrate its throughput, scalability, and resource efficiency. This chapter details the experimental setup, the baselines used for comparison, and the analysis of the results across various metrics.
+
+\section{Experimental Setup}
+\label{sec:eval:setup}
+
+All performance tests use 16-bit fingerprints (or equivalent space allocation for the Blocked Bloom filter) and random 64-bit integers as input keys. The experiments evaluate both positive lookups (items present in the filter) and negative lookups (items absent from the filter), as well as insertion throughput.
+
+\subsection{Reference Implementations}
+To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared against the following data structures:
+
+\begin{itemize}
+  \item \textbf{GPU Blocked Bloom Filter}: Sourced from the \textit{cuCollections} library, serving as a high-performance baseline for a static (non-deletable) filter. \cite{cuCollections}
+
+  \item \textbf{Original CPU Cuckoo Filter}: The reference implementation from the original 2014 paper by Fan et al. \cite{og-cuckoo-filter}.
+
+  \item \textbf{Optimized Partitioned CPU Cuckoo Filter}: A custom implementation utilizing multithreading (one thread per partition) to maximize CPU throughput without the overhead of SIMD instructions, which were found to degrade performance in this specific context. \cite{partitioned-cuckoo}
+
+  \item \textbf{GPU Quotient Filter}: Included for a basic comparison. Note that its restrictive parameterization makes it largely unsuitable for the massive batch use-cases targeted by this thesis. \cite{gpu-qf}
+
+  \item \textbf{Bulk Two-Choice Filter (TCF)}: A modern, GPU-focused AMQ data structure that serves as a direct competitor. \cite{tcf}
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+The implementations are assessed using the following metrics:
+
+\begin{itemize}
+  \item \textbf{Throughput}: Measured in millions of operations per second for insertions and lookups. This is evaluated under two distinct conditions:
+    \begin{itemize}
+      \item \textbf{L2-Resident}: A filter size small enough to fit entirely within the GPU's L2 cache.
+      \item \textbf{DRAM-Resident}: A larger filter size that necessitates global memory access.
+    \end{itemize}
+
+  \item \textbf{Bucket Size Impact}: An analysis of how different fixed bucket sizes affect the performance of the GPU Cuckoo filter (Section \ref{sec:eval:bucket-size}).
+
+  \item \textbf{False Positive Rate (FPR)}: The empirical FPR is measured for given load factors and filter sizes to verify adherence to theoretical bounds (Section \ref{sec:eval:fpr}).
+
+  \item \textbf{Cache Efficiency}: L1 and L2 cache hit rates are measured to evaluate memory locality (Section \ref{sec:eval:cache}).
+
+  \item \textbf{Hardware Utilization}: Resource usage is analysed as a percentage of the theoretical peak throughput ("Speed of Light") for compute, memory bandwidth, and cache bandwidth (Section \ref{sec:eval:sol}).
+\end{itemize}
+
+\section{Throughput Analysis}
+\label{sec:eval:throughput}
+
+\subsection{L2-Resident Filters}
+\label{sec:eval:throughput:l2-resident}
+
+\subsection{DRAM-Resident Filters}
+\label{sec:eval:throughput:dram-resident}
+
+\section{Bucket Size Impact}
+\label{sec:eval:bucket-size}
+
+The \texttt{bucketSize} parameter, defining the number of fingerprints stored in each bucket, plays an important role in the filter's overall performance. Testing demonstrates that performance degrades at both the lower and upper extremes of bucket sizing, necessitating a careful balance between algorithmic overhead and memory access granularity.
+
+\subsection{Performance Trade-offs}
+
+\begin{itemize}
+  \item \textbf{Small Buckets}: Configuring the filter with very small buckets negatively impacts performance. With fewer slots per bucket, the probability of a collision increases, as does the likelihood that a bucket is full. This increases the average number of buckets that must be accessed and loaded from memory to complete an insertion or a lookup, resulting in higher latency.
+
+  \item \textbf{Large Buckets}: Excessively large buckets introduce hardware-level inefficiencies. If a bucket's size exceeds the GPU's cache line size (typically 128 bytes), fetching a single logical bucket requires multiple physical memory transactions. In the worst case, this doubles the number of cache lines that must be fetched, effectively halving the effective memory bandwidth.
+\end{itemize}
+
+\subsection{Optimal Configuration}
+
+% TODO: Add figure
+The experiments in Figure 4.2 identify distinct optimal configurations for insertion and lookup operations depending on the working set size:
+
+\begin{itemize}
+  \item \textbf{Insertion}: A bucket size of 16 fingerprints was found to be the fastest configuration in all tested scenarios. This size appears to offer the optimal trade-off, providing enough slots to minimize eviction chains without incurring the bandwidth penalty of multi-cache-line fetches.
+
+  \item \textbf{Lookup (L2-Resident)}: When the filter is sized to fit entirely within the GPU's L2 cache, a bucket size of 8 fingerprints yields the highest throughput. This is driven by instruction-level efficiency. A bucket of this size can be represented as two 64-bit words or a single 128-bit vector. This allows the entire bucket to be loaded into registers via a single vectorized machine instruction, maximizing the throughput of the L1/L2 cache hierarchy.
+
+  \item \textbf{Lookup (DRAM-Resident)}: Once the filter size exceeds the L2 cache capacity, the bottleneck shifts to global memory bandwidth. In this case, a bucket size of 16 becomes favourable again. Since fetching data from DRAM creates a significant latency penalty, it is more efficient to process a larger "middle ground" bucket size that maximizes the utility of the data fetched in a standard 128-byte DRAM burst.
+\end{itemize}
+
+\section{False Positive Rate (FPR)}
+\label{sec:eval:fpr}
+
+\section{Cache Efficiency}
+\label{sec:eval:cache}
+
+\section{Hardware Utilization}
+\label{sec:eval:sol}

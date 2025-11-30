@@ -9,62 +9,43 @@
 \subsection{Problem Statement}
 \label{sec:intro:problem}
 
-In the era of big data, the ability to perform high-speed set membership queries is a fundamental requirement for a vast range of applications, for everything from network traffic analysis \cite{bloom-network} to large-scale distributed database systems. Determining whether an element belongs to a (often rather large) set is a frequent and often performance-critical operation. While exact data structures provide definitive answers, their memory footprint and computational overhead can be prohibitive when dealing with massive datasets. This has led to the widespread adoption of probabilistic data structures, which trade a small, manageable false-positive probability for significant gains in space and time efficiency.
+In the era of big data, the ability to perform high-speed set membership queries is a fundamental requirement for applications ranging from network traffic analysis \cite{bloom-network} to large-scale distributed systems. Determining whether an element belongs to a massive set is a frequent and performance-critical operation. While exact data structures provide definitive answers, their memory footprint and computational overhead render them impractical for massive datasets. This has led to the widespread adoption of probabilistic data structures, which trade a small, manageable false-positive probability for significant gains in space and time efficiency.
 
-For years, the Bloom filter has been the go-to probabilistic data structure for approximate set membership. However, its primary limitation is the inability to delete elements, making it unsuitable for dynamic datasets. While variations like the \textit{Counting Bloom filter} \cite{counting-bloom} exist that support deletion, they come at the cost of much higher space requirements to the point of not being viable in practice. The Cuckoo filter has emerged as a powerful alternative, offering native support for deletions and often superior space efficiency and performance, particularly for low false-positive rates.
+For years, the Bloom filter has been the standard probabilistic data structure for approximate set membership. However, its primary limitation is the inability to delete elements, making it unsuitable for dynamic datasets. While variations like the \textit{Counting Bloom filter} \cite{counting-bloom} support deletion, they incur prohibitive space overheads that often negate their practical viability. The Cuckoo filter has emerged as a powerful alternative, offering native support for deletions and often superior space efficiency, particularly at low false-positive rates.
 
-Despite the advantages of the Cuckoo filter, its performance on traditional CPU architectures can quickly become a bottleneck in high-throughput environments where millions of queries per second are the norm. The sequential nature of insertion, which may involve displacing multiple existing items, can severely limit scalability. Modern applications in real-time analytics, network security, and scientific computing generate data at rates that can overwhelm a single CPU's processing capabilities. This presents a clear performance gap and motivates the exploration of massively parallel hardware.
+Despite these advantages, the performance of Cuckoo filters on traditional CPU architectures can become a bottleneck in high-throughput environments. The sequential nature of the insertion algorithm, which may involve displacing multiple existing items, severely limits scalability on serial processors.
 
-This thesis addresses the need for a higher-throughput Cuckoo filter by harnessing the parallel processing power of Graphics Processing Units (GPUs). The core problem is to design, implement, and evaluate a Cuckoo filter that can leverage the thousands of cores on a modern GPU to perform insertions, lookups, and deletions in parallel, thereby achieving a significant performance leap over existing CPU-based implementations.
+This performance gap motivates the exploration of massively parallel hardware. However, porting a Cuckoo filter to a GPU is not a straightforward translation, as the algorithm's reliance on sequential eviction chains, random memory accesses, and conditional logic conflicts with the GPU's requirement for massive parallelism and structured, contiguous memory access patterns. This thesis addresses these architectural mismatches by designing, implementing, and evaluating a GPU-accelerated Cuckoo filter. The core objective is to leverage the massive parallelism of modern GPUs to handle insertions, lookups, and deletions concurrently, thereby achieving a significant performance leap over existing CPU-based implementations.
 
 \subsection{Use Cases}
 \label{sec:intro:use-cases}
 
-The demand for high-speed, dynamic set membership testing is prevalent across numerous domains. While CPU-based dynamic filters exist, many modern applications generate data at a rate or scale that creates a performance bottleneck, motivating the need for a massively parallel, GPU-accelerated solution. Such a filter would provide substantial benefits in the following areas and more:
+The demand for high-speed, dynamic set membership testing shows up across numerous domains. While CPU-based dynamic filters exist, many modern applications generate data at a rate or scale that creates a performance bottleneck, motivating the need for a massively parallel, GPU-accelerated solution. Such a filter would provide substantial benefits in the following areas and more:
 
 \begin{itemize}
   \item \textbf{High-Speed Network Security}: Threat intelligence feeds for malicious IPs, URLs, and malware signatures are updated continuously, requiring a filter that supports both insertions and deletions. In high-speed networks (100Gbps+), a CPU can be overwhelmed by the sheer volume of packets per second. A GPU-accelerated filter can process large batches of packet headers or identifiers in parallel, enabling line-rate inspection against dynamic blacklists in a way that is infeasible for CPU-based solutions \cite{packet-classification} \cite{grashofer2018towards}.
 
-  \item \textbf{High-Throughput Caching Systems}: Caches in Content Delivery Networks (CDNs), database buffer pools, and HTTP reverse proxies experience constant churn as items are added and evicted. A dynamic filter is essential to prevent expensive disk or network lookups for non-existent objects. When the request rate is in the millions per second, the CPU can offload these cache-presence checks to a GPU, processing them in large, parallel batches to free up cycles for handling the actual data I/O \cite{chang2008bigtable} \cite{counting-bloom}.
+  \item \textbf{High-Throughput Caching Systems}: Caches in Content Delivery Networks (CDNs) and HTTP reverse proxies experience constant churn as items are added and evicted. A dynamic filter is essential to prevent expensive disk or network lookups for non-existent objects. When the request rate is in the millions per second, the CPU can offload these cache-presence checks to a GPU, processing them in large, parallel batches to free up cycles for handling the actual data I/O \cite{chang2008bigtable} \cite{counting-bloom}.
 
   \item \textbf{Large-Scale Databases and Distributed Systems}: Database systems often use filters to avoid expensive disk lookups for non-existent keys. In a distributed setting, a GPU-accelerated filter could serve as a high-performance shared resource that tracks the existence of records across multiple nodes, reducing network latency and improving overall query performance. \cite{li1995perf} \cite{mullin2002optimal}
 
   \item \textbf{Bioinformatics and Computational Biology}: Genomics and proteomics research involves searching for patterns or sequences within massive biological datasets. A GPU-accelerated Cuckoo filter could be used to rapidly pre-screen for the presence of specific k-mers or genetic markers before launching more computationally intensive analyses, significantly speeding up the research pipeline. \cite{gaia2019ngsreadstreatment}
 \end{itemize}
 
-\subsection{Challenges}
-\label{sec:intro:challenges}
+\section{Contributions}
+\label{sec:intro:contributions}
 
-Migrating a data structure like the Cuckoo filter from a sequential CPU environment to a massively parallel GPU architecture is not a trivial task. It presents several unique and significant challenges that this thesis aims to address:
+This thesis presents a comprehensive study on accelerating probabilistic data structures using GPUs. The main contributions of this work are as follows:
 
 \begin{itemize}
-  \item \textbf{Adapting Sequential Logic for Parallel Execution}: The core insertion algorithm of a Cuckoo filter, which can trigger a chain of item displacements, is inherently sequential. Designing a correct and efficient method to allow thousands of threads to perform this logic simultaneously is the primary architectural challenge.
+  \item \textbf{A Novel GPU-Accelerated Cuckoo Filter Design}: The design and implementation of a parallel Cuckoo filter supporting insertion, lookup, and deletion are presented. The implementation introduces a lock-free, atomic-based mechanism to handle the "cuckoo" eviction process safely within a massively parallel environment, addressing the challenge of managing race conditions without sacrificing throughput.
 
-  \item \textbf{Managing High-Contention Memory Access}: A Cuckoo filter relies on a shared, central data structure. With thousands of threads attempting to read and write to this structure concurrently, managing access to avoid data corruption and performance bottlenecks is a complex problem that requires careful, lock-free algorithm design.
+  \item \textbf{Advanced Optimization Techniques}: Several optimization strategies are explored and evaluated to maximize occupancy and memory bandwidth. These include a sorted-insertion algorithm to improve memory locality and a modified eviction strategy designed to reduce displacement chain lengths at high load factors.
 
-  \item \textbf{Designing for a Specialized Memory Architecture}: The performance of parallel processors is highly dependent on how memory is accessed. The hashing-based, random-access nature of the Cuckoo filter is fundamentally at odds with the GPU's preference for structured, contiguous memory access. A key challenge is to design a data layout and access strategy that works efficiently within these architectural constraints.
+  \item \textbf{System-Level Integration Extensions}: Moving beyond a standalone kernel, two extensions are contributed to facilitate real-world adoption. First, an Inter-Process Communication (IPC) wrapper is developed to enable zero-copy, low-latency sharing of the filter between processes. Second, a multi-GPU implementation is provided that transparently partitions data across multiple devices using NCCL, allowing the filter to scale beyond the memory limits of a single card.
 
-  \item \textbf{Balancing Competing Performance Goals}: The goals of achieving high parallelism, maximizing space efficiency (high occupancy), and maintaining a low false-positive rate are often in conflict. The design choices made to improve computational throughput may negatively impact memory usage or accuracy. A central challenge is to navigate these trade-offs to produce a filter that is holistically superior to existing solutions.
+  \item \textbf{Comprehensive Evaluation}: A rigorous performance analysis is conducted comparing the GPU Cuckoo filter against CPU baselines and a GPU Blocked Bloom filter. The results demonstrate that the implementation achieves competitive throughput—reaching within 83\% of the read-only Blocked Bloom filter's performance—while offering the critical advantage of dynamic deletion support.
 \end{itemize}
-
-\section{Objectives}
-\label{sec:intro:objectives}
-
-The primary goal of this thesis is to design, implement, and rigorously evaluate a GPU-accelerated Cuckoo filter to address the performance bottlenecks of CPU-based solutions in high-throughput environments. To achieve this, the following key objectives have been defined:
-
-\begin{enumerate}
-  \item \textbf{Design and Implement a Fast, Memory-Efficient, and Correct GPU Cuckoo Filter}:
-    \begin{itemize}
-      \item \textbf{Parallel Algorithms}: Devising and implementing parallel algorithms for the core operations of insertion, lookup, and deletion that minimize thread conflicts and avoid race conditions.
-      \item \textbf{Memory Optimization}: Structuring the filter in the GPU's memory to promote coalesced memory access patterns to the extent that it is possible, thereby maximizing bandwidth and reducing latency.
-      \item \textbf{Correctness}: Ensuring the implementation strictly adheres to the semantics of the Cuckoo filter, providing reliable approximate set membership queries. This includes correctly handling insertions, deletions, and the "cuckoo" displacement mechanism in a concurrent environment.
-    \end{itemize}
-  \item \textbf{Conduct a Comprehensive Performance Evaluation and Comparative Analysis}:
-    \begin{itemize}
-      \item \textbf{Reference Implementations}: The comparison will be performed against two well-known reference implementations, these being the CPU-based Cuckoo filter from \cite{og-cuckoo-filter} and the GPU-based Blocked Bloom filter from the \textit{cuCollections} library \cite{cuCollections}.
-      \item \textbf{Evaluation Metrics}: The performance of the implementations will be measured and compared across several critical dimensions. The primary metric will be \textbf{throughput}, quantifying the raw processing speed in terms of millions of insertions, lookups, and deletions per second. This will be evaluated alongside the \textbf{memory usage} to analyse the space efficiency of each filter in achieving a target capacity and \textbf{false-positive rate}. Furthermore, the investigation will scrutinize the filters' \textbf{behaviour under various load factors}, observing how performance metrics like insertion time and failure rates evolve as the data structures approach their capacity. Finally, the accuracy of each implementation will be empirically validated by measuring the \textbf{false-negative rates}.
-    \end{itemize}
-\end{enumerate}
 
 \section{Thesis Structure}
 \label{sec:intro:structure}
