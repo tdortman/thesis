@@ -66,8 +66,7 @@ The \texttt{bucketSize} parameter, defining the number of fingerprints stored in
 
 \subsection{Optimal Configuration}
 
-% TODO: Add figure
-The experiments in Figure 4.2 identify distinct optimal configurations for insertion and lookup operations depending on the working set size:
+The experiments in Figure \ref{fig:bucket-size} identify distinct optimal configurations for insertion and lookup operations depending on the working set size:
 
 \begin{itemize}
   \item \textbf{Insertion}: A bucket size of 16 fingerprints was found to be the fastest configuration in all tested scenarios. This size appears to offer the optimal trade-off, providing enough slots to minimize eviction chains without incurring the bandwidth penalty of multi-cache-line fetches.
@@ -76,6 +75,13 @@ The experiments in Figure 4.2 identify distinct optimal configurations for inser
 
   \item \textbf{Lookup (DRAM-Resident)}: Once the filter size exceeds the L2 cache capacity, the bottleneck shifts to global memory bandwidth. In this case, a bucket size of 16 becomes favourable again. Since fetching data from DRAM creates a significant latency penalty, it is more efficient to process a larger "middle ground" bucket size that maximizes the utility of the data fetched in a standard 128-byte DRAM burst.
 \end{itemize}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1\textwidth]{images/bucket-size.png}
+  \caption{Normalized throughput of the GPU Cuckoo filter for different bucket sizes.}
+  \label{fig:bucket-size}
+\end{figure}
 
 \section{False Positive Rate (FPR)}
 \label{sec:eval:fpr}
