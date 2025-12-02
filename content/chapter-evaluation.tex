@@ -105,7 +105,7 @@ To evaluate the reliability of the implemented filters, the empirical false-posi
 
   \item \textbf{CPU vs. GPU Cuckoo Filters}: A distinction remains visible between the CPU and GPU Cuckoo filter implementations. The CPU version achieves a very low false-positive rate, hovering near 0.005\%. The GPU Cuckoo filter, while still highly accurate, exhibits a slightly higher rate of approximately 0.045\%. This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}. To maximize parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4. As established in Equation \ref{eq:cuckoo-space-bound}, a larger bucket size linearly increases the collision probability for a fixed fingerprint size.
 
-  \item \textbf{Comparison with TCF}: The GPU Cuckoo filter significantly outperforms the Bulk Two-Choice Filter (TCF) regarding accuracy. The TCF exhibits an error rate roughly an order of magnitude higher (ranging between 0.2\% and 0.5\%). While the TCF is more accurate than the Blocked Bloom filter, the Cuckoo filter and GQF designs offer a superior balance of accuracy and retrievability for this workload.
+  \item \textbf{Comparison with TCF}: The GPU Cuckoo filter significantly outperforms the Bulk Two-Choice Filter (TCF) regarding accuracy. The TCF exhibits an error rate roughly an order of magnitude higher (ranging between 0.2\% and 0.5\%). While the TCF is more accurate than the Blocked Bloom filter, the Cuckoo filter and GQF designs offer superior accuracy for this workload.
 \end{itemize}
 
 \section{Cache Efficiency}
