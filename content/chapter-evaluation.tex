@@ -6,7 +6,16 @@ The performance of the GPU-accelerated Cuckoo filter is evaluated to demonstrate
 \section{Experimental Setup}
 \label{sec:eval:setup}
 
-All performance tests use 16-bit fingerprints (or equivalent space allocation for the Blocked Bloom filter) and random 64-bit integers as input keys. The experiments evaluate both positive lookups (items present in the filter) and negative lookups (items absent from the filter), as well as insertion throughput.
+The performance evaluation was conducted on two distinct hardware configurations to analyse how different memory architectures impact the scalability of the filters.
+
+\begin{itemize}
+  \item \textbf{System A (GDDR7)}: An AMD EPYC 7713P (64 cores) paired with an NVIDIA RTX PRO 6000 Blackwell GPU featuring 96 GB of GDDR7 memory (1.8 TB/s). The system runs AlmaLinux 10.1 with NVIDIA driver 580.95.05 and CUDA 12.9.86.
+  \item \textbf{System B (HBM3)}: An NVIDIA GH200 Grace Hopper system with 72 ARM Neoverse V2 cores and an H100 GPU with 96 GB of HBM3 memory (3.4 TB/s). The system runs Ubuntu 24.04.3 with NVIDIA driver 580.105.08 and CUDA 13.0.88.
+\end{itemize}
+
+It is important to note that these systems are not compared head-to-head to determine which is "better." Rather, they are used to evaluate how the algorithms respond to high-bandwidth memory (HBM) versus standard graphics memory (GDDR).
+
+All performance tests use 16-bit fingerprints (with equivalent space allocation for the Blocked Bloom filter) and random 64-bit integers as input keys.
 
 \subsection{Reference Implementations}
 To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared against the following data structures:
@@ -16,7 +25,7 @@ To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared 
 
   \item \textbf{Original CPU Cuckoo Filter}: The reference implementation from the original 2014 paper by Fan et al. \cite{og-cuckoo-filter}.
 
-  \item \textbf{Optimized Partitioned CPU Cuckoo Filter}: A custom implementation utilizing multithreading (one thread per partition) to maximize CPU throughput without the overhead of SIMD instructions, which were found to degrade performance in this specific context. \cite{partitioned-cuckoo}
+  \item \textbf{Optimized Partitioned CPU Cuckoo Filter}: A custom implementation utilizing multithreading (one thread per partition) to maximize CPU throughput without the overhead of SIMD instructions, which were found to degrade performance in this specific context. This filter is not tested for System B, as it relies on x86-64 SIMD instructions. \cite{partitioned-cuckoo}
 
   \item \textbf{GPU Counting Quotient Filter (GQF)}: A highly space-efficient probabilistic data structure sourced from the same study as the TCF. This implementation utilizes efficient rank-and-select primitives to minimize metadata overhead and supports counting, resizing, and deletions. \cite{tcf}
 
@@ -27,7 +36,7 @@ To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared 
 The implementations are assessed using the following metrics:
 
 \begin{itemize}
-  \item \textbf{Throughput}: Measured in millions of operations per second for insertions and lookups. This is evaluated under two distinct conditions:
+  \item \textbf{Throughput}: Measured for insertions, lookups, and deletions and is evaluated under two distinct conditions:
     \begin{itemize}
       \item \textbf{L2-Resident}: A filter size small enough to fit entirely within the GPU's L2 cache.
       \item \textbf{DRAM-Resident}: A larger filter size that necessitates global memory access.
@@ -45,11 +54,168 @@ The implementations are assessed using the following metrics:
 \section{Throughput Analysis}
 \label{sec:eval:throughput}
 
+This section analyses the raw throughput of the filters in millions of operations per second (MOPS). The results highlight the GPU Cuckoo filter's ability to compete with the static Blocked Bloom filter while significantly outperforming other dynamic alternatives.
+
 \subsection{L2-Resident Filters}
 \label{sec:eval:throughput:l2-resident}
 
+In this scenario, the filter size (approx. 4.2 million items) is small enough to fit entirely within the GPU's L2 cache. This isolates the algorithmic efficiency and instruction throughput from main memory latency.
+
+\subsubsection{Insertion Performance}
+Figures \ref{fig:insert-mon02-small} and \ref{fig:insert-gh200-small} illustrate the insertion throughput. The results demonstrate that the GPU Cuckoo filter is highly competitive, bridging the gap between static and dynamic data structures.
+
+While the static Blocked Bloom filter maintains a performance lead of approximately 2x due to its much simpler, append-only memory access pattern, the Cuckoo filter establishes itself as the clear performance leader among the dynamic data structures. It achieves throughput significantly higher than the TCF and orders of magnitude higher than the CPU versions. This shows that the proposed parallel eviction strategy successfully minimizes the overhead typically associated with supporting deletions.
+
+In contrast, the GQF's insertion performance is rather poor with small batches, consistently lagging behind even the CPU-based implementations. This indicates that the GQF's locking overhead and metadata management create a significant bottleneck that prevents it from saturating the GPU's resources for smaller workloads.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/insert_perf_mon02_small.png}
+  \caption{Insert Performance on System A (GDDR7) for an L2-resident filter}
+  \label{fig:insert-mon02-small}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/insert_perf_gh200_small.png}
+  \caption{Insert Performance on System B (HBM3) for an L2-resident filter}
+  \label{fig:insert-gh200-small}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Lookup Performance}
+The query performance is evaluated by measuring throughput for both positive lookups (keys present in the filter) and negative lookups (keys absent). The results for the GDDR7 system are presented in Figure \ref{fig:query-mon02-small}, while the HBM3 system results are shown in Figure \ref{fig:query-gh200-small}.
+
+For positive lookups, the GPU Cuckoo filter demonstrates exceptional efficiency, nearly matching the Blocked Bloom filter on GDDR7 and outperforming it on HBM3. This performance is driven by the implementation's bias towards placing items in their primary bucket. With the larger bucket size of 16, there is a high probability that an existing item resides in its primary location. Consequently, the lookup algorithm frequently short-circuits after loading only the first bucket, requiring just a single memory transaction (or cache hit).
+
+In the case of negative lookups, the throughput is roughly halved. To definitively rule out the presence of an item, the algorithm must inspect both candidate buckets. This requires two distinct memory accesses, doubling the bandwidth requirement compared to a successful primary-bucket hit. This is different from the TCF, which utilizes cooperative groups to always load both candidate blocks in parallel to minimize thread divergence. As a result, it exhibits symmetric performance for positive and negative queries, whereas the Cuckoo filter optimizes specifically for the positive case.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/query_perf_mon02_small.png}
+  \caption{Query Performance on System A (GDDR7) for an L2-resident filter.}
+  \label{fig:query-mon02-small}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/query_perf_gh200_small.png}
+  \caption{Query Performance on System B (HBM3) for an L2-resident filter.}
+  \label{fig:query-gh200-small}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Deletion Performance}
+Deletion performance, illustrated in Figure \ref{fig:delete-mon02-small} and \ref{fig:delete-gh200-small}, highlights the most significant performance advantage of the GPU Cuckoo filter over its competitors.
+
+As the logarithmic scale demonstrates, the Cuckoo filter is orders of magnitude faster than both the TCF and the GQF. This performance gap comes from the fundamental algorithmic differences in how deletions are handled:
+\begin{itemize}
+  \item \textbf{Cuckoo Filter}: Deletion is a localized, atomic compare-and-swap (CAS) operation. Once the target fingerprint is located, a single atomic instruction is sufficient to remove it.
+  \item \textbf{GQF \& TCF}: These filters require complex metadata updates or element shifting to maintain their structural invariants (e.g., maintaining sorted runs or tombstones). These operations introduce significant overhead, severely limiting throughput.
+\end{itemize}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/delete_perf_mon02_small.png}
+  \caption{Deletion Performance on System A (GDDR7) for an L2-resident filter.}
+  \label{fig:delete-mon02-small}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/delete_perf_gh200_small.png}
+  \caption{Deletion Performance on System B (HBM3) for an L2-resident filter.}
+  \label{fig:delete-gh200-small}
+\end{figure}
+
+\FloatBarrier
+
 \subsection{DRAM-Resident Filters}
 \label{sec:eval:throughput:dram-resident}
+
+For larger datasets (here tested with approx. 268 million items), the filter size exceeds the GPU's L2 cache capacity and thus performance is primarily limited by the memory subsystem. The comparison between System A (GDDR7) and System B (HBM3) reveals an important difference in how the different data structures scale with modern hardware architectures.
+
+\subsubsection{Impact of Hardware Architecture}
+\label{sec:eval:throughput:dram-scaling}
+
+A consistent trend observed across all operations (Insertion, Lookup, and Deletion) reveals a fundamental difference in how the different data structures utilize modern hardware. The filters fall into two distinct scaling categories:
+
+\begin{itemize}
+  \item \textbf{DRAM-Bound Filters (Cuckoo \& Blocked Bloom)}: Both the GPU Cuckoo filter and the Blocked Bloom filter demonstrate strong scalability with global memory bandwidth. Their throughput increases significantly when moving from GDDR7 to HBM3, even though the HBM3 system has 30\% fewer CUDA cores. This confirms that their performance is primarily limited by how fast data can be moved from DRAM.
+
+  \item \textbf{SRAM-Bound Filters (TCF \& GQF)}: In contrast, the TCF and GQF show stagnant or even regressive performance on the HBM3 system. This indicates that these filters are bound not by global DRAM bandwidth, but by the speed of Shared Memory (SRAM). As detailed in the cache efficiency analysis (Section \ref{sec:eval:cache}), these filters rely heavily on complex intra-warp coordination, cooperative groups, and local sorting within shared memory. This creates a scalability bottleneck: because DRAM bandwidth is currently growing significantly faster than SRAM speed in GPU architectures, filters that rely on heavy local computation per byte of data fetched can face a "scalability wall".
+\end{itemize}
+
+\subsubsection{Insertion Performance}
+
+The insertion throughput for the DRAM-resident workload is illustrated in Figure \ref{fig:insert-mon02-large} for the GDDR7 system and Figure \ref{fig:insert-gh200-large} for the HBM3 system.
+
+Consistent with the architectural analysis above, the Cuckoo filter maintains high throughput in the DRAM-resident case. On the GDDR7 system, it competes closely with the Blocked Bloom filter. On the HBM3 system, the Blocked Bloom filter pulls ahead slightly because its linear writes are more efficient than the random atomic transactions required by the Cuckoo filter. However, the Cuckoo filter remains the fastest dynamic option by a wide margin, as the GQF and TCF struggle to hide the latency of global memory accesses due to their complex internal logic.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/insert_perf_mon02_large.png}
+  \caption{Insertion Performance on System A (GDDR7) for a DRAM-resident filter.}
+  \label{fig:insert-mon02-large}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/insert_perf_gh200_large.png}
+  \caption{Insertion Performance on System B (HBM3) for a DRAM-resident filter.}
+  \label{fig:insert-gh200-large}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Lookup Performance}
+Query performance is presented in Figure \ref{fig:query-mon02-large} for the GDDR7 system and Figure \ref{fig:query-gh200-large} for the HBM3 system.
+
+Across both systems, the Cuckoo filter maintains a distinct performance profile based on the query result:
+\begin{itemize}
+  \item \textbf{Positive Lookups}: Positive queries (solid blue line) consistently achieve higher throughput than negative queries. The larger bucket size $(b=16)$ ensures that most items reside in their primary bucket, allowing the filter to satisfy the majority of positive requests with a single DRAM transaction.
+
+  \item \textbf{Negative Lookups}: Throughput for negative lookups (dashed blue line) is about half that of positive lookups. To definitively confirm an item is absent, the algorithm must check both candidate buckets, doubling the memory bandwidth requirement per query. This contrasts with the TCF, where positive and negative query performance is symmetric because the cooperative groups always load both blocks in parallel.
+\end{itemize}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/query_perf_mon02_large.png}
+  \caption{Query Performance on System A (GDDR7) for a DRAM-resident filter.}
+  \label{fig:query-mon02-large}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/query_perf_gh200_large.png}
+  \caption{Query Performance on System B (HBM3) for a DRAM-resident filter.}
+  \label{fig:query-gh200-large}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Deletion Performance}
+Figures \ref{fig:delete-mon02-large} and \ref{fig:delete-gh200-large} illustrate the deletion performance.
+
+The Cuckoo filter's dominance in deletion throughput is consistent across both hardware architectures. Whether bound by GDDR7 or HBM3 latency, the simplicity of the Cuckoo filter's atomic-CAS deletion logic allows it to outperform the TCF and GQF by orders of magnitude. While the GQF suffers from the latency of shifting elements to maintain sorted runs, the TCF is bottlenecked by its use of cooperative groups and block-wide updates. These heavier operations interact poorly with the high latency of global memory access compared to the single-slot atomic operation used by the Cuckoo filter.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/delete_perf_mon02_large.png}
+  \caption{Deletion Performance on System A (GDDR7) for a DRAM-resident filter.}
+  \label{fig:delete-mon02-large}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/perf/delete_perf_gh200_large.png}
+  \caption{Deletion Performance on System B (HBM3) for a DRAM-resident filter.}
+  \label{fig:delete-gh200-large}
+\end{figure}
+
+\FloatBarrier
 
 \section{Bucket Size Impact}
 \label{sec:eval:bucket-size}
@@ -87,7 +253,7 @@ The experiments in Figure \ref{fig:bucket-size} identify distinct optimal config
 \section{False Positive Rate (FPR)}
 \label{sec:eval:fpr}
 
-To evaluate the reliability of the implemented filters, the empirical false-positive rate was measured across a range of filter capacities. For each test, the filters were populated to a constant 95\% load factor using random keys. The total memory size was varied from $2^{15}$ to $2^{30}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint. The results are presented in \ref{fig:fpr-vs-memory}
+To evaluate the reliability of the implemented filters, the empirical false-positive rate was measured across a range of filter capacities. For each test, the filters were populated to a constant 95\% load factor using random keys. The total memory size was varied from $2^{15}$ to $2^{30}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint. The results are presented in Figure \ref{fig:fpr-vs-memory}:
 
 \begin{figure}[h!]
   \centering
@@ -96,20 +262,105 @@ To evaluate the reliability of the implemented filters, the empirical false-posi
   \label{fig:fpr-vs-memory}
 \end{figure}
 
-\subsection{Analysis}
-
 \begin{itemize}
-  \item \textbf{Blocked Bloom Filter}: The Blocked Bloom filter demonstrates the highest false-positive rate among all tested structures, ranging from approximately 0.5\% to over 4\%. This is a known characteristic of the blocked design, partitioning the bit array into small, fixed-size blocks prevents the "averaging" of hash collisions across the entire filter. Consequently, a few heavily congested blocks can disproportionately skew the overall error rate. It is notably the only filter where the false-positive rate actively degrades as the total memory size increases.
+  \item \textbf{Blocked Bloom Filter}: The Blocked Bloom filter demonstrates the highest false-positive rate among all tested structures, ranging from approximately 0.5\% to over 4\%. This is a known characteristic of the blocked design: partitioning the bit array into small, fixed-size blocks prevents the "averaging" of hash collisions across the entire filter. Consequently, a few heavily congested blocks can disproportionately skew the overall error rate. It is notably the only filter where the false-positive rate actively degrades as the total memory size increases.
 
-  \item \textbf{Quotient Filter Accuracy}: The GPU Counting Quotient Filter (GQF) exhibits the lowest false-positive rate among all candidates, maintaining an error rate between 0.001\% and 0.002\%. This confirms the theoretical space efficiency of quotient filters, which handle collisions via Robin Hood hashing and metadata encoding rather than the probabilistic bucket overflow mechanisms found in Cuckoo filters.
+  \item \textbf{Quotient Filter Accuracy}: The GQF exhibits the lowest false-positive rate among all candidates, maintaining an error rate between 0.001\% and 0.002\%. This confirms the theoretical space efficiency of quotient filters, which handle collisions via Robin Hood hashing and metadata encoding rather than the probabilistic bucket overflow mechanisms found in Cuckoo filters.
 
-  \item \textbf{CPU vs. GPU Cuckoo Filters}: A distinction remains visible between the CPU and GPU Cuckoo filter implementations. The CPU version achieves a very low false-positive rate, hovering near 0.005\%. The GPU Cuckoo filter, while still highly accurate, exhibits a slightly higher rate of approximately 0.045\%. This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}. To maximize parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4. As established in Equation \ref{eq:cuckoo-space-bound}, a larger bucket size linearly increases the collision probability for a fixed fingerprint size.
+  \item \textbf{CPU vs. GPU Cuckoo Filters}: A distinction remains visible between the CPU and GPU Cuckoo filter implementations. The CPU version achieves a very low false-positive rate, hovering near 0.005\%. The GPU Cuckoo filter, while still highly accurate, exhibits a slightly higher rate of approximately 0.045\%. This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}. To maximize parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4. As established in Equation \ref{eq:cuckoo-space-bound}, a larger bucket size directly increases the collision probability for a fixed fingerprint size.
 
-  \item \textbf{Comparison with TCF}: The GPU Cuckoo filter significantly outperforms the Bulk Two-Choice Filter (TCF) regarding accuracy. The TCF exhibits an error rate roughly an order of magnitude higher (ranging between 0.2\% and 0.5\%). While the TCF is more accurate than the Blocked Bloom filter, the Cuckoo filter and GQF designs offer superior accuracy for this workload.
+  \item \textbf{Comparison with TCF}: The GPU Cuckoo filter significantly outperforms the TCF regarding accuracy. The TCF exhibits an error rate roughly an order of magnitude higher (ranging between 0.2\% and 0.5\%). While the TCF is more accurate than the Blocked Bloom filter, the Cuckoo filter and GQF designs offer superior accuracy for this workload.
 \end{itemize}
 
 \section{Cache Efficiency}
 \label{sec:eval:cache}
 
+To understand how each filter interacts with the GPU's memory hierarchy, the L1 and L2 cache hit rates were measured by profiling the relevant kernels using NVIDIA Nsight Compute (ncu) on System B. While cache hit rate is not a direct proxy for overall throughput, it provides crucial insight into the memory access patterns and architectural bottlenecks of each implementation. The results for Insert, Query, and Delete operations are presented in Figures \ref{fig:cache-insert}, \ref{fig:cache-query}, and \ref{fig:cache-delete}, respectively.
+
+\subsection{L1 Cache Analysis}
+A consistent trend across all operations is the exceptionally high L1 hit rate (near 100\%) for the TCF and GQF. This is a direct consequence of their design: both filters rely heavily on shared memory for internal computations, such as intra-block sorting and cooperative group coordination. Since shared memory physically resides within the L1 cache on modern NVIDIA architectures, these accesses are counted as L1 hits.
+
+The Cuckoo filter exhibits a moderate L1 hit rate (typically between 30\% and 60\%). This reflects its reliance on atomic operations on global memory addresses. While some repeated accesses may hit in L1, the random nature of hashing means that successive memory requests from a warp rarely map to the same L1 cache line, preventing the high hit rates seen in the shared-memory-heavy implementations. The Blocked Bloom filter generally shows the lowest L1 hit rate, consistent with its streaming access pattern where new cache lines are constantly pulled in.
+
+\subsection{L2 Cache Analysis}
+
+The L2 cache hit rates provide a clear visualization of the transition from a cache-resident workload to a DRAM-resident workload. For the Cuckoo filter and the Blocked Bloom filter, the L2 hit rate remains high (approximately 80-90\%) for smaller capacities. However, a sharp decline is observed once the filter size exceeds $2^{24}$ elements. This inflection point roughly corresponds to the physical L2 cache size of the test GPU. The steep drop-off confirms that beyond this point, every operation effectively incurs a global memory access, explaining the shift in performance scaling discussed in Section \ref{sec:eval:throughput}.
+
+The GQF exhibits similar behavior for its Lookup operation (see Figure \ref{fig:cache-query}). Because a GQF lookup involves linearly scanning a cluster of slots in memory, it relies heavily on the L2 cache to minimize latency. Once the filter grows too large, these linear scans result in frequent cache misses, aligning its curve with that of the Cuckoo and Bloom filters.
+
+In contrast, the TCF and GQF (specifically for Insertion and Deletion) maintain a consistently high L2 hit rate across all filter sizes. This unusual stability indicates that these algorithms interact with global memory far less frequently than the Cuckoo or Bloom filters. Instead, they perform the vast majority of their work—such as sorting items within a block or managing cooperative groups—using internal registers and shared memory. While this results in high cache statistics, it confirms the architectural analysis from the previous section: these filters are bound by the speed of the GPU's compute units and shared memory (SRAM), preventing them from utilizing the abundant DRAM bandwidth available on modern High-Bandwidth Memory systems.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/cache/insert.png}
+  \caption{L1 and L2 cache hit rates for the Insert operation across varying filter capacities.}
+  \label{fig:cache-insert}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/cache/query.png}
+  \caption{L1 and L2 cache hit rates for the Query operation across varying filter capacities.}
+  \label{fig:cache-query}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/cache/delete.png}
+  \caption{L1 and L2 cache hit rates for the Delete operation across varying filter capacities.}
+  \label{fig:cache-delete}
+\end{figure}
+
+\FloatBarrier
+
 \section{Hardware Utilization}
 \label{sec:eval:sol}
+
+To validate the architectural hypotheses regarding memory-bound versus compute-bound behavior, the resource utilization of each filter was profiled using NVIDIA Nsight Compute just like in Section \ref{sec:eval:cache}. This analysis measures the achieved throughput as a percentage of the GPU's theoretical peak ("Speed of Light") for three critical subsystems: Compute (SM), Cache (L1/L2), and Global Memory (DRAM). The results are presented in Figures \ref{fig:sol-compute}, \ref{fig:sol-cache-l1}, \ref{fig:sol-cache-l2}, and \ref{fig:sol-dram}.
+
+\subsection{Compute Utilization}
+The SM throughput metrics, shown in Figure \ref{fig:sol-compute}, reveal distinct execution characteristics for the different algorithms. The Cuckoo and Blocked Bloom filters exhibit a characteristic "hump" profile. When the filter fits within the L2 cache (up to $2^{24}$ elements), compute utilization rises steadily as the execution is dominated by hash calculations and bitwise manipulation instructions. However, once the capacity exceeds the L2 limit, compute utilization drops sharply. This decline occurs because the SMs begin to stall while waiting for data from global memory, shifting the primary bottleneck from instruction throughput to memory latency.
+
+In contrast, the TCF shows a steady increase in compute utilization as the filter grows, eventually reaching high levels of SM saturation (up to 80\%). This confirms that the TCF is primarily compute-bound, spending the majority of its cycles executing cooperative group logic and sorting operations within shared memory rather than waiting on external memory. The GQF stands out for consistently low compute utilization, particularly for insertion and deletion. This suggests it is bottlenecked by neither pure compute throughput nor memory bandwidth, but likely by serialization latency within threads, such as branch divergence or dependency stalls.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/sol/sm_throughput.png}
+  \caption{Compute (SM) throughput as a percentage of peak performance.}
+  \label{fig:sol-compute}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Cache Throughput}
+The L1 and L2 cache throughput metrics (Figures \ref{fig:sol-cache-l1} and \ref{fig:sol-cache-l2}) mirror the cache hit rate findings from Section \ref{sec:eval:cache}.
+
+The Cuckoo and Blocked Bloom filters effectively utilize cache bandwidth up to the L2 capacity limit, after which throughput declines as requests miss to DRAM. In contrast, the TCF and GQF maintain slowly increasing cache throughput regardless of filter size, reinforcing that their working set for active operations remains largely resident in shared memory/L1.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/sol/l1_throughput.png}
+  \caption{L1 throughput as a percentage of peak performance.}
+  \label{fig:sol-cache-l1}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/sol/l2_throughput.png}
+  \caption{L2 throughput as a percentage of peak performance.}
+  \label{fig:sol-cache-l2}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{DRAM Throughput}
+The DRAM throughput results, presented in Figure \ref{fig:sol-dram}, provide definitive confirmation of the scaling characteristics discussed in Section \ref{sec:eval:throughput}. For the Cuckoo and Blocked Bloom filters, DRAM utilization jumps significantly once the filter size exceeds the L2 cache limit. Notably, the Cuckoo filter's insert operation utilizes nearly 35\% of the peak DRAM bandwidth, while query operations reach over 60\%. This confirms that these algorithms are truly memory-bound for large datasets. Consequently, their performance is directly tied to the available memory bandwidth, ensuring they will continue to benefit from future hardware advancements like HBM3e and HBM4.
+
+At the same time, the TCF and GQF show negligible DRAM utilization (near 0\%) for insertion and deletion operations, regardless of filter size. This effectively proves that these algorithms are unable to utilize the available global memory bandwidth. Their performance is strictly limited by the speed of the on-chip memory (SRAM). As a result, they are less likely to scale with future improvements in DRAM technology compared to the memory-hungry Cuckoo filter.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{images/sol/dram_throughput.png}
+  \caption{Global Memory (DRAM) throughput as a percentage of peak performance.}
+  \label{fig:sol-dram}
+\end{figure}

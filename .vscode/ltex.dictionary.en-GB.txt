@@ -72,3 +72,10 @@ artifacts
 Googletest
 RocksDB
 atomicexchange
+EPYC
+AlmaLinux
+Neoverse
+behavior
+GQF
+Nsight
+ncu

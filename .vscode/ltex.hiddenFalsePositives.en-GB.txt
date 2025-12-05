@@ -41,3 +41,15 @@
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QBigtable: A distributed storage system for structured data\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QACM Transactions on Computer Systems (TOCS)\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QProceedings of the 2006 ACM SIGMOD international conference on Management of data\\E$"}
+{"rule":"ADMIT_ENJOY_VB","sentence":"^\\QRather, they are used to evaluate how the algorithms respond to high-bandwidth memory (HBM) versus standard graphics memory (GDDR).\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QDeletion Performance on System A (GDDR7).\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QDeletion Performance on System B (HBM3).\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QQuery Performance on System B (HBM3) for a DRAM-resident filter.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QDeletion Performance on System A (GDDR7) for a L2-resident filter.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QDeletion Performance on System B (HBM3) for a L2-resident filter.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QDeletion Performance on System A (GDDR7) for an L2-resident filter.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QDeletion Performance on System B (HBM3) for an L2-resident filter.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QL1 (left) and L2 (right) cache hit rates for the Delete operation across varying filter capacities.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QL1 and L2 cache hit rates for the Delete operation across varying filter capacities.\\E$"}
+{"rule":"IT_IS_2","sentence":"^\\QWhile the static Blocked Bloom filter maintains a performance lead of approximately 2x due to its much simpler, append-only memory access pattern, the Cuckoo filter establishes itself as the clear performance leader among dynamic data structures.\\E$"}
+{"rule":"IT_IS_2","sentence":"^\\QWhile the static Blocked Bloom filter maintains a performance lead of approximately 2x due to its much simpler, append-only memory access pattern, the Cuckoo filter establishes itself as the clear performance leader among the dynamic data structures.\\E$"}
