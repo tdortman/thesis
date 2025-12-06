@@ -6,7 +6,7 @@ The performance of the GPU-accelerated Cuckoo filter is evaluated to demonstrate
 \section{Experimental Setup}
 \label{sec:eval:setup}
 
-The performance evaluation was conducted on two distinct hardware configurations to analyse how different memory architectures impact the scalability of the filters.
+The performance evaluation was conducted on four distinct hardware configurations to analyse how different memory architectures impact the scalability of the filters. Systems C is only used for the comparison between sorted and unsorted insertion as well as the comparison of the two eviction policies.
 
 \begin{itemize}
   \item \textbf{System A (GDDR7)}: An AMD EPYC 7713P (64 cores) paired with an NVIDIA RTX PRO 6000 Blackwell GPU featuring 96 GB of GDDR7 memory (1.8 TB/s). The system runs AlmaLinux 10.1 with NVIDIA driver 580.95.05 and CUDA 12.9.86.
@@ -18,6 +18,7 @@ It is important to note that these systems are not compared head-to-head to dete
 All performance tests use 16-bit fingerprints (with equivalent space allocation for the Blocked Bloom filter) and random 64-bit integers as input keys.
 
 \subsection{Reference Implementations}
+\label{sec:eval:baselines}
 To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared against the following data structures:
 
 \begin{itemize}
@@ -27,12 +28,13 @@ To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared 
 
   \item \textbf{Optimized Partitioned CPU Cuckoo Filter}: A custom implementation utilizing multithreading (one thread per partition) to maximize CPU throughput without the overhead of SIMD instructions, which were found to degrade performance in this specific context. This filter is not tested for System B, as it relies on x86-64 SIMD instructions. \cite{partitioned-cuckoo}
 
-  \item \textbf{GPU Counting Quotient Filter (GQF)}: A highly space-efficient probabilistic data structure sourced from the same study as the TCF. This implementation utilizes efficient rank-and-select primitives to minimize metadata overhead and supports counting, resizing, and deletions. \cite{tcf}
-
   \item \textbf{Bulk Two-Choice Filter (TCF)}: A modern, GPU-focused AMQ data structure that serves as a direct competitor. \cite{tcf}
+
+  \item \textbf{GPU Counting Quotient Filter (GQF)}: A highly space-efficient probabilistic data structure sourced from the same study as the TCF. This implementation utilizes efficient rank-and-select primitives to minimize metadata overhead and supports counting, resizing, and deletions. \cite{tcf}
 \end{itemize}
 
 \subsection{Evaluation Metrics}
+\label{sec:eval:metrics}
 The implementations are assessed using the following metrics:
 
 \begin{itemize}
@@ -42,13 +44,11 @@ The implementations are assessed using the following metrics:
       \item \textbf{DRAM-Resident}: A larger filter size that necessitates global memory access.
     \end{itemize}
 
-  \item \textbf{Bucket Size Impact}: An analysis of how different fixed bucket sizes affect the performance of the GPU Cuckoo filter (Section \ref{sec:eval:bucket-size}).
-
-  \item \textbf{False Positive Rate (FPR)}: The empirical FPR is measured for given load factors and filter sizes to verify adherence to theoretical bounds (Section \ref{sec:eval:fpr}).
+  \item \textbf{False Positive Rate}: The empirical FPR is measured for given load factors and filter sizes to verify adherence to theoretical bounds (Section \ref{sec:eval:fpr}).
 
   \item \textbf{Cache Efficiency}: L1 and L2 cache hit rates are measured to evaluate memory locality (Section \ref{sec:eval:cache}).
 
-  \item \textbf{Hardware Utilization}: Resource usage is analysed as a percentage of the theoretical peak throughput ("Speed of Light") for compute, memory bandwidth, and cache bandwidth (Section \ref{sec:eval:sol}).
+  \item \textbf{Hardware Utilization}: Resource usage is analysed as a percentage of the theoretical peak throughput ("Speed of Light") for compute, DRAM and cache bandwidth (Section \ref{sec:eval:sol}).
 \end{itemize}
 
 \section{Throughput Analysis}
@@ -250,6 +250,163 @@ The experiments in Figure \ref{fig:bucket-size} identify distinct optimal config
 \end{figure}
 
 \FloatBarrier
+
+\section{Eviction Policies}
+\label{sec:eval:eviction-policies}
+
+To evaluate the impact of the insertion strategy on performance and stability, a comparative analysis was conducted between the standard DFS eviction policy and the proposed BFS heuristic.
+
+\subsection{Experimental Setup}
+For this analysis and the subsequent evaluation of sorted insertion (Section \ref{sec:eval:sorted-insertion}), the experimental setup was expanded with a third hardware configuration to provide finer-grained data on GDDR7 performance scaling:
+
+\begin{itemize}
+  \item \textbf{System C (GDDR7)}: An AMD Ryzen 9 5900X (12 cores) paired with an NVIDIA RTX 5070 Ti GPU featuring 16 GB of GDDR7 memory (0.9 TB/s). The system runs NixOS 25.11 with NVIDIA driver 580.105.08 and CUDA 12.8.93.
+\end{itemize}
+
+The tests use a fixed capacity of either $2^{22}$ (L2-resident) or $2^{28}$ (DRAM-resident) slots. To accurately measure performance in the critical high-load regime, the insertion workload is split based on the target load factor $\alpha$. For each data point, the filter is first pre-filled with 75\% of the total items required to reach the target load (i.e., $0.75 \cdot \alpha \cdot capacity$). Subsequently, the remaining 25\% of items are inserted to reach the final target load $\alpha$, and the throughput of this second phase is recorded. This ensures that the measurement captures the performance behavior specifically as the filter transitions from a moderately full state to the final target occupancy, effectively isolating the impact of the eviction strategy.
+
+\subsection{Eviction Reduction Analysis}
+\label{sec:eval:eviction-policies:reduction}
+
+The premise of the BFS eviction policy is that by investing more computational effort to search for a "local" empty slot, the filter can avoid triggering long, expensive eviction chains. To validate this hypothesis, the average number of evictions performed per inserted item was measured.
+
+As shown in Figure \ref{fig:eviction-reduction}, the BFS policy successfully lowers the eviction rate compared to the greedy DFS approach.
+
+As the filter fills ups, the DFS strategy (which picks a random victim immediately upon collision) sees a quick exponential increase in evictions. In contrast, the BFS strategy delays this spike significantly. By checking up to 8 candidate slots before resorting to an eviction, the BFS approach resolves many collisions locally.
+
+This reduction in evictions directly translates to a reduction in global memory writes. Every eviction saved is an atomic read-modify-write transaction avoided. This explains the performance data observed in the next section: on bandwidth-limited systems (Systems A and C), saving these memory transactions yields a net speed-up, whereas on bandwidth-rich systems (System B), the cost of the extra local checks outweighs the savings.
+
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/evict/count_per_insert.png}
+  \caption{Average number of evictions per insertion on System B.}
+  \label{fig:eviction-reduction}
+\end{figure}
+
+\FloatBarrier
+
+\subsection{Performance Analysis}
+The throughput impact of the BFS policy presents a trade-off between computational complexity (checking 8 candidates per step) and memory bandwidth efficiency (avoiding global memory accesses caused by evictions).
+
+\subsubsection{L2-Resident Workloads}
+In the L2-resident scenario (Figures \ref{fig:evict:insert-system-c-small}, \ref{fig:evict:insert-system-b-small}, \ref{fig:evict:insert-system-a-small}), the standard DFS policy consistently outperforms the BFS policy across all systems.
+
+When the filter fits entirely within the L2 cache, the latency penalty of an eviction (loading a new bucket) is minimal. At the same time, the BFS policy incurs a higher instruction overhead per step because it must perform atomic checks on up to 8 candidate slots within the loaded buckets. In this bandwidth-abundant, low-latency environment, the computational cost of these extra checks outweighs the savings from reduced evictions, making the simpler greedy approach faster.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/evict/insert_system_a_small.png}
+  \caption{Insert Throughput on System A (L2-Resident).}
+  \label{fig:evict:insert-system-a-small}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/evict/insert_system_b_small.png}
+  \caption{Insert Throughput on System B (L2-Resident).}
+  \label{fig:evict:insert-system-b-small}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/evict/insert_system_c_small.png}
+  \caption{Insert Throughput on System C (L2-Resident).}
+  \label{fig:evict:insert-system-c-small}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{DRAM-Resident Workloads}
+
+For large filters, the performance dynamics shift based on the memory technology of the underlying hardware.
+
+\begin{itemize}
+  \item \textbf{GDDR7 Systems (System A \& C)}: On both the RTX Pro 6000 and the RTX 5070 Ti, the BFS policy achieves higher throughput than the DFS policy at high load factors (Figure \ref{fig:evict:insert-system-a-large}, \ref{fig:evict:insert-system-c-large}). On these systems, the latency and bandwidth cost of fetching a new bucket from DRAM (caused by an eviction) is high. By investing more compute cycles to find a slot locally, the BFS policy effectively reduces global memory traffic, resulting in a net performance gain.
+
+  \item \textbf{HBM3 System (System B)}: Conversely, on the GH200 (Figure \ref{fig:evict:insert-system-b-large}), the standard DFS policy remains faster. The massive bandwidth provided by HBM3 effectively hides the cost of the extra evictions generated by the DFS policy. Consequently, the bottleneck shifts back to compute latency, where the simpler logic of the DFS approach proves superior.
+\end{itemize}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/evict/insert_system_a_large.png}
+  \caption{Insert Throughput on System A (DRAM-Resident).}
+  \label{fig:evict:insert-system-a-large}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/evict/insert_system_b_large.png}
+  \caption{Insert Throughput on System B (DRAM-Resident).}
+  \label{fig:evict:insert-system-b-large}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/evict/insert_system_c_large.png}
+  \caption{Insert Throughput on System C (DRAM-Resident).}
+  \label{fig:evict:insert-system-c-large}
+\end{figure}
+
+\FloatBarrier
+
+\section{Sorted vs. Unsorted Insertion}
+\label{sec:eval:sorted-insertion}
+
+To investigate the potential for enhancing insertion throughput by improving memory locality, an alternative insertion strategy was implemented and evaluated. This strategy, detailed in Section \ref{sec:implementation:optimisation-techniques:sorted}, pre-sorts the input keys by their primary bucket index before launching the insertion kernel. The goal is to maximize coalesced memory accesses by ensuring that adjacent threads target the same or nearby memory regions.
+
+\subsection{Performance Characteristics}
+
+The performance impact of sorting was evaluated across all three test systems. Figures \ref{fig:sorted-system-a}, \ref{fig:sorted-system-b}, and \ref{fig:sorted-system-c} illustrate the throughput comparison between the standard unsorted approach and the sorted variant across a wide range of input batch sizes.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/sorted_insertion/system_a.png}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System A (GDDR7).}
+  \label{fig:sorted-system-a}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/sorted_insertion/system_b.png}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System B (HBM3).}
+  \label{fig:sorted-system-b}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/sorted_insertion/system_c.png}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System C (GDDR7).}
+  \label{fig:sorted-system-c}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Impact on Throughput Curve}
+Across all hardware configurations, pre-sorting the input has a distinct "flattening" effect on the throughput curve.
+\begin{itemize}
+  \item \textbf{Small Inputs (L2-Resident)}: For smaller input sizes, where the filter fits within the L2 cache, the sorted strategy is significantly slower. The overhead of the radix sort dominates the total execution time, and the benefits of memory locality are minimal since the data is already cached.
+  \item \textbf{Large Inputs (DRAM-Resident)}: As the input size grows and the filter spills into global memory, the unsorted throughput declines due to random memory access latency. Conversely, the sorted throughput remains relatively stable.
+\end{itemize}
+
+\subsubsection{Architecture-Specific Behavior}
+The usefulness of this optimization is heavily dependent on the memory subsystem of the GPU.
+
+\begin{itemize}
+  \item \textbf{GDDR7 Systems (A \& C)}: On Systems A and C, which rely on GDDR7 memory, the sorted insertion strategy begins to show promise at the upper limits of the tested capacity. As the memory bottleneck intensifies, the improved access patterns of the sorted approach allow it to match or slightly exceed the performance of the unsorted baseline. This confirms that sorting serves as a valid optimization for scenarios that are severely bound by global memory latency.
+
+  \item \textbf{HBM3 System (B)}: On System B, the massive bandwidth of HBM3 effectively hides the random access latency of the unsorted approach. Consequently, the unsorted insertion remains significantly faster across all tested sizes. The cost of sorting simply adds overhead without providing a necessary benefit, as the memory controller can already saturate the bus with random requests.
+\end{itemize}
+
+\subsection{Trade-offs and Limitations}
+
+While sorting can theoretically improve throughput for memory-bound workloads, it introduces significant practical limitations:
+
+\begin{itemize}
+  \item \textbf{Memory Overhead}: The sorting process is not free in terms of space. It requires auxiliary buffers to hold the sorted keys and indices, effectively doubling the peak memory usage during insertion. This halves the maximum batch size that can be processed in a single pass, which may be prohibitive for memory-constrained applications.
+
+  \item \textbf{Limited Gains}: Even on GDDR7 systems where the optimization is most relevant, the crossover point where sorting becomes beneficial occurs only at very large capacities. Given the substantial memory overhead, the modest throughput gains at the extreme tail end of the capacity curve may not justify the added complexity and resource consumption for general-use cases.
+\end{itemize}
+
 \section{False Positive Rate (FPR)}
 \label{sec:eval:fpr}
 

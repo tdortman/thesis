@@ -79,3 +79,5 @@ behavior
 GQF
 Nsight
 ncu
+NixOS
+evictionPolicy

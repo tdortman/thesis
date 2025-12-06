@@ -53,3 +53,7 @@
 {"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QL1 and L2 cache hit rates for the Delete operation across varying filter capacities.\\E$"}
 {"rule":"IT_IS_2","sentence":"^\\QWhile the static Blocked Bloom filter maintains a performance lead of approximately 2x due to its much simpler, append-only memory access pattern, the Cuckoo filter establishes itself as the clear performance leader among dynamic data structures.\\E$"}
 {"rule":"IT_IS_2","sentence":"^\\QWhile the static Blocked Bloom filter maintains a performance lead of approximately 2x due to its much simpler, append-only memory access pattern, the Cuckoo filter establishes itself as the clear performance leader among the dynamic data structures.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QInsert Throughput on System C (DRAM-Resident).\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QInsert Throughput on System C (L2-Resident).\\E$"}
+{"rule":"CD_NN","sentence":"^\\QBy checking up to 8 candidate slots (4 per bucket) before resorting to an eviction, the BFS approach resolves many collisions locally.\\E$"}
+{"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QThroughput comparison of sorted vs. unsorted insertion on System C (GDDR7).\\E$"}
