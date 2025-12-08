@@ -1,7 +1,7 @@
 \chapter{Background and Related Work}
 \label{sec:background}
 
-Having established the motivation and objectives for designing a GPU-accelerated Cuckoo filter, this chapter provides the necessary background from its two foundational domains: probabilistic data structures and parallel computing. The discussion first traces the algorithmic lineage of the Cuckoo filter, beginning with the Bloom filter, progressing to the Cuckoo hashing scheme, and culminating in the Cuckoo filter itself. Subsequently, the focus shifts to the hardware and software paradigm with an introduction to the GPU architecture, the CUDA programming model, and the key performance considerations essential for developing efficient parallel algorithms. A firm grasp of both these areas is crucial for understanding the design choices and implementation challenges addressed in the remainder of this thesis.
+Having established the motivation for designing a GPU-accelerated Cuckoo filter, this chapter provides the necessary background information from its two relevant domains: probabilistic data structures and parallel computing. The discussion first traces the algorithmic lineage of the Cuckoo filter, beginning with the Bloom filter, progressing to the Cuckoo hashing scheme, and culminating in the Cuckoo filter itself. Subsequently, the focus shifts to hardware and software with an introduction to the GPU architecture, the CUDA programming model, and the key performance considerations essential for developing efficient parallel algorithms. A firm grasp of both these areas is crucial for understanding the design choices and implementation challenges addressed in the remainder of this thesis.
 
 \section{Probabilistic Data Structures}
 \label{sec:background:probabilistic-data-structures}
@@ -52,7 +52,7 @@ Despite its widespread use, the classic Bloom filter has several notable disadva
 \subsection{Blocked Bloom Filter}
 \label{sec:background:blocked-bloom-filter}
 
-To address the critical issue of poor memory locality, the Blocked Bloom Filter was introduced. As this variant is a primary point of comparison in the performance evaluation in this thesis, its design warrants a more detailed explanation.
+To address the issue of poor memory locality, the Blocked Bloom Filter was introduced. As this variant is a primary point of comparison in the performance evaluation in this thesis, its design warrants a more detailed explanation.
 
 Instead of a single monolithic bit array, the Blocked Bloom Filter partitions the array into an array of smaller, independent Bloom filters, called blocks. Each block is typically sized to fit within a single CPU cache line (e.g., 64 bytes). The hashing scheme is modified: a single hash function is first used to map an incoming item to a specific block. Then, the standard $k$ hash functions are used to set or check bits only within that selected block, as shown in Figure \ref{fig:blocked-bloom-filter}.
 
