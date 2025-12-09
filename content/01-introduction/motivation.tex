@@ -1,8 +1,3 @@
-% !TEX root = ../my-thesis.tex
-%
-\chapter{Introduction}
-\label{sec:intro}
-
 \section{Motivation}
 \label{sec:intro:motivation}
 
@@ -31,36 +26,3 @@ The demand for high-speed, dynamic set membership testing shows up across numero
 
   \item \textbf{Bioinformatics and Computational Biology}: Genomics and proteomics research involves searching for patterns or sequences within massive biological datasets. A GPU-accelerated Cuckoo filter could be used to rapidly pre-screen for the presence of specific k-mers or genetic markers before launching more computationally intensive analyses, significantly speeding up the research pipeline. \cite{gaia2019ngsreadstreatment}
 \end{itemize}
-
-\section{Contributions}
-\label{sec:intro:contributions}
-
-This thesis presents a comprehensive study on accelerating probabilistic data structures using GPUs. The main contributions of this work are as follows:
-
-\begin{itemize}
-  \item \textbf{A novel GPU-Accelerated Cuckoo Filter Design}: The design and implementation of a parallel Cuckoo filter supporting insertion, lookup, and deletion are presented. The implementation introduces a lock-free, atomic-based mechanism to handle the "cuckoo" eviction process safely within a massively parallel environment, addressing the challenge of managing race conditions without sacrificing throughput.
-
-  \item \textbf{Advanced Optimization Techniques}: Several optimization strategies are explored and evaluated to maximize occupancy and memory bandwidth. These include a sorted-insertion algorithm to improve memory locality and a modified eviction strategy designed to reduce eviction chain lengths at high load factors.
-
-  \item \textbf{System-Level Integration Extensions}: Moving beyond a standalone kernel, two extensions are contributed to facilitate real-world adoption. First, an Inter-Process Communication (IPC) wrapper is developed to enable zero-copy, low-latency sharing of the filter between processes. Second, a multi-GPU implementation is provided that transparently partitions data across multiple devices using NCCL, allowing the filter to scale beyond the memory limits of a single card.
-
-  \item \textbf{Comprehensive Evaluation}: A rigorous analysis is conducted comparing the GPU Cuckoo filter against CPU baselines and other GPU-accelerated filters. The results demonstrate that the implementation achieves competitive throughput with the static Blocked Bloom filter while far surpassing the other tested dynamic filters.
-\end{itemize}
-
-\section{Thesis Structure}
-\label{sec:intro:structure}
-
-\textbf{Chapter \ref{sec:related}} \\[0.2em]
-\blindtext
-
-\textbf{Chapter \ref{sec:system}} \\[0.2em]
-\blindtext
-
-\textbf{Chapter \ref{sec:concepts}} \\[0.2em]
-\blindtext
-
-\textbf{Chapter \ref{sec:concepts}} \\[0.2em]
-\blindtext
-
-\textbf{Chapter \ref{sec:conclusion}} \\[0.2em]
-\blindtext

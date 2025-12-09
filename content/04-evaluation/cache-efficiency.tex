@@ -1,0 +1,40 @@
+\section{Cache Efficiency}
+\label{sec:eval:cache}
+
+To understand how each filter interacts with the GPU's memory hierarchy, the L1 and L2 cache hit rates were measured by profiling the relevant kernels using NVIDIA Nsight Compute (ncu) on System B. While cache hit rate is not a direct proxy for overall throughput, it provides crucial insight into the memory access patterns and architectural bottlenecks of each implementation. The results for Insert, Query, and Delete operations are presented in Figures \ref{fig:cache-insert}, \ref{fig:cache-query}, and \ref{fig:cache-delete}, respectively.
+
+\subsection{L1 Cache Analysis}
+A consistent trend across all operations is the exceptionally high L1 hit rate (near 100\%) for the TCF and GQF. This is a direct consequence of their design: both filters rely heavily on shared memory for internal computations, such as intra-block sorting and cooperative group coordination. Since shared memory physically resides within the L1 cache on modern NVIDIA architectures, these accesses are counted as L1 hits.
+
+The Cuckoo filter exhibits a moderate L1 hit rate (typically between 30\% and 60\%). This reflects its reliance on atomic operations on global memory addresses. While some repeated accesses may hit in L1, the random nature of hashing means that successive memory requests from a warp rarely map to the same L1 cache line, preventing the high hit rates seen in the shared-memory-heavy implementations. The Blocked Bloom filter generally shows the lowest L1 hit rate, consistent with its streaming access pattern where new cache lines are constantly pulled in.
+
+\subsection{L2 Cache Analysis}
+
+The L2 cache hit rates provide a clear visualization of the transition from a cache-resident workload to a DRAM-resident workload. For the Cuckoo filter and the Blocked Bloom filter, the L2 hit rate remains high (approximately 80-90\%) for smaller capacities. However, a sharp decline is observed once the filter size exceeds $2^{24}$ elements. This inflection point roughly corresponds to the physical L2 cache size of the test GPU. The steep drop-off confirms that beyond this point, every operation effectively incurs a global memory access, explaining the shift in performance scaling discussed in Section \ref{sec:eval:throughput}.
+
+The GQF exhibits similar behavior for its Lookup operation (see Figure \ref{fig:cache-query}). Because a GQF lookup involves linearly scanning a cluster of slots in memory, it relies heavily on the L2 cache to minimize latency. Once the filter grows too large, these linear scans result in frequent cache misses, aligning its curve with that of the Cuckoo and Bloom filters.
+
+In contrast, the TCF and GQF (specifically for Insertion and Deletion) maintain a consistently high L2 hit rate across all filter sizes. This unusual stability indicates that these algorithms interact with global memory far less frequently than the Cuckoo or Bloom filters. Instead, they perform the vast majority of their work—such as sorting items within a block or managing cooperative groups—using internal registers and shared memory. While this results in high cache statistics, it confirms the architectural analysis from the previous section: these filters are bound by the speed of the GPU's compute units and shared memory (SRAM), preventing them from utilizing the abundant DRAM bandwidth available on modern High-Bandwidth Memory systems.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/cache/insert.png}
+  \caption{L1 and L2 cache hit rates for the Insert operation across varying filter capacities.}
+  \label{fig:cache-insert}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/cache/query.png}
+  \caption{L1 and L2 cache hit rates for the Query operation across varying filter capacities.}
+  \label{fig:cache-query}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/cache/delete.png}
+  \caption{L1 and L2 cache hit rates for the Delete operation across varying filter capacities.}
+  \label{fig:cache-delete}
+\end{figure}
+
+\FloatBarrier

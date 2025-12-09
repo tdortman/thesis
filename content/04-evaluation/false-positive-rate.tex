@@ -1,0 +1,51 @@
+\section{False Positive Rate (FPR)}
+\label{sec:eval:fpr}
+
+\subsection{Empirical Accuracy Analysis}
+\label{sec:eval:fpr:empirical}
+
+To evaluate the reliability of the implemented filters, the empirical false-positive rate was measured across a range of filter capacities. For each test, the filters were populated to a constant 95\% load factor using random keys. The total memory size was varied from $2^{15}$ to $2^{30}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint. The results are presented in Figure \ref{fig:fpr-vs-memory}:
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/fpr.png}
+  \caption{Comparison of False Positive Rates (FPR) versus total memory size for various filter implementations at a 95\% load factor.}
+  \label{fig:fpr-vs-memory}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Blocked Bloom Filter}: The Blocked Bloom filter demonstrates the highest false-positive rate among all tested structures, ranging from approximately 0.5\% to over 4\%. This is a known characteristic of the blocked design: partitioning the bit array into small, fixed-size blocks prevents the "averaging" of hash collisions across the entire filter. Consequently, a few heavily congested blocks can disproportionately skew the overall error rate. It is notably the only filter where the false-positive rate actively degrades as the total memory size increases.
+
+  \item \textbf{Quotient Filter Accuracy}: The GQF exhibits the lowest false-positive rate among all candidates, maintaining an error rate between 0.001\% and 0.002\%. This confirms the theoretical space efficiency of quotient filters, which handle collisions via Robin Hood hashing and metadata encoding rather than the probabilistic bucket overflow mechanisms found in Cuckoo filters.
+
+  \item \textbf{CPU vs. GPU Cuckoo Filters}: A distinction remains visible between the CPU and GPU Cuckoo filter implementations. The CPU version achieves a very low false-positive rate, hovering near 0.005\%. The GPU Cuckoo filter, while still highly accurate, exhibits a slightly higher rate of approximately 0.045\%. This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}. To maximize parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4. As established in Equation \ref{eq:cuckoo-space-bound}, a larger bucket size directly increases the collision probability for a fixed fingerprint size.
+
+  \item \textbf{Comparison with TCF}: The GPU Cuckoo filter significantly outperforms the TCF regarding accuracy. The TCF exhibits an error rate roughly an order of magnitude higher (ranging between 0.2\% and 0.5\%). While the TCF is more accurate than the Blocked Bloom filter, the Cuckoo filter and GQF designs offer superior accuracy for this workload.
+\end{itemize}
+
+\subsection{Performance vs. Accuracy Trade-off}
+\label{sec:eval:fpr:tradeoff}
+
+In real-world applications, filters are often chosen based on strict False Positive Rate requirements (e.g. $\leq 1\%$ or $\leq 0.1\%$). To evaluate how the filters perform under these constraints, a parameter sweep was conducted to identify the configuration that yields the highest throughput for a given target FPR.
+
+These tests were performed on System B (HBM3) with a fixed capacity of $2^{28}$ slots. The CPU implementations are excluded from this comparison as their throughput is insufficient for the massive batch sizes used. To represent a realistic workload where the presence of items is uncertain, the query throughput is reported as a weighted average of positive and negative lookups, with a 50\% hit rate.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/throughput-by-fpr.png}
+  \caption{Maximum achievable throughput for Insert, Query, and Delete operations while adhering to strict False Positive Rate targets. Note the logarithmic scale on the Y-axis.}
+  \label{fig:throughput-by-fpr}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Baseline Comparison}: As expected, the Blocked Bloom filter offers the highest raw throughput for insertions and queries due to its simplicity. However, its inability to support deletions rules it out for dynamic applications. Among the dynamic filters, the Cuckoo filter is the closest competitor to the Bloom filter's performance.
+
+  \item \textbf{Consistency}: The GPU Cuckoo filter demonstrates remarkable consistency. Its throughput for insertions, deletions, and queries remains high and stable across all target error rates, from $10\%$ down to $0.01\%$. This stability allows system designers to tune the filter's accuracy without fearing a sudden cliff in performance.
+
+  \item \textbf{Dynamic Operation Performance}: While the GQF can match the Cuckoo filter in query throughput for this specific mix, it suffers a catastrophic penalty in dynamic operations. Its insertion and deletion throughputs are orders of magnitude lower (note the log scale) due to the complex synchronization required to shift elements. Similarly, the TCF, while faster than the GQF for updates, still lags significantly behind the Cuckoo filter in deletion throughput.
+
+  \item \textbf{Conclusion}: The GPU Cuckoo filter emerges as the most robust and well-rounded solution for high-throughput dynamic workloads. It is the only data structure capable of maintaining high performance for insertions, lookups, \textit{and} deletions simultaneously, while satisfying strict accuracy constraints.
+
+\end{itemize}
+
+\FloatBarrier

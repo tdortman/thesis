@@ -1,0 +1,25 @@
+\section{IPC Wrapper}
+\label{sec:implementation:ipc-wrapper}
+
+To allow the GPU-accelerated Cuckoo filter to be used as a high-performance, system-wide service, an Inter-Process Communication (IPC) wrapper was developed. This wrapper exposes the filter's functionality through a client-server architecture, with a core focus on enabling true zero-copy data transfer for maximum efficiency.
+
+The architecture is built upon two primary mechanisms: a shared memory queue for communication and CUDA's IPC API for data access. A fixed-size ring buffer, chosen for its superior performance and simplicity in a concurrent environment, is created in a POSIX shared memory segment to act as a command queue. The key is how input data is handled. Instead of sending buffers through the queue, a client performs the following steps:
+
+\begin{enumerate}
+  \item Allocate memory in its own GPU memory space for the batch of items to be processed.
+  \item Obtain opaque memory handles to this device memory using \\
+    \texttt{cudaIpcGetMemHandle}.
+  \item Place these handles inside a request message alongside other metadata like the size of input and output buffers, which is then enqueued into the shared memory ring buffer.
+\end{enumerate}
+
+The server runs a single worker thread that continuously dequeues requests from this ring buffer. For each request, the server's thread uses \\ \texttt{cudaIpcOpenMemHandle} on the provided handle to obtain a direct, valid device pointer into the \textit{client's} GPU memory space. This allows the server to launch its kernels and read the input keys directly, completely avoiding the significant overhead of inter-process data copies.
+
+The queue is blocking by design, meaning a client attempting to enqueue a request into a full queue will wait until a slot becomes available. The server supports both a graceful shutdown, where it stops accepting new requests but processes all outstanding items, and a forced shutdown that cancels all pending requests.
+
+To simplify its use, a client library abstracts away the low-level IPC details. An optional Thrust wrapper is also provided to allow for seamless interaction with \texttt{thrust::device\_vector}. This architecture could be enhanced in several ways in the future:
+
+\begin{itemize}
+  \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximize throughput in high-concurrency scenarios.
+  \item Support could be added for multiple worker threads managing filters on different GPUs to enable further load balancing.
+  \item The filter could be exposed over a network by leveraging technologies like RDMA (Remote Direct Memory Access) to preserve the zero-copy transfer properties.
+\end{itemize}

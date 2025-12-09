@@ -1,0 +1,57 @@
+\section{Sorted vs. Unsorted Insertion}
+\label{sec:eval:sorted-insertion}
+
+To investigate the potential for enhancing insertion throughput by improving memory locality, an alternative insertion strategy was implemented and evaluated. This strategy, detailed in Section \ref{sec:implementation:optimisation-techniques:sorted}, pre-sorts the input keys by their primary bucket index before launching the insertion kernel. The goal is to maximize coalesced memory accesses by ensuring that adjacent threads target the same or nearby memory regions.
+
+\subsection{Performance Characteristics}
+
+The performance impact of sorting was evaluated across all three test systems. Figures \ref{fig:sorted-system-a}, \ref{fig:sorted-system-b}, and \ref{fig:sorted-system-c} illustrate the throughput comparison between the standard unsorted approach and the sorted variant across a wide range of input batch sizes.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/sorted_insertion/system_a.png}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System A (GDDR7).}
+  \label{fig:sorted-system-a}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/sorted_insertion/system_b.png}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System B (HBM3).}
+  \label{fig:sorted-system-b}
+\end{figure}
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/sorted_insertion/system_c.png}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System C (GDDR7).}
+  \label{fig:sorted-system-c}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Impact on Throughput Curve}
+Across all hardware configurations, pre-sorting the input has a distinct "flattening" effect on the throughput curve.
+\begin{itemize}
+  \item \textbf{Small Inputs (L2-Resident)}: For smaller input sizes, where the filter fits within the L2 cache, the sorted strategy is significantly slower. The overhead of the radix sort dominates the total execution time, and the benefits of memory locality are minimal since the data is already cached.
+  \item \textbf{Large Inputs (DRAM-Resident)}: As the input size grows and the filter spills into global memory, the unsorted throughput declines due to random memory access latency. Conversely, the sorted throughput remains relatively stable.
+\end{itemize}
+
+\subsubsection{Architecture-Specific Behavior}
+The usefulness of this optimization is heavily dependent on the memory subsystem of the GPU.
+
+\begin{itemize}
+  \item \textbf{GDDR7 Systems (A \& C)}: On Systems A and C, which rely on GDDR7 memory, the sorted insertion strategy begins to show promise at the upper limits of the tested capacity. As the memory bottleneck intensifies, the improved access patterns of the sorted approach allow it to match or slightly exceed the performance of the unsorted baseline. This confirms that sorting serves as a valid optimization for scenarios that are severely bound by global memory latency.
+
+  \item \textbf{HBM3 System (B)}: On System B, the massive bandwidth of HBM3 effectively hides the random access latency of the unsorted approach. Consequently, the unsorted insertion remains significantly faster across all tested sizes. The cost of sorting simply adds overhead without providing a necessary benefit, as the memory controller can already saturate the bus with random requests.
+\end{itemize}
+
+\subsection{Trade-offs and Limitations}
+
+While sorting can theoretically improve throughput for memory-bound workloads, it introduces significant practical limitations:
+
+\begin{itemize}
+  \item \textbf{Memory Overhead}: The sorting process is not free in terms of space. It requires auxiliary buffers to hold the sorted keys and indices, effectively doubling the peak memory usage during insertion. This halves the maximum batch size that can be processed in a single pass, which may be prohibitive for memory-constrained applications.
+
+  \item \textbf{Limited Gains}: Even on GDDR7 systems where the optimization is most relevant, the crossover point where sorting becomes beneficial occurs only at very large capacities. Given the substantial memory overhead, the modest throughput gains at the extreme tail end of the capacity curve may not justify the added complexity and resource consumption for general-use cases.
+\end{itemize}

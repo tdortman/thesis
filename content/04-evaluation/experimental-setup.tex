@@ -1,0 +1,47 @@
+\section{Experimental Setup}
+\label{sec:eval:setup}
+
+The performance evaluation was conducted on two distinct hardware configurations to analyse how different memory architectures impact the scalability of the filters. Systems C is only used for the comparison between sorted and unsorted insertion as well as the comparison of the two eviction policies.
+
+\begin{itemize}
+  \item \textbf{System A (GDDR7)}: An AMD EPYC 7713P (64 cores) paired with an NVIDIA RTX PRO 6000 Blackwell GPU featuring 96 GB of GDDR7 memory (1.8 TB/s). The system runs AlmaLinux 10.1 with NVIDIA driver 580.95.05 and CUDA 12.9.86.
+  \item \textbf{System B (HBM3)}: An NVIDIA GH200 Grace Hopper system with 72 ARM Neoverse V2 cores and an H100 GPU with 96 GB of HBM3 memory (3.4 TB/s). The system runs Ubuntu 24.04.3 with NVIDIA driver 580.105.08 and CUDA 13.0.88.
+\end{itemize}
+
+It is important to note that these systems are not compared head-to-head to determine which is "better." Rather, they are used to evaluate how the algorithms respond to high-bandwidth memory (HBM) versus standard graphics memory (GDDR).
+
+All performance tests use 16-bit fingerprints (with equivalent space allocation for the Blocked Bloom filter) and random 64-bit integers as input keys.
+
+\subsection{Reference Implementations}
+\label{sec:eval:baselines}
+To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared against the following data structures:
+
+\begin{itemize}
+  \item \textbf{GPU Blocked Bloom Filter}: Sourced from the \textit{cuCollections} library, serving as a high-performance baseline for a static (non-deletable) filter. \cite{cuCollections}
+
+  \item \textbf{Original CPU Cuckoo Filter}: The reference implementation from the original 2014 paper by Fan et al. \cite{og-cuckoo-filter}.
+
+  \item \textbf{Optimized Partitioned CPU Cuckoo Filter}: A custom implementation utilizing multithreading (one thread per partition) to maximize CPU throughput without the overhead of SIMD instructions, which were found to degrade performance in this specific context. This filter is not tested for System B, as it relies on x86-64 SIMD instructions. \cite{partitioned-cuckoo}
+
+  \item \textbf{Bulk Two-Choice Filter (TCF)}: A modern, GPU-focused AMQ data structure that serves as a direct competitor. \cite{tcf}
+
+  \item \textbf{GPU Counting Quotient Filter (GQF)}: A highly space-efficient probabilistic data structure sourced from the same study as the TCF. This implementation utilizes efficient rank-and-select primitives to minimize metadata overhead and supports counting, resizing, and deletions. \cite{tcf}
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+\label{sec:eval:metrics}
+The implementations are assessed using the following metrics:
+
+\begin{itemize}
+  \item \textbf{Throughput}: Measured for insertions, lookups, and deletions and is evaluated under two distinct conditions:
+    \begin{itemize}
+      \item \textbf{L2-Resident}: A filter size small enough to fit entirely within the GPU's L2 cache.
+      \item \textbf{DRAM-Resident}: A larger filter size that necessitates global memory access.
+    \end{itemize}
+
+  \item \textbf{False Positive Rate}: The empirical FPR is measured for given load factors and filter sizes to verify adherence to theoretical bounds (Section \ref{sec:eval:fpr}).
+
+  \item \textbf{Cache Efficiency}: L1 and L2 cache hit rates are measured to evaluate memory locality (Section \ref{sec:eval:cache}).
+
+  \item \textbf{Hardware Utilization}: Resource usage is analysed as a percentage of the theoretical peak throughput ("Speed of Light") for compute, DRAM and cache bandwidth (Section \ref{sec:eval:sol}).
+\end{itemize}
