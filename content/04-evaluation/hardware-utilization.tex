@@ -8,7 +8,7 @@ The SM throughput metrics, shown in Figure \ref{fig:sol-compute}, reveal distinc
 
 In contrast, the TCF shows a steady increase in compute utilization as the filter grows, eventually reaching high levels of SM saturation (up to 80\%). This confirms that the TCF is primarily compute-bound, spending the majority of its cycles executing cooperative group logic and sorting operations within shared memory rather than waiting on external memory. The GQF stands out for consistently low compute utilization, particularly for insertion and deletion. This suggests it is bottlenecked by neither pure compute throughput nor memory bandwidth, but likely by serialization latency within threads, such as branch divergence or dependency stalls.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.8\textwidth]{images/sol/sm_throughput.png}
   \caption{Compute (SM) throughput as a percentage of peak performance.}
@@ -22,14 +22,14 @@ The L1 and L2 cache throughput metrics (Figures \ref{fig:sol-cache-l1} and \ref{
 
 The Cuckoo and Blocked Bloom filters effectively utilize cache bandwidth up to the L2 capacity limit, after which throughput declines as requests miss to DRAM. In contrast, the TCF and GQF maintain slowly increasing cache throughput regardless of filter size, reinforcing that their working set for active operations remains largely resident in shared memory/L1.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.8\textwidth]{images/sol/l1_throughput.png}
   \caption{L1 throughput as a percentage of peak performance.}
   \label{fig:sol-cache-l1}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.8\textwidth]{images/sol/l2_throughput.png}
   \caption{L2 throughput as a percentage of peak performance.}
@@ -43,7 +43,7 @@ The DRAM throughput results, presented in Figure \ref{fig:sol-dram}, provide def
 
 At the same time, the TCF and GQF show negligible DRAM utilization (near 0\%) for insertion and deletion operations, regardless of filter size. This effectively proves that these algorithms are unable to utilize the available global memory bandwidth. Their performance is strictly limited by the speed of the on-chip memory (SRAM). As a result, they are less likely to scale with future improvements in DRAM technology compared to the memory-hungry Cuckoo filter.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.8\textwidth]{images/sol/dram_throughput.png}
   \caption{Global Memory (DRAM) throughput as a percentage of peak performance.}

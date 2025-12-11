@@ -16,7 +16,7 @@ The GQF exhibits similar behavior for its Lookup operation. Because a GQF lookup
 
 In contrast, the TCF and GQF (specifically for Insertion and Deletion) maintain a consistently high L2 hit rate across all filter sizes. This unusual stability indicates that these algorithms interact with global memory far less frequently than the Cuckoo or Bloom filters. Instead, they perform the vast majority of their work, such as sorting items within a block or managing cooperative groups, using internal registers and shared memory. While this results in high cache statistics, it confirms the architectural analysis from the previous section: these filters are bound by the speed of the GPU's compute units and shared memory (SRAM), preventing them from utilizing the abundant DRAM bandwidth available on modern High-Bandwidth Memory systems.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/cache-hit-rates.png}
   \caption{L1 and L2 cache hit rates for the various operations across varying filter capacities.}

@@ -59,3 +59,10 @@
 {"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QThroughput comparison of sorted vs. unsorted insertion on System C (GDDR7).\\E$"}
 {"rule":"IT_IS_2","sentence":"^\\QWhile the static Blocked Bloom filter maintains a performance lead due to its much simpler, append-only memory access pattern, the Cuckoo filter establishes itself as the clear performance leader among the dynamic data structures.\\E$"}
 {"rule":"ENGLISH_WORD_REPEAT_BEGINNING_RULE","sentence":"^\\QDeletion Performance for L2-resident (Top) and DRAM-resident (Bottom) filters.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QFuture iterations could implement an asynchronous command queue, similar to io_uring, to allow clients to submit batches of requests without stalling, further maximizing GPU occupancy.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qenglish  english Abstract Zusammenfassung\\E$"}
+{"rule":"WHITESPACE_RULE","sentence":"^\\Qenglish  english Abstract Zusammenfassung\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qenglish  english Abstract Zusammenfassung\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qenglish\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QAbstract (German) german\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qenglish\\E$"}

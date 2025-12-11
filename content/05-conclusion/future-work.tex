@@ -1,4 +1,11 @@
 \section{Future Work}
-\label{sec:conclusion:future}
+\label{sec:conclusion:future-work}
 
-\Blindtext[2][2]
+The work presented in this thesis opens several avenues for future research and optimization:
+
+\begin{itemize}
+  \item \textbf{Asynchronous APIs}: The current IPC mechanism is blocking. Future iterations could implement an asynchronous command queue, similar to \texttt{io\_uring}, to allow clients to submit batches of requests without stalling, further maximizing GPU occupancy.
+  \item \textbf{Variable-Length Fingerprints}: Investigating methods to support variable-length fingerprints within the fixed-bucket structure could allow users to fine-tune the space-accuracy trade-off without the coarseness of jumping from 16-bit to 32-bit tags.
+  \item \textbf{Adaptive Eviction Policies}: Implementing a dynamic runtime system that switches between DFS and BFS eviction strategies based on the current load factor and hardware could provide optimal performance across all scenarios.
+  \item \textbf{Integration with Database Systems}: The ultimate test of this data structure would be its integration into a GPU-accelerated database engine (e.g., as a filter for join operations) to measure its impact on end-to-end query latency in a real-world application.
+\end{itemize}

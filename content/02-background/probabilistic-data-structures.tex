@@ -83,7 +83,7 @@ The insertion process is more involved and follows the distinct "cuckoo" evictio
   \item To prevent infinite loops, a maximum number of evictions is set. If this limit is reached, the table is considered full, and all items must be rehashed with a new pair of hash functions, potentially into larger tables.
 \end{enumerate}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.7\textwidth]{images/cuckoo-hashing.png}
   \caption{Illustration of a Cuckoo hashing insertion in a single-table variant. The incoming item $x$ finds both of its candidate slots occupied. It evicts item $a$, triggering a cascading eviction chain until item $d$ is moved to a free slot, resulting in a new stable arrangement of items in the table.}

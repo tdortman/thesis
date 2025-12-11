@@ -6,7 +6,7 @@
 
 To evaluate the reliability of the implemented filters, the empirical false-positive rate was measured across a range of filter capacities. For each test, the filters were populated to a constant 95\% load factor using random keys. The total memory size was varied from $2^{15}$ to $2^{30}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint. The results are presented in Figure \ref{fig:fpr-vs-memory}:
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/fpr.png}
   \caption{Comparison of False Positive Rates (FPR) versus total memory size for various filter implementations at a 95\% load factor.}
@@ -30,7 +30,7 @@ In real-world applications, filters are often chosen based on strict False Posit
 
 These tests were performed on System B (HBM3) with a fixed capacity of $2^{28}$ slots. The CPU implementations are excluded from this comparison as their throughput is insufficient for the massive batch sizes used. To represent a realistic workload where the presence of items is uncertain, the query throughput is reported as a weighted average of positive and negative lookups, with a 50\% hit rate.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/throughput-by-fpr.png}
   \caption{Maximum achievable throughput for Insert, Query, and Delete operations while adhering to strict False Positive Rate targets. Note the logarithmic scale on the Y-axis.}

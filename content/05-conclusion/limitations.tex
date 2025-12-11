@@ -1,0 +1,12 @@
+\section{Limitations}
+\label{sec:conclusion:limitations}
+
+Despite the success of the implementation, certain limitations remain:
+
+\begin{itemize}
+  \item \textbf{Insertion Performance at Capacity}: As the filter approaches maximum capacity ($>95\%$), the insertion throughput degrades significantly due to long eviction chains. While the BFS eviction policy helps with this on bandwidth-constrained systems, the fundamental algorithmic bottleneck persists.
+
+  \item \textbf{False Positive Rate Flexibility}: Unlike a Bloom filter, where the error rate can be tuned arbitrarily by changing the number of hash functions, the Cuckoo filter's error rate is constrained to discrete steps determined by the available integer widths (8, 16, or 32 bits).
+
+  \item \textbf{Memory Footprint}: To achieve peak performance, the implementation relies on power-of-two capacities and fixed bucket sizes, which can lead to slight memory fragmentation or over-provisioning compared to the more granular sizing possible with a Quotient filter.
+\end{itemize}
