@@ -6,12 +6,12 @@ To ensure the correctness and reliability of the implementation, a comprehensive
 \subsection{Unit Testing}
 \label{sec:implementation:testing:unit}
 
-The Googletest framework is utilized to implement a comprehensive suite of unit tests. These tests are designed to validate the correctness of individual components and helper functions in isolation. The test suite covers common use cases, known edge cases (such as empty inputs, full filters, and operations on zero-capacity filters), and the internal logic of critical functions like hashing, fingerprint extraction, and bucket index calculation. This low-level validation provides a strong foundation of correctness upon which the larger system is built.
+The Googletest framework is utilized to implement a comprehensive suite of unit tests. These tests are designed to validate the correctness of individual components in isolation. The test suite covers common use cases and known edge cases (such as empty inputs, full filters, and operations on zero-capacity filters). This low-level validation provides a strong foundation of correctness upon which the larger system is built.
 
 \subsection{Functional and Empirical Verification}
 \label{sec:implementation:testing:functional}
 
-Beyond unit tests, a dedicated test binary was created for each primary output artifact to empirically verify its end-to-end functionality. A standardized test flow was developed to rigorously validate the correctness properties of the filter implementations. This procedure was then adapted for the specific contexts of the single-GPU, IPC, and multi-GPU versions.
+Beyond unit tests, a dedicated test binary was created for each primary output artifact to empirically verify its end-to-end functionality. A standardized test flow was developed to rigorously validate the correctness of the filter implementations. This procedure was then adapted for the specific contexts of the single-GPU, IPC, and multi-GPU versions.
 
 \subsubsection{Standard Verification Procedure}
 \label{sec:implementation:testing:std-proc}
@@ -25,7 +25,12 @@ The core empirical validation follows a standardized, multi-stage procedure usin
 
   \item \textbf{False-Positive Rate Measurement}: The empirical false-positive rate is measured by querying one million distinct keys known not to be in the filter (drawn from the disjoint range $[2^{32}, 2^{64}-1]$). The observed rate of positive matches is then calculated and compared against the theoretically expected rate to ensure it falls within an acceptable margin.
 
-  \item \textbf{Deletion Correctness and Stability Test}: Half of the initially inserted items are deleted. A subsequent query for the entire original set of keys is then conducted to verify three conditions: (a) all non-deleted items must still be found; (b) the vast majority of deleted items must no longer be found; and (c) the rate of any remaining positive hits for the deleted items must be statistically consistent with the filter's theoretical false-positive rate.
+  \item \textbf{Deletion Correctness and Stability Test}: Half of the initially inserted items are deleted. A subsequent query for the entire original set of keys is then conducted to verify three conditions:
+    \begin{itemize}
+      \item All non-deleted items must still be found.
+      \item The vast majority of deleted items must no longer be found
+      \item The rate of any remaining positive hits for the deleted items must be statistically consistent with the filter's theoretical false-positive rate.
+    \end{itemize}
 \end{enumerate}
 
 \subsubsection{Single-GPU Filter Verification}

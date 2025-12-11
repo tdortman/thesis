@@ -5,7 +5,7 @@
 
 Recent work by McCoy et al. introduced the Two-Choice Filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs \cite{tcf}. The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter that is optimized for the architectural constraints of a GPU.
 
-Structurally, the TCF is similar to a Cuckoo filter. It organizes fingerprints into blocks that are sized to fit within a GPU cache line to ensure high memory locality. Furthermore, unlike a Cuckoo filter, it uses two hash functions to map each item to two candidate blocks.
+Structurally, the TCF is quite similar to a Cuckoo filter. It organizes fingerprints into blocks that are sized to fit within a GPU cache line to ensure high memory locality. Furthermore, unlike a Cuckoo filter, it uses two hash functions to map each item to two candidate blocks.
 
 The fundamental difference lies in the insertion strategy. Whereas a Cuckoo filter employs an eviction-based scheme, the TCF uses a simpler placement-based strategy derived from the "power-of-two-choices" paradigm to help with load balancing \cite{potc}. The insertion logic is as follows:
 

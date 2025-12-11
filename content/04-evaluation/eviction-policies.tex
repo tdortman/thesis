@@ -10,7 +10,7 @@ For this analysis and the subsequent evaluation of sorted insertion (Section \re
   \item \textbf{System C (GDDR7)}: An AMD Ryzen 9 5900X (12 cores) paired with an NVIDIA RTX 5070 Ti GPU featuring 16 GB of GDDR7 memory (0.9 TB/s). The system runs NixOS 25.11 with NVIDIA driver 580.105.08 and CUDA 12.8.93.
 \end{itemize}
 
-The tests use a fixed capacity of either $2^{22}$ (L2-resident) or $2^{28}$ (DRAM-resident) slots. To accurately measure performance in the critical high-load regime, the insertion workload is split based on the target load factor $\alpha$. For each data point, the filter is first pre-filled with 75\% of the total items required to reach the target load (i.e., $0.75 \cdot \alpha \cdot capacity$). Subsequently, the remaining 25\% of items are inserted to reach the final target load $\alpha$, and the throughput of this second phase is recorded. This ensures that the measurement captures the performance behavior specifically as the filter transitions from a moderately full state to the final target occupancy, effectively isolating the impact of the eviction strategy.
+The tests use a fixed capacity of either $2^{22}$ (L2-resident) or $2^{28}$ (DRAM-resident) slots. To accurately measure performance in the critical high-load scenario, the insertion workload is split based on the target load factor $\alpha$. For each data point, the filter is first pre-filled with 75\% of the total items required to reach the target load (i.e., $0.75 \cdot \alpha \cdot capacity$). Subsequently, the remaining 25\% of items are inserted to reach the final target load $\alpha$, and the throughput of this second phase is recorded. This ensures that the measurement captures the performance behavior specifically as the filter transitions from a moderately full state to the final target occupancy, effectively isolating the impact of the eviction strategy.
 
 \subsection{Eviction Reduction Analysis}
 \label{sec:eval:eviction-policies:reduction}
@@ -23,7 +23,7 @@ As the filter fills ups, the DFS strategy (which picks a random victim immediate
 
 This reduction in evictions directly translates to a reduction in global memory writes. Every eviction saved is an atomic read-modify-write transaction avoided. This explains the performance data observed in the next section: on bandwidth-limited systems (Systems A and C), saving these memory transactions yields a net speed-up, whereas on bandwidth-rich systems (System B), the cost of the extra local checks outweighs the savings.
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/evict/count_per_insert.png}
   \caption{Average number of evictions per insertion on System B.}
@@ -40,21 +40,21 @@ In the L2-resident scenario (Figures \ref{fig:evict:insert-system-c-small}, \ref
 
 When the filter fits entirely within the L2 cache, the latency penalty of an eviction (loading a new bucket) is minimal. At the same time, the BFS policy incurs a higher instruction overhead per step because it must perform atomic checks on up to 8 candidate slots within the loaded buckets. In this bandwidth-abundant, low-latency environment, the computational cost of these extra checks outweighs the savings from reduced evictions, making the simpler greedy approach faster.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/evict/insert_system_a_small.png}
   \caption{Insert Throughput on System A (L2-Resident).}
   \label{fig:evict:insert-system-a-small}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/evict/insert_system_b_small.png}
   \caption{Insert Throughput on System B (L2-Resident).}
   \label{fig:evict:insert-system-b-small}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/evict/insert_system_c_small.png}
   \caption{Insert Throughput on System C (L2-Resident).}
@@ -68,26 +68,26 @@ When the filter fits entirely within the L2 cache, the latency penalty of an evi
 For large filters, the performance dynamics shift based on the memory technology of the underlying hardware.
 
 \begin{itemize}
-  \item \textbf{GDDR7 Systems (System A \& C)}: On both the RTX Pro 6000 and the RTX 5070 Ti, the BFS policy achieves higher throughput than the DFS policy at high load factors (Figure \ref{fig:evict:insert-system-a-large}, \ref{fig:evict:insert-system-c-large}). On these systems, the latency and bandwidth cost of fetching a new bucket from DRAM (caused by an eviction) is high. By investing more compute cycles to find a slot locally, the BFS policy effectively reduces global memory traffic, resulting in a net performance gain.
+  \item \textbf{GDDR7 (System A \& C)}: On both the RTX Pro 6000 and the RTX 5070 Ti, the BFS policy achieves higher throughput than the DFS policy at high load factors (Figure \ref{fig:evict:insert-system-a-large}, \ref{fig:evict:insert-system-c-large}). On these systems, the latency and bandwidth cost of fetching a new bucket from DRAM (caused by an eviction) is high. By investing more compute cycles to find a slot locally, the BFS policy effectively reduces global memory traffic, resulting in a net performance gain.
 
-  \item \textbf{HBM3 System (System B)}: Conversely, on the GH200 (Figure \ref{fig:evict:insert-system-b-large}), the standard DFS policy remains faster. The massive bandwidth provided by HBM3 effectively hides the cost of the extra evictions generated by the DFS policy. Consequently, the bottleneck shifts back to compute latency, where the simpler logic of the DFS approach proves superior.
+  \item \textbf{HBM3 (System B)}: Conversely, on the GH200 (Figure \ref{fig:evict:insert-system-b-large}), the standard DFS policy remains faster. The massive bandwidth provided by HBM3 effectively hides the cost of the extra evictions generated by the DFS policy. Consequently, the bottleneck shifts back to compute latency, where the simpler logic of the DFS approach proves superior.
 \end{itemize}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/evict/insert_system_a_large.png}
   \caption{Insert Throughput on System A (DRAM-Resident).}
   \label{fig:evict:insert-system-a-large}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/evict/insert_system_b_large.png}
   \caption{Insert Throughput on System B (DRAM-Resident).}
   \label{fig:evict:insert-system-b-large}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/evict/insert_system_c_large.png}
   \caption{Insert Throughput on System C (DRAM-Resident).}

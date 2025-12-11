@@ -8,7 +8,7 @@ At the heart of this thesis is the need for a dynamic and efficient data structu
 
 Invented in 1970, the Bloom filter has long been the dominant probabilistic data structure for approximate membership query (AMQ) problems. Its operation is based on a simple yet effective concept: a bit array of size $m$ and a set of $k$ independent hash functions. To insert an item, the item is hashed $k$ times, and each resulting hash value is used as an index to set a bit in the array to 1. To query for an item's membership, the item is again hashed $k$ times. If all corresponding bits in the array are 1, the item is considered to possibly be in the set. However, if even one bit is 0, the item is definitively not in the set, as illustrated in Figure \ref{fig:bloom-filter}.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.7\textwidth]{images/bloom-filter.png}
   \caption{An illustration of a Bloom filter's insertion and lookup mechanism with $m=11$ slots and $k=3$ hash functions. The set $\{x, y, z\}$ has been inserted, setting the corresponding bits in the array to 1. A membership query for a new item $w$ returns a definitive "no" (guaranteeing no false negatives) because one of the bits it maps to is 0.}
@@ -37,7 +37,7 @@ Such a filter uses $1.44 \log_2(1/\epsilon)$ bits per element.
 Despite its widespread use, the classic Bloom filter has several notable disadvantages:
 
 \begin{itemize}
-  \item \textbf{No Deletion}: The standard implementation does not support the removal of items, as clearing a bit could inadvertently remove other items that hash to the same location. Variants like the Counting Bloom Filter address this by using counters instead of single bits, but at a significant cost to space efficiency.
+  \item \textbf{No Deletion}: The standard implementation does not support the removal of items, as clearing a bit could inadvertently remove other items that hash to the same location. Variants like the Counting Bloom Filter \cite{counting-bloom} address this by using counters instead of single bits, but at a significant cost to space efficiency.
   \item \textbf{Linear Complexity}: Lookup and insertion performance is dependent on the number of hash functions, which scales linearly with $m$. This can lead to performance bottlenecks in high-throughput scenarios.
   \item \textbf{Poor Memory Locality}: The $k$ hash functions produce indices that are typically scattered randomly across the entire bit array. This leads to poor cache performance on CPUs and is particularly detrimental on GPUs, where it prevents efficient memory access.
   \item \textbf{Degrading Performance}: As the filter fills up and more bits are set to 1, the false positive rate steadily increases, eventually converging to a point where all queries yield a positive result.
@@ -47,11 +47,11 @@ Despite its widespread use, the classic Bloom filter has several notable disadva
 \subsection{Blocked Bloom Filter}
 \label{sec:background:blocked-bloom-filter}
 
-To address the issue of poor memory locality, the Blocked Bloom Filter was introduced. As this variant is a primary point of comparison in the performance evaluation in this thesis, its design warrants a more detailed explanation.
+To address the issue of poor memory locality, the Blocked Bloom Filter was introduced. As this variant is a primary point of comparison in this thesis, its design warrants a more detailed explanation.
 
 Instead of a single monolithic bit array, the Blocked Bloom Filter partitions the array into an array of smaller, independent Bloom filters, called blocks. Each block is typically sized to fit within a single CPU cache line (e.g., 64 bytes). The hashing scheme is modified: a single hash function is first used to map an incoming item to a specific block. Then, the standard $k$ hash functions are used to set or check bits only within that selected block, as shown in Figure \ref{fig:blocked-bloom-filter}.
 
-\begin{figure}[h!]
+\begin{figure}[ht!]
   \centering
   \includegraphics[width=0.7\textwidth]{images/blocked-bloom-filter.png}
   \caption{An illustration of a Blocked Bloom Filter. Each item is first mapped to a single block (e.g., item $y$ maps to Block 0, while $x$ and $z$ map to Block 1). The $k$ hash functions then operate only within that selected block, improving memory locality. A query for item $w$, which maps to Block 0, returns a definitive "no" as one of its target bits is 0.}
@@ -60,7 +60,7 @@ Instead of a single monolithic bit array, the Blocked Bloom Filter partitions th
 
 The primary advantage of this design is a dramatic improvement in memory locality. All $k$ memory accesses for a single item are now confined to a small, contiguous memory region. This is highly beneficial for modern CPU caches and, more importantly for this thesis, is extremely well-suited to the parallel memory access patterns of GPUs. When multiple threads in a warp process items that map to the same block, their memory requests can be coalesced into a single transaction, significantly improving memory bandwidth utilization.
 
-However, this performance gain comes at the cost of a higher false positive rate for the same amount of memory. By partitioning the filter, the Blocked Bloom Filter loses the "averaging" effect of the classic design. If an unlucky distribution of items causes one block to become heavily saturated, its local false positive rate will increase dramatically, and this "hotspot" can dominate the overall false positive rate of the entire structure. Therefore, the Blocked Bloom Filter represents a direct trade-off: it sacrifices some statistical efficiency for significantly better performance, making it a crucial and highly relevant baseline for evaluating cache-aware and GPU-accelerated data structures.
+However, this performance gain comes at the cost of a higher false positive rate. By partitioning the filter, the Blocked Bloom Filter loses the "averaging" effect of the classic design. If an unlucky distribution of items causes one block to become heavily saturated, its local false positive rate will increase dramatically, and this "hotspot" can dominate the overall false positive rate of the entire structure. Therefore, the Blocked Bloom Filter represents a direct trade-off: sacrificing some statistical efficiency for significantly better performance, making it a highly relevant baseline for evaluating cache-aware and GPU-accelerated data structures.
 
 \subsection{Cuckoo Hashing}
 \label{sec:background:cuckoo-hashing}
@@ -90,9 +90,9 @@ The insertion process is more involved and follows the distinct "cuckoo" evictio
   \label{fig:cuckoo-hashing}
 \end{figure}
 
-The success of this probabilistic scheme hinges on the load factor. The theory guarantees that if the tables are kept sufficiently sparse. Specifically, if the number of slots in each table $r$ is greater than $(1+\epsilon)n$, where $n$ is the number of items, the probability of an insertion failing and requiring a rehash is very low \cite{pagh2001cell}. This effectively means the total load factor across both tables should be kept below 50\%.
+The success of this probabilistic scheme hinges on the load factor, the theory guarantees that if the tables are kept sufficiently sparse. Specifically, if $r$ is greater than $(1+\epsilon)n$, where $n$ is the number of items, the probability of an insertion failing and requiring a rehash is very low \cite{pagh2001cell}. This effectively means the total load factor across both tables should be kept below 50\%.
 
-A common and important variant, is to use a single table of size $m = 2r$. This is more space-efficient and is the model that more closely resembles a Cuckoo filter's implementation. This variant provides an important conceptual link to the Cuckoo filter because it introduces the idea of deriving an alternate location from a current one without storing any extra state.
+A common and important variant is to use a single table of size $m = 2r$. This is more space-efficient and is the model that more closely resembles a Cuckoo filter's implementation. It also introduces the idea of deriving an alternate location from a current one without storing any extra state.
 
 Pagh and Rodler describe a trick, attributed to John Tromp, that achieves this. The key insight is to redefine the two potential locations for an item $x$. Instead of simply being $h_1(x) \bmod m$ and $h_2(x) \bmod m$, the locations are defined as:
 
@@ -101,7 +101,7 @@ Pagh and Rodler describe a trick, attributed to John Tromp, that achieves this. 
   \item $i_2 = (h_2(x) - h_1(x)) \bmod m$
 \end{itemize}
 
-With this specific construction, a symmetric, state-free mapping function can be used to jump between the two locations. If an item $x$ is currently at a location $i$, its alternate location $i'$ can be calculated using the single mapping
+With this specific construction, a symmetric function can be used to jump between the two locations. If an item $x$ is currently at a location $i$, its alternate location $i'$ can be calculated using the mapping
 
 \begin{equation}
   i' = (h_2(x) - i) \bmod m
@@ -112,18 +112,18 @@ This works because the transformation is its own inverse for that specific pair 
 \subsection{Cuckoo Filter}
 \label{sec:background:cuckoo-filter}
 
-The Cuckoo filter, introduced by Fan et al., is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter, most notably by supporting dynamic deletion of items \cite{og-cuckoo-filter}. It improves upon standard Cuckoo hashing with several important distinctions.
+The Cuckoo filter, introduced by Fan et al., is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter, most notably by supporting deletion of items \cite{og-cuckoo-filter}. It improves upon standard Cuckoo hashing with several important distinctions.
 
 First, instead of storing entire items, a Cuckoo filter only stores a small fingerprint for each item, which is a fixed-size sequence of bits derived from the item's hash. This significantly reduces the memory footprint. A direct consequence, however, is that traditional rehashing is not an option, as the original items are not available to be re-inserted. Therefore, the filter's size and parameters are typically static once it is created.
 
-Second, it replaces the standard Cuckoo hashing scheme with partial-key cuckoo hashing. This clever technique establishes a symmetric dependency between the two potential bucket locations and the item's fingerprint. A single hash function is used to compute an initial location $i_1$ and a fingerprint $f$. The alternate location $i_2$ is then derived using the XOR operation
+Second, it replaces the standard Cuckoo hashing scheme with partial-key cuckoo hashing. This clever technique establishes a symmetric dependency between the two potential bucket locations and the item's fingerprint. A single hash function is used to compute an initial location $i_1$ and a fingerprint $fp$. The alternate location $i_2$ is then derived using the XOR operation:
 
 \begin{equation}
-  i_2 = i_1 \oplus \mathrm{hash}(f)
+  i_2 = i_1 \oplus \mathrm{hash}(fp)
   \label{eq:partial-cuckoo-hashing}
 \end{equation}
 
-Thanks to the symmetric nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus \mathrm{hash}(f)$. This allows an evicted fingerprint to calculate its alternate location from its current position and its own fingerprint alone, a crucial feature since the original item is not stored.
+Thanks to the symmetric nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus \mathrm{hash}(fp)$. This allows an evicted fingerprint to calculate its alternate location from its current position and its own fingerprint alone, a crucial feature since the original item is not stored.
 
 \subsubsection{Design and Performance Characteristics}
 \label{sec:background:cuckoo-filter:design-perf}
@@ -139,7 +139,7 @@ The design of the Cuckoo filter leads to several practical advantages over Bloom
       \epsilon \approx 2b/2^f
     \end{equation}
 
-    The actual amortized space cost per item, $C$, is the fingerprint size $f$ divided by the filter's load factor $\alpha$ (e.g., $\alpha \approx 0.955$ for buckets of size 4), since the cost of the unoccupied slots must be distributed among the stored items. The minimal fingerprint size required to achieve a target rate $\epsilon$ is approximately
+    The actual amortized space cost per item, $C$, is the fingerprint size $f$ divided by the filter's load factor $\alpha$, since the cost of the unoccupied slots must be distributed among the stored items. The minimal fingerprint size required to achieve a target rate $\epsilon$ is approximately
 
     \begin{equation}
       f \ge \log_2(2b/\epsilon) = \log_2(1/\epsilon) + \log_2(2b)
@@ -152,7 +152,7 @@ The design of the Cuckoo filter leads to several practical advantages over Bloom
       \label{eq:cuckoo-space-bound}
     \end{equation}
 
-    This equation is critical as it decomposes the cost into the information-theoretic lower bound ($\log_2(1/\epsilon)$), an overhead term related to the bucket size ($\log_2(2b)$), and an efficiency penalty from the load factor ($1/\alpha$). It clearly reveals the central trade-off: a larger bucket size $b$ improves the load factor $\alpha$ but also increases the overhead term, requiring careful tuning to optimize space. For a target $\epsilon < 3\%$, the authors show that a well-configured Cuckoo filter is more space-efficient than a space-optimized Bloom filter.
+    This equation is important as it decomposes the cost into the information-theoretic lower bound ($\log_2(1/\epsilon)$), an overhead term related to the bucket size ($\log_2(2b)$), and an efficiency penalty from the load factor ($1/\alpha$). It clearly reveals the central trade-off: a larger bucket size $b$ improves the load factor $\alpha$ but also increases the overhead term, requiring careful tuning to optimize space. For a target $\epsilon < 3\%$, the authors show that a well-configured Cuckoo filter is more space-efficient than a space-optimized Bloom filter \cite{og-cuckoo-filter}.
 
   \item \textbf{Performance}: A key performance advantage is that any lookup, positive or negative, always reads a fixed number of buckets, resulting in (at most) two cache line misses. This is a significant improvement over standard Bloom filters, where the number of memory probes $k$ scales with the desired false positive rate and can be much larger than two. This theoretical efficiency translates to strong practical performance. As demonstrated later in the evaluation in Section \ref{sec:eval:throughput}, while it does not fully match the raw throughput of the highly cache-optimized (and non-deletable) Blocked Bloom Filter, a well-managed GPU Cuckoo Filter is highly competitive and easily surpasses all other tested filters.
 \end{itemize}

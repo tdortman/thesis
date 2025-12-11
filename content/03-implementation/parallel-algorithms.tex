@@ -31,7 +31,7 @@ To maintain an accurate count of the total items in the filter without creating 
     \State $h = \mathrm{hash}(\text{key})$
     \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
     \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
-    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
+    \State $i_2 = \text{alt\_bucket}(i_1, fp)$
     \If{there is an empty slot in bucket $i_1$ or $i_2$}
       \State insert $fp$ into an empty slot (atomic)
       \State \textbf{return} \texttt{Success}
@@ -63,7 +63,7 @@ The parallel lookup algorithm is similar to insertion but is a read-only operati
 
 The thread calculates the item's fingerprint and its two candidate bucket indices, just as in the insertion process. It then searches both buckets for a matching fingerprint, again using the fingerprint to determine a random starting point for a linear probe. Despite the ability to use two threads per item to check both buckets in parallel, this was found to be slower in every tested case.
 
-The key optimization in the lookup kernel is the use of vectorized, non-atomic memory loads. Since it can be guaranteed that no other kernel is writing to the filter during a lookup operation, thread safety is not a concern. Modern GPU hardware can load 128 bits (or 16 bytes) in a single instruction. The kernel leverages this by loading two 64-bit words at a time, allowing a thread to check multiple fingerprints with a single memory transaction and dramatically increasing throughput. The results of the lookup (found or not found) are written to a user-provided output array.
+The key optimization in the lookup kernel is the use of vectorized, non-atomic memory loads. Since it can be guaranteed that no other kernel is writing or deleting during a lookup operation, thread safety is not a concern. Modern GPU hardware can load 128 bits (or 16 bytes) in a single instruction. The kernel leverages this by loading two 64-bit words at a time, allowing a thread to check multiple fingerprints with a single memory transaction and dramatically increasing throughput. The results of the lookup (found or not found) are written to a user-provided output array.
 
 % tex-fmt: off
 \begin{algorithm}[H]
@@ -112,7 +112,7 @@ The outcome of this atomic operation dictates the thread's next action:
   \item \textbf{If the CAS fails}, it implies that another thread has modified that specific slot in the brief moment after it was found (e.g., by deleting a different item that happened to have the same fingerprint). In this event, the thread's deletion is not yet complete, and it must continue its linear scan through the rest of the bucket(s) to find another instance of the fingerprint to attempt to remove.
 \end{itemize}
 
-This continues until a deletion is successful, or both buckets have been fully traversed. This ensures that each deletion request is handled independently and correctly, even in the presence of duplicate fingerprints. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, a hierarchical reduction on the success values is used to minimize contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
+Each deletion attempt proceeds until an entry has been successfully removed, or both buckets have been fully examined. This approach ensures the operation is handled independently and correctly, even when duplicate fingerprints exist. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, a hierarchical reduction on the success values is used to minimize contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
 
 % tex-fmt: off
 \begin{algorithm}[H]
@@ -123,7 +123,7 @@ This continues until a deletion is successful, or both buckets have been fully t
     \State $h = \mathrm{hash}(\text{key})$
     \State $fp = \mathrm{upper32}(h) \mathbin{\&} \bigl((1 \ll \text{bitsPerTag}) - 1\bigr)$
     \State $i_1 = \mathrm{lower32}(h) \bmod \text{numBuckets}$
-    \State $i_2 = i_1 \oplus \mathrm{hash}(fp) \bmod \text{numBuckets}$
+    \State $i_2 = \text{alt\_bucket}(i_1, fp)$
     \State \textbf{return} TryRemove(bucket $i_1$, $fp$) \textbf{or} TryRemove(bucket $i_2$, $fp$)
   \EndFunction
   \Statex

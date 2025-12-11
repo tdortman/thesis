@@ -8,7 +8,7 @@ To handle datasets that exceed the memory capacity of a single graphics card, a 
 
 The core design choice was to instantiate a completely independent Cuckoo filter instance on each GPU, each managing its own dedicated device memory. While a single, logically distributed filter was considered, the practical overhead of managing eviction chains across the high-latency interconnect between GPUs was deemed prohibitive, as it would severely compromise insertion performance.
 
-To distribute items across these independent filters, a deterministic partitioning scheme is used. Each key is assigned to a specific GPU based on the result of $\mathrm{hash}(key) \bmod n$, where $n$ is the number of GPUs. While a uniform hash function would distribute keys evenly, minor variances are expected in practice. To account for this and prevent premature insertion failures on one device, each GPU's filter is allocated slightly more capacity (2\%) than its proportional share.
+To distribute items across these independent filters, a deterministic partitioning scheme is used. Each key is assigned to a specific GPU based on the result of $\mathrm{hash}(key) \bmod n$, where $n$ is the number of GPUs. While a uniform hash function would ideally distribute keys evenly, minor variances are expected in practice. To account for this and prevent premature insertion failures on one device, each GPU's filter is allocated slightly more capacity (2\%) than its proportional share.
 
 \subsection{Data Distribution and Processing}
 \label{sec:implementation:multi-gpu-distribution}
@@ -30,7 +30,7 @@ Distributing the input data from the host to the correct GPU partition is a crit
 
 For lookup and deletion operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order. To solve this efficiently, the results are sent back to the GPUs that originally held the keys (pre-partitioning). This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order. This avoids numerous small, inefficient memory copies and preserves the parallelism of the overall process.
 
-\subsection{Challenges and Overheads}
-\label{sec:implementation:multi-gpu-challenges}
+\subsection{Overheads}
+\label{sec:implementation:multi-gpu-overheads}
 
 The multi-GPU implementation, while powerful, introduces its own set of overheads. The data partitioning stage on each GPU requires at least one sorting pass, a reduction, and an exclusive prefix-sum to manage the data. These operations are accelerated using the Thrust library, which itself requires significant temporary storage. This increased memory pressure on each GPU means that the processable chunk size must be carefully managed to avoid running out of device memory during the partitioning phase.

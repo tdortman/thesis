@@ -5,7 +5,7 @@ The performance evaluation was conducted on two distinct hardware configurations
 
 \begin{itemize}
   \item \textbf{System A (GDDR7)}: An AMD EPYC 7713P (64 cores) paired with an NVIDIA RTX PRO 6000 Blackwell GPU featuring 96 GB of GDDR7 memory (1.8 TB/s). The system runs AlmaLinux 10.1 with NVIDIA driver 580.95.05 and CUDA 12.9.86.
-  \item \textbf{System B (HBM3)}: An NVIDIA GH200 Grace Hopper system with 72 ARM Neoverse V2 cores and an H100 GPU with 96 GB of HBM3 memory (3.4 TB/s). The system runs Ubuntu 24.04.3 with NVIDIA driver 580.105.08 and CUDA 13.0.88.
+  \item \textbf{System B (HBM3)}: An NVIDIA GH200 Grace Hopper system with 72 ARM Neoverse V2 cores and an H100 GPU featuring 96 GB of HBM3 memory (3.4 TB/s). The system runs Ubuntu 24.04.3 with NVIDIA driver 580.105.08 and CUDA 13.0.88.
 \end{itemize}
 
 It is important to note that these systems are not compared head-to-head to determine which is "better." Rather, they are used to evaluate how the algorithms respond to high-bandwidth memory (HBM) versus standard graphics memory (GDDR).
@@ -33,13 +33,13 @@ To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared 
 The implementations are assessed using the following metrics:
 
 \begin{itemize}
-  \item \textbf{Throughput}: Measured for insertions, lookups, and deletions and is evaluated under two distinct conditions:
+  \item \textbf{Throughput}: Measured for insertions, lookups, and deletions and is evaluated under two distinct conditions (Section \ref{sec:eval:throughput}):
     \begin{itemize}
       \item \textbf{L2-Resident}: A filter size small enough to fit entirely within the GPU's L2 cache.
       \item \textbf{DRAM-Resident}: A larger filter size that necessitates global memory access.
     \end{itemize}
 
-  \item \textbf{False Positive Rate}: The empirical FPR is measured for given load factors and filter sizes to verify adherence to theoretical bounds (Section \ref{sec:eval:fpr}).
+  \item \textbf{False Positive Rate (FPR) and Trade-offs}: The empirical FPR is measured to verify adherence to theoretical bounds. Furthermore, a comparative analysis is performed to determine the maximum achievable throughput for each filter when constrained to specific target false-positive rates (Section \ref{sec:eval:fpr}).
 
   \item \textbf{Cache Efficiency}: L1 and L2 cache hit rates are measured to evaluate memory locality (Section \ref{sec:eval:cache}).
 

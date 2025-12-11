@@ -9,20 +9,20 @@ The design of the GPU-accelerated Cuckoo filter emphasizes compile-time configur
 To maximize performance by allowing the compiler to generate highly specialized code, the filter's core parameters are defined at compile-time as template arguments. These parameters are consolidated into a single configuration structure, \texttt{CuckooConfig}, which provides a clean and explicit way to instantiate the filter. The primary configuration options are:
 
 \begin{itemize}
-  \item \texttt{bitsPerTag}: Defines the size of each fingerprint in bits. The implementation is specialized for values of 8, 16, or 32, which align well with standard integer types.
+  \item \texttt{bitsPerTag}: Defines the size of each fingerprint in bits. The implementation rounds up to 8, 16, or 32.
 
   \item \texttt{bucketSize}: Specifies the number of fingerprints stored in each bucket. A smaller bucket size generally leads to a lower false positive rate but can negatively impact insertion performance and overall occupancy. A default of 16 was chosen through empirical performance testing.
 
   \item \texttt{maxEvictions}: Sets the maximum number of evictions a single thread is allowed to perform during an insertion attempt before it gives up and reports a failure. The default value of 500 was determined empirically.
 
-  \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels. This parameter can be tuned to optimize GPU occupancy for different hardware architectures.
+  \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels. This parameter can be tuned to optimize GPU occupancy for different hardware architectures. A default of 256 was chosen through empirical testing.
 
-  \item \texttt{AltBucketPolicy}: A template parameter that accepts a class. This class encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket from its primary one. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but an alternative based on the "Additive and Subtractive" Cuckoo filter \cite{add-sub-cuckoo-filter} has also been implemented to demonstrate this flexibility.
+  \item \texttt{AltBucketPolicy}: A template parameter that accepts a class which encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but an alternative based on the "Additive and Subtractive" Cuckoo filter \cite{add-sub-cuckoo-filter} has also been implemented to demonstrate this flexibility.
 
   \item \texttt{evictionPolicy}: A template parameter that defines the strategy for selecting a victim fingerprint to displace when a bucket is full. The default implementation employs a standard greedy approach (picking a random item). However, more sophisticated strategies can be substituted, such as the heuristic-based approach described in Section \ref{sec:implementation:optimisation-techniques:eviction}, which attempts to minimize the length of eviction chains.
 \end{itemize}
 
-Throughout the implementation, \texttt{static\_assert} statements are used to enforce critical invariants at compile time, such as ensuring that certain parameters are powers of two to allow for efficient bitwise AND operations instead of more costly modulo arithmetic.
+Throughout the implementation, static assertions are used to enforce important invariants at compile time, such as ensuring that certain parameters are powers of two to allow for efficient bitwise AND operations instead of more costly modulo arithmetic.
 
 \subsection{Memory Layout and State Management}
 \label{sec:implementation:mem-layout-state}
@@ -32,19 +32,19 @@ The filter's primary data storage is a single, contiguous linear array of fixed-
 \begin{itemize}
   \item Each bucket is composed of an array of 64-bit unsigned integer words.
 
-  \item Fingerprints (\texttt{tags}) are tightly packed within these 64-bit words. For example, a 64-bit word can hold eight 8-bit fingerprints or four 16-bit fingerprints.
+  \item Fingerprints (tags) are tightly packed within these 64-bit words. For example, a 64-bit word can hold eight 8-bit fingerprints or four 16-bit fingerprints.
 \end{itemize}
 
-This packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints. However, the computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off.
+While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off.
 
 The filter's state is maintained by a single global atomic counter that tracks the total number of occupied slots. This counter resides in device memory and is updated atomically by the insertion and deletion kernels. Its value is only lazily copied to the host when an explicit query is made, minimizing host-device communication.
 
-Due to a limitation of CUDA C++ where kernels cannot be class members, the implementation passes a pointer to the filter's class instance (\texttt{this}) to each launched kernel. This allows the threads to access the filter's configuration and state, such as data pointers and capacity, as needed.
+Due to a limitation of CUDA C++ where kernels cannot be class members, the implementation passes a pointer to the filter's class instance to each launched kernel. This allows the threads to access the filter's configuration and state, such as data pointers and capacity, as needed.
 
 \subsection{Public API}
 \label{sec:implementation:api}
 
-The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a "traditional" C-style API that operates on raw device pointers and item counts, and, if the Thrust library is available, a set of convenience wrappers that accept \texttt{thrust::device\_vector} objects.
+The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a traditional C-style API that operates on raw device pointers and item counts, and, if the Thrust library is available, a set of convenience wrappers that accept \texttt{thrust::device\_vector} objects.
 
 \subsubsection{\texttt{explicit CuckooFilter(size\_t capacity)}}
 
@@ -56,7 +56,7 @@ This function attempts to insert a batch of \texttt{n} items from a buffer in de
 
 \subsubsection{\texttt{size\_t insertManySorted(const T* d\_keys, const size\_t n)}}
 
-This variant offers an alternative insertion strategy focused on improving memory locality. Before insertion, it first computes each item's primary bucket index and packs it with its fingerprint. This array of packed tags is then sorted on the GPU using CUB's radix sort. This ensures that threads with adjacent indices are highly likely to be accessing the same memory region. This approach generally outperforms the standard \texttt{insertMany} when the filter is too large to fit into the GPU's L2 cache. However, it incurs higher peak memory usage and is slower for smaller, cache-resident filters due to the overhead of the packing and sorting steps.
+To address the performance penalties of random memory access, this variant introduces a pre-sorting step. The algorithm computes bucket indices and fingerprints, packs them into key-value pairs, and sorts them via CUB's radix sort before insertion begins. This ensures that consecutive threads target contiguous memory regions. While this strategy yields performance gains for massive datasets by minimizing DRAM transaction overhead, the added computational cost of sorting makes it less efficient for smaller filters that already fit within the GPU cache.
 
 \subsubsection{\texttt{void containsMany(const T* d\_keys, const size\_t n, bool* d\_output)}}
 

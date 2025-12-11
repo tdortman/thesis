@@ -8,7 +8,7 @@ The chapter begins by outlining the fundamental design of the data structure its
 
 Beyond the baseline algorithms, some advanced optimization techniques are explored. These include a sorted insertion strategy to improve memory locality for large, out-of-cache filters, and an alternative eviction method designed to reduce the amount of necessary evictions at high load factors.
 
-Finally, two major extensions are presented that elevate the filter from a single-GPU data structure to a system-level component. An Inter-Process Communication (IPC) wrapper is detailed, which enables zero-copy sharing of the filter between multiple processes on the same machine. To address datasets larger than a single GPU's memory, the following section then describes a multi-GPU implementation that partitions the workload and data across multiple devices, using high-speed interconnects for efficient communication.
+Finally, two major extensions are presented that elevate the filter from a single-GPU data structure to a system-level component. An IPC wrapper is detailed, which enables zero-copy sharing of the filter between multiple processes on the same machine. To address datasets larger than a single GPU's memory, the following section then describes a multi-GPU implementation that partitions the workload and data across multiple devices, using high-speed interconnects for efficient communication.
 
 \input{content/03-implementation/challenges}
 \input{content/03-implementation/data-structure-design}
