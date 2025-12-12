@@ -9,7 +9,7 @@ The design of the GPU-accelerated Cuckoo filter emphasizes compile-time configur
 To maximize performance by allowing the compiler to generate highly specialized code, the filter's core parameters are defined at compile-time as template arguments. These parameters are consolidated into a single configuration structure, \texttt{CuckooConfig}, which provides a clean and explicit way to instantiate the filter. The primary configuration options are:
 
 \begin{itemize}
-  \item \texttt{bitsPerTag}: Defines the size of each fingerprint in bits. The implementation rounds up to 8, 16, or 32.
+  \item \texttt{bitsPerTag}: Defines the size of each fingerprint in bits. Has to be 8, 16, or 32.
 
   \item \texttt{bucketSize}: Specifies the number of fingerprints stored in each bucket. A smaller bucket size generally leads to a lower false positive rate but can negatively impact insertion performance and overall occupancy. A default of 16 was chosen through empirical performance testing.
 
