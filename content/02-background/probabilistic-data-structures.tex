@@ -10,7 +10,7 @@ Invented in 1970, the Bloom filter has long been the dominant probabilistic data
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.7\textwidth]{images/bloom-filter.png}
+  \includegraphics[width=0.7\textwidth]{images/bloom-filter.pdf}
   \caption{An illustration of a Bloom filter's insertion and lookup mechanism with $m=11$ slots and $k=3$ hash functions. The set $\{x, y, z\}$ has been inserted, setting the corresponding bits in the array to 1. A membership query for a new item $w$ returns a definitive "no" (guaranteeing no false negatives) because one of the bits it maps to is 0.}
   \label{fig:bloom-filter}
 \end{figure}
@@ -53,7 +53,7 @@ Instead of a single monolithic bit array, the Blocked Bloom Filter partitions th
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.7\textwidth]{images/blocked-bloom-filter.png}
+  \includegraphics[width=0.7\textwidth]{images/blocked-bloom-filter.pdf}
   \caption{An illustration of a Blocked Bloom Filter. Each item is first mapped to a single block (e.g., item $y$ maps to Block 0, while $x$ and $z$ map to Block 1). The $k$ hash functions then operate only within that selected block, improving memory locality. A query for item $w$, which maps to Block 0, returns a definitive "no" as one of its target bits is 0.}
   \label{fig:blocked-bloom-filter}
 \end{figure}
@@ -85,7 +85,7 @@ The insertion process is more involved and follows the distinct "cuckoo" evictio
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=0.7\textwidth]{images/cuckoo-hashing.png}
+  \includegraphics[width=0.7\textwidth]{images/cuckoo-hashing.pdf}
   \caption{Illustration of a Cuckoo hashing insertion in a single-table variant. The incoming item $x$ finds both of its candidate slots occupied. It evicts item $a$, triggering a cascading eviction chain until item $d$ is moved to a free slot, resulting in a new stable arrangement of items in the table.}
   \label{fig:cuckoo-hashing}
 \end{figure}
