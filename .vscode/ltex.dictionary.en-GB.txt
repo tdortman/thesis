@@ -103,3 +103,5 @@ CASweak
 targetTag
 SWARMatch
 AtomicCAS
+TryInsert
+FindNextEmpty

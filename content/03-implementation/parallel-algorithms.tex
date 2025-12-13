@@ -21,7 +21,6 @@ The parallel insertion algorithm is designed to handle a large batch of items in
 
 To maintain an accurate count of the total items in the filter without creating a bottleneck on a single atomic counter, a hierarchical reduction is employed. Each thread that successfully inserts an item contributes a +1. These values are first summed efficiently at the warp level using shuffle instructions, then aggregated at the block level using shared memory, and finally, a single atomic addition per block is performed on the global counter in device memory.
 
-% FIXME: I don't really like this formatting but that's okay, can always change it later
 % tex-fmt: off
 \begin{algorithm}[htbp]
   \caption{Parallel Insertion}
@@ -65,7 +64,8 @@ To maintain an accurate count of the total items in the filter without creating 
            \If{\text{AtomicCAS}(\texttt{word}, \texttt{EMPTY} $\to$ \texttt{tag} at \texttt{slot})}
              \State \textbf{return} \texttt{True}
            \EndIf
-           \LComment{CAS failed, retry}
+           \LComment{Reload and re-check if CAS failed}
+           \State Reload \texttt{word}
         \EndWhile
       \EndFor
       \State \textbf{return} \texttt{False}
