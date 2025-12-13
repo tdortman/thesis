@@ -73,3 +73,4 @@
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qreturn HasZeroByte check1 or HasZeroByte check2 Deletion.\\E$"}
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qmask&& \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q where \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q and \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qmask&& \\E(?:Dummy|Ina|Jimmy-)[0-9]+$"}
+{"rule":"CD_NN","sentence":"^\\Qmask is not 0 slot \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q FindFirstSet mask\\E$"}
