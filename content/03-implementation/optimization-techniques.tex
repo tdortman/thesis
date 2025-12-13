@@ -3,6 +3,19 @@
 
 Beyond the core algorithm design, some noteworthy optimization strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
 
+\subsection{Bitwise SWAR Operations}
+\label{sec:implementation:optimisation-techniques:swar}
+
+To maximize the instruction-level parallelism within each thread, the implementation leverages SWAR (SIMD Within A Register) techniques. Since fingerprints are small (e.g., 8 or 16 bits), standard scalar comparison loops introduce unnecessary branching overhead.
+
+By packing multiple fingerprints into a single \texttt{uint64\_t}, it is possible to perform logical operations on all tags in a word simultaneously. The implementation utilizes a specialized bit-twiddling formula \cite{bit-twiddling-hacks} to detect empty slots or matching tags:
+
+\begin{equation}
+  \text{mask} = (v - \texttt{0x0101\dots01}) \mathbin{\&} \neg v \mathbin{\&} \texttt{0x8080\dots80}
+\end{equation}
+
+For searching operations, the target fingerprint is broadcast across a 64-bit word and XORed with the bucket data. The zero-byte test is then applied to the result. This technique allows the algorithm to verify multiple fingerprints (e.g., 4 or 8) simultaneously without the need for explicit unpacking. While the algorithm must still iterate through the 64-bit words that make up a bucket, the inner loop of checking individual slots is replaced by constant-time bitwise logic. This minimizes branch divergence compared to a simple implementation that iterates over each tag.
+
 \subsection{Sorted Insertion}
 \label{sec:implementation:optimisation-techniques:sorted}
 

@@ -37,6 +37,8 @@ The filter's primary data storage is a single, contiguous linear array of fixed-
 
 While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off.
 
+Furthermore, this enables the use of SWAR (SIMD Within A Register) techniques. Bitwise magic numbers can be used to search for empty slots (zero detection) or matching tags (XOR comparison) in parallel within a single register \cite{bit-twiddling-hacks}. This eliminates the need for branching loops when iterating over slots within a word.
+
 The filter's state is maintained by a single global atomic counter that tracks the total number of occupied slots. This counter resides in device memory and is updated atomically by the insertion and deletion kernels. Its value is only lazily copied to the host when an explicit query is made, minimizing host-device communication.
 
 Due to a limitation of CUDA C++ where kernels cannot be class members, the implementation passes a pointer to the filter's class instance to each launched kernel. This allows the threads to access the filter's configuration and state, such as data pointers and capacity, as needed.

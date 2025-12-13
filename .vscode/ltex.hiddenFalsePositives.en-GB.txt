@@ -66,3 +66,10 @@
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qenglish\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QAbstract (German) german\\E$"}
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qenglish\\E$"}
+{"rule":"A_BIT","sentence":"^\\QBit Twiddling Hacks\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QTryInsertSWAR bucket, tag each word in bucket old = word.loadrelaxed() SWAR Zero Detection Logic mask = GetZeroMask old mask == 0 break\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QbitPos = FindFirstSet mask slot = bitPos / bitsPerTag new = ReplaceTag old, slot, tag\\E$"}
+{"rule":"EN_UNPAIRED_BRACKETS","sentence":"^\\Qword.CAS(old, new)) return True CAS failed: old is updated, retry loop return False\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qreturn HasZeroByte check1 or HasZeroByte check2 Deletion.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qmask&& \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q where \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q and \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qmask&& \\E(?:Dummy|Ina|Jimmy-)[0-9]+$"}
