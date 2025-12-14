@@ -9,14 +9,13 @@ The core of this thesis is the design of parallel algorithms for the Cuckoo filt
 The parallel insertion algorithm is designed to handle a large batch of items in parallel, with each CUDA thread being responsible for inserting a single item. The process for each thread is as follows:
 
 \begin{enumerate}
-  \item \textbf{Hashing and Key Generation}: Each item is first hashed into a 64-bit value using the xxHash64 algorithm, chosen for its high speed and excellent statistical properties. This hash is then split: the upper 32 bits are used to derive the item's fingerprint, while the lower 32 bits are used as the basis for its primary bucket index. A crucial initial finding was that using the same bits for both the fingerprint and the primary index led to a high probability of identical fingerprints clustering in the same buckets, causing a severe degradation in performance. Thus, distinct parts of the hash are used for each. The alternate bucket index is then calculated using the partial-key cuckoo hashing scheme, which is described in detail in Section \ref{sec:background:cuckoo-filter}.
+  \item \textbf{Hashing and Key Generation}: Each item is first hashed into a 64-bit value using the xxHash64 algorithm. This hash is split: the upper 32 bits derive the fingerprint, and the lower 32 bits determine the primary bucket index. Distinct hash parts are used to avoid fingerprint clustering. The alternate bucket index is calculated using the partial-key cuckoo hashing scheme (Section \ref{sec:background:cuckoo-filter}).
 
-  \item \textbf{Direct Insertion Attempt}: The thread checks the two candidate buckets. Instead of iterating through slots sequentially, the algorithm loads the bucket as a sequence of 64-bit words. It utilizes a bitwise SWAR (SIMD Within A Register) algorithm (specifically, the standard "zero-byte detection" trick) \cite{bit-twiddling-hacks} to generate a mask of all empty slots in the word simultaneously. The index of the first empty slot is determined using the hardware intrinsic \texttt{\_\_ffsll} (Find First Set). If a slot is found, an atomic Compare-And-Swap (CAS) is attempted to transition the word from its old state to a new state containing the inserted fingerprint.
+  \item \textbf{Direct Insertion Attempt}: The thread checks the two candidate buckets. To distribute items evenly and reduce contention on the first slots of a bucket, the thread does not start scanning at index 0. Instead, it uses the item's fingerprint to calculate a pseudo-random starting word index. It then iterates through the bucket's 64-bit words, wrapping around to the beginning. For each word, it utilizes a bitwise SWAR algorithm \cite{bit-twiddling-hacks} to generate a mask of empty slots. If a slot is found, an atomic Compare-And-Swap (CAS) attempts to insert the fingerprint.
 
-  \item \textbf{Eviction Process}: If both candidate buckets are full, the thread initiates the cuckoo process. It randomly selects one of the two buckets and a random occupied slot within it. It then atomically replaces the fingerprint (\texttt{tag\_old}) in that slot with its own fingerprint (\texttt{tag\_new}). The evicted fingerprint, \texttt{tag\_old}, now becomes the item that the thread must insert. The thread calculates \texttt{tag\_old}'s alternate bucket and continues this process in a loop.
+  \item \textbf{Eviction Process}: If both candidate buckets are full, the thread initiates the eviction process. It randomly selects one bucket and a random occupied slot within it. It atomically replaces the existing fingerprint (\texttt{tag\_old}) with its own (\texttt{tag\_new}). The evicted fingerprint becomes the new item to insert, and the thread calculates its alternate bucket to continue the process.
 
-  \item \textbf{Termination}: The eviction loop continues until either an empty slot is found or a predefined limit on the number of evictions is reached, at which point the insertion is reported as a failure.
-
+  \item \textbf{Termination}: The eviction loop continues until an empty slot is found or a limit on the number of evictions is reached, triggering an insertion failure.
 \end{enumerate}
 
 To maintain an accurate count of the total items in the filter without creating a bottleneck on a single atomic counter, a hierarchical reduction is employed. Each thread that successfully inserts an item contributes a +1. These values are first summed efficiently at the warp level using shuffle instructions, then aggregated at the block level using shared memory, and finally, a single atomic addition per block is performed on the global counter in device memory.
@@ -57,15 +56,18 @@ To maintain an accurate count of the total items in the filter without creating 
       \State \textbf{return} \texttt{Failure}
     \EndFunction
     \Statex
-    \Function{TryInsert}{bucket, tag}
-      \For{each \texttt{word} in \texttt{bucket}}
+   \Function{TryInsert}{bucket, tag}
+      \State $start \gets (\text{tag} \bmod \text{bucketSize}) / \text{tagsPerWord}$
+      \For{$i = 0$ \textbf{to} $\text{wordCount} - 1$}
+        \State $idx \gets (start + i) \bmod \text{wordCount}$
+        \State \texttt{word} $\gets$ \texttt{bucket}[idx]
+
         \While{\texttt{word} has empty slots}
-           \State \texttt{slot} $\gets$ \Call{FindNextEmpty}{\texttt{word}}
-           \If{\text{AtomicCAS}(\texttt{word}, \texttt{EMPTY} $\to$ \texttt{tag} at \texttt{slot})}
-             \State \textbf{return} \texttt{True}
-           \EndIf
-           \LComment{Reload and re-check if CAS failed}
-           \State Reload \texttt{word}
+          \State \texttt{slot} $\gets$ \Call{FindNextEmpty}{\texttt{word}}
+          \If{\text{AtomicCAS}(\texttt{word}, \texttt{EMPTY} $\to$ \texttt{tag} at \texttt{slot})}
+            \State \textbf{return} \texttt{True}
+          \EndIf
+          \State Reload \texttt{word}
         \EndWhile
       \EndFor
       \State \textbf{return} \texttt{False}
@@ -77,11 +79,9 @@ To maintain an accurate count of the total items in the filter without creating 
 \subsection{Lookup}
 \label{sec:implementation:lookup}
 
-The parallel lookup algorithm is similar to insertion but is a read-only operation, allowing for more aggressive memory access optimizations. Each thread is assigned an item to look for.
+The parallel lookup algorithm is a read-only operation optimized for memory access. Each thread calculates the fingerprint and two bucket indices. Similar to insertion, the thread determines a random starting word based on the fingerprint to avoid checking the same memory locations first for every query.
 
-The thread calculates the item's fingerprint and its two candidate bucket indices, just as in the insertion process. However, instead of iterating through slots sequentially or using a linear probe, the algorithm retrieves the bucket contents in chunks aligned to the machine word size. Despite the ability to use two threads per item to check both buckets in parallel, this was found to be slower in every tested case, so a single thread checks both buckets sequentially.
-
-The key optimization in the lookup kernel is the combination of vectorized, non-atomic memory loads with SWAR comparisons. Since no other kernel is writing to the filter during a lookup, thread safety is not a concern. Modern GPU hardware can load 128 bits (16 bytes) in a single instruction. The kernel leverages this to load two 64-bit words into registers simultaneously. Once loaded, the query fingerprint is broadcast across a 64-bit pattern and XORed with the bucket data. A bitwise zero-detection mask is then applied to the result. This allows the thread to compare all fingerprints in the current word against the query tag using only constant-time arithmetic operations, eliminating the branching overhead of a linear search loop.
+The key optimization is vectorized, non-atomic memory loads combined with SWAR comparisons. Modern GPU hardware can load 128 bits (16 bytes) in a single instruction. The kernel loads two 64-bit words simultaneously starting from the randomized offset. It then broadcasts the query fingerprint and XORs it with the loaded data to check for matches in parallel using constant-time arithmetic, eliminating branching loops.
 
 % tex-fmt: off
 \begin{algorithm}[htbp]
@@ -101,9 +101,13 @@ The key optimization in the lookup kernel is the combination of vectorized, non-
     \Function{Find}{bucket, tag}
       \State \texttt{pattern} $\gets$ \Call{BroadcastTag}{tag}
 
-      \LComment{Load bucket in 128-bit chunks (vectorized load)}
+      \LComment{Random start index aligned to 128-bit boundary}
+      \State $start \gets (\text{tag} \bmod \text{bucketSize}) / \text{tagsPerWord}$
+      \State $start \gets \text{FloorToEven}(start)$
+
       \For{$i = 0$ \textbf{to} $\text{wordCount} - 1$ \textbf{step} 2}
-        \State $w_1, w_2 \gets$ \Call{LoadWords}{bucket, $i$}
+        \State $idx \gets (start + i) \bmod \text{wordCount}$
+        \State $w_1, w_2 \gets$ \Call{LoadWords}{bucket, $idx$}
 
         \LComment{Use SWAR to check for matches in parallel}
         \If{\Call{HasZeroByte}{$w_1 \oplus \texttt{pattern}$} \textbf{or} \Call{HasZeroByte}{$w_2 \oplus \texttt{pattern}$}}
@@ -118,21 +122,9 @@ The key optimization in the lookup kernel is the combination of vectorized, non-
 \subsection{Deletion}
 \label{sec:implementation:deletion}
 
-The parallel deletion algorithm leverages SWAR to locate and remove items efficiently while maintaining data integrity. Similar to insertion, the algorithm iterates through the bucket in 64-bit word chunks.
+The parallel deletion algorithm leverages SWAR to locate and remove items efficiently. Like the other operations, it iterates through the bucket in 64-bit words, starting at a pseudo-random offset derived from the fingerprint.
 
-To locate the target fingerprint, the thread broadcasts the target tag across a register and performs an XOR operation with the loaded word. The result is passed through the zero-byte detection formula. If the resulting mask is non-zero, it indicates that one or more slots within the word contain the target tag. The precise index of the first matching slot is extracted using the \texttt{\_\_ffsll} intrinsic.
-
-Once a match is found, the thread calculates a new 64-bit value where the target slot is set to \texttt{EMPTY} (zero), while preserving all other slots. It then attempts to commit this change using an atomic CAS on the entire word.
-
-The CAS operation is critical here:
-
-\begin{itemize}
-  \item \textbf{Success}: If the CAS succeeds, the item has been removed and the kernel returns successfully.
-
-  \item \textbf{Failure}: If the CAS fails, it implies another thread modified the word (e.g., inserted or deleted a neighbour) in the meantime. The thread must reload the current value of the word and re-evaluate the SWAR logic. This retry loop ensures that the thread never accidentally overwrites a concurrent modification.
-\end{itemize}
-
-Each deletion attempt proceeds until an entry has been successfully removed, or both buckets have been fully examined. This approach ensures the operation is handled independently and correctly, even when duplicate fingerprints exist. The success or failure of each operation can be optionally reported back to the host via a provided bit-vector. Similarly to how it is done after insertion, a hierarchical reduction on the success values is used to minimize contention when decrementing the atomic counter that holds the number of occupied slots in the filter.
+The thread broadcasts the target tag and uses SWAR to find matches. If a match is found, it attempts an atomic CAS to set the specific slot to \texttt{EMPTY} (zero). If the CAS fails (due to concurrent modification), the thread reloads and retries. This ensures thread safety without locking. The operation continues until the item is removed or the entire bucket has been scanned.
 
 % tex-fmt: off
 \begin{algorithm}[htbp]
@@ -150,7 +142,11 @@ Each deletion attempt proceeds until an entry has been successfully removed, or 
     \EndFunction
     \Statex
     \Function{Remove}{bucket, targetTag}
-      \For{each \texttt{word} in \texttt{bucket}}
+      \State $start \gets (\text{tag} \bmod \text{bucketSize}) / \text{tagsPerWord}$
+
+      \For{$i = 0$ \textbf{to} $\text{wordCount} - 1$}
+        \State $idx \gets (start + i) \bmod \text{wordCount}$
+        \State \texttt{word} $\gets$ \texttt{bucket}[idx]
         \State \texttt{mask} $\gets$ \Call{SWAR\_Match}{\texttt{word}, \texttt{targetTag}}
 
         \While{\texttt{mask} is not 0}
