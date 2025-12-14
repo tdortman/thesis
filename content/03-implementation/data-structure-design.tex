@@ -27,7 +27,7 @@ Throughout the implementation, static assertions are used to enforce important i
 \subsection{Memory Layout and State Management}
 \label{sec:implementation:mem-layout-state}
 
-The filter's primary data storage is a single, contiguous linear array of fixed-size buckets allocated in the GPU's global memory. To maximize memory bandwidth and avoid misaligned access, the internal layout is carefully structured:
+The filter's primary data storage is a single, contiguous array of fixed-size buckets allocated in the GPU's global memory. To maximize memory bandwidth and avoid misaligned access, the internal layout is carefully structured:
 
 \begin{itemize}
   \item Each bucket is composed of an array of 64-bit unsigned integer words.
