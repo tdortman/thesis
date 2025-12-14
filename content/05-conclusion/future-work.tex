@@ -8,8 +8,6 @@ The work presented in this thesis opens several avenues for future research and 
 
   \item \textbf{Variable-Length Fingerprints}: Investigating methods to support variable-length fingerprints within the fixed-bucket structure could allow users to fine-tune the space-accuracy trade-off without the coarseness of jumping from 16-bit to 32-bit tags.
 
-  \item \textbf{Adaptive Eviction Policies}: Implementing a dynamic runtime system that switches between DFS and BFS eviction strategies based on the current load factor and hardware telemetry could provide optimal performance across all scenarios.
-
   \item \textbf{Integration into High-Throughput Systems}: While micro-benchmarks demonstrate raw speed, the ultimate validation would be integrating the library into real-world systems characterized by high churn. Deploying the filter within network intrusion detection systems, streaming analytics pipelines, or GPU-accelerated database engines would provide valuable insight into its impact on end-to-end application latency and throughput.
 
   \item \textbf{Robustness Against Churn}: Future work could explore hybrid architectures, such as attaching a small "overflow stash" or secondary table, to catch items that fail the eviction chain. This would significantly improve stability and reliability for non-terminating, dynamic workloads.

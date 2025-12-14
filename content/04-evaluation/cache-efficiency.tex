@@ -4,9 +4,13 @@
 To understand how each filter interacts with the GPU's memory hierarchy, the L1 and L2 cache hit rates were measured by profiling the relevant kernels using NVIDIA Nsight Compute (ncu) on System B. While cache hit rate is not a direct proxy for overall throughput, it provides crucial insight into the memory access patterns and architectural bottlenecks of each implementation. The results for Insert, Query, and Delete operations are presented in Figure \ref{fig:cache-hit-rates}.
 
 \subsection{L1 Cache Analysis}
-A consistent trend across all operations is the exceptionally high L1 hit rate (near 100\%) for the TCF and GQF. This is a direct consequence of their design: both filters rely heavily on shared memory for internal computations, such as intra-block sorting and cooperative group coordination. Since shared memory physically resides within the L1 cache on modern NVIDIA architectures, these accesses are counted as L1 hits.
+A consistent trend across all operations is the exceptionally high L1 hit rate (near 100\%) for both the TCF and the GQF, though they achieve this through different mechanisms.
 
-The Cuckoo filter exhibits a moderate L1 hit rate (typically between 30\% and 60\%). This reflects its reliance on atomic operations on global memory addresses. While some repeated accesses may hit in L1, the random nature of hashing means that successive memory requests from a warp rarely map to the same L1 cache line, preventing the high hit rates seen in the shared-memory-heavy implementations. The Blocked Bloom filter generally shows the lowest L1 hit rate, consistent with its streaming access pattern where new cache lines are constantly pulled in.
+The TCF relies heavily on shared memory for internal computations. It utilizes cooperative groups to load blocks into shared memory and perform intra-block sorting and coordination. Since shared memory physically resides within the L1 cache configuration on modern NVIDIA architectures, these accesses are recorded as L1 hits.
+
+In contrast, the GQF does not explicitly utilize shared memory but achieves high L1 efficiency through extreme spatial locality. The implementation assigns individual threads to manage specific, contiguous regions of the filter. As a thread performs operations such as linear probing or shifting elements within a run, it repeatedly accesses the same range of memory addresses. This ensures that the relevant cache lines remain resident in L1, resulting in a near-perfect hit rate despite operating directly on global memory structures.
+
+The Cuckoo filter exhibits a moderate L1 hit rate (typically between 30\% and 60\%). This reflects its reliance on atomic operations on global memory addresses. While some metadata or repeated accesses may hit in L1, the random nature of hashing means that successive memory requests from a warp rarely map to the same L1 cache line, preventing the high hit rates seen in the locality-optimized implementations.
 
 \subsection{L2 Cache Analysis}
 
