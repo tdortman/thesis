@@ -1,3 +1,5 @@
+\clearpage
+
 \section{Thesis Structure}
 \label{sec:intro:structure}
 
@@ -6,8 +8,6 @@ This chapter establishes the foundation for the thesis. It reviews the fundament
 
 \textbf{Chapter \ref{sec:implementation}} \\[0.2em]
 This chapter details the design and realization of the high-performance GPU Cuckoo filter library. It documents the parallel algorithms developed for insertion, lookup, and deletion, explaining how lock-free atomic operations are utilized to manage concurrency. Furthermore, it describes advanced optimizations for memory locality and system-level extensions, including an Inter-Process Communication wrapper and a multi-GPU sharding mechanism.
-
-\newpage
 
 \textbf{Chapter \ref{sec:evaluation}} \\[0.2em]
 This chapter presents a comprehensive empirical analysis of the implemented data structure. The filter is benchmarked against state-of-the-art CPU and GPU baselines across diverse hardware architectures (GDDR7 and HBM3). The evaluation covers throughput, memory efficiency, and hardware utilization, identifying key performance characteristics and architectural scaling behaviours in both cache-resident and DRAM-resident scenarios.
