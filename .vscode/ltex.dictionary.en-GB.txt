@@ -106,3 +106,4 @@ AtomicCAS
 TryInsert
 FindNextEmpty
 FPRs
+WordType
