@@ -1,3 +1,5 @@
+\clearpage
+
 \section{Parallel Algorithms}
 \label{sec:implementation:parallel-algorithms}
 
@@ -76,6 +78,8 @@ To maintain an accurate count of the total items in the filter without creating 
 \end{algorithm}
 % tex-fmt: on
 
+\FloatBarrier
+
 \subsection{Lookup}
 \label{sec:implementation:lookup}
 
@@ -119,6 +123,9 @@ The key optimization is vectorized, non-atomic memory loads combined with SWAR c
   \end{algorithmic}
 \end{algorithm}
 % tex-fmt: on
+
+\FloatBarrier
+
 \subsection{Deletion}
 \label{sec:implementation:deletion}
 
