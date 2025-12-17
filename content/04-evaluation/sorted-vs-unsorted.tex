@@ -3,9 +3,11 @@
 
 To investigate the potential for enhancing insertion throughput by improving memory locality, an alternative insertion strategy was implemented and evaluated. This strategy, detailed in Section \ref{sec:implementation:optimisation-techniques:sorted}, pre-sorts the input keys by their primary bucket index before launching the insertion kernel. The goal is to maximize coalesced memory accesses by ensuring that adjacent threads target the same or nearby memory regions.
 
+To strictly isolate the benefits of memory locality from the computational overhead of the sorting algorithm, a \textit{Presorted} metric was also introduced. This metric measures the throughput of the insertion kernel assuming the data has already been sorted "for free", whereas \textit{Sorted} reflects the end-to-end throughput including the radix sort and packing overhead.
+
 \subsection{Performance Characteristics}
 
-The performance impact of sorting was evaluated across all three test systems. Figures \ref{fig:sorted-system-a}, \ref{fig:sorted-system-b}, and \ref{fig:sorted-system-c} illustrate the throughput comparison between the standard unsorted approach and the sorted variant across a wide range of input batch sizes.
+The performance impact of sorting was evaluated across all three test systems. Figures \ref{fig:sorted-system-a}, \ref{fig:sorted-system-b}, and \ref{fig:sorted-system-c} illustrate the throughput comparison between the standard unsorted approach and the sorted variants across a wide range of input batch sizes.
 
 \begin{figure}[ht!]
   \centering
@@ -31,27 +33,30 @@ The performance impact of sorting was evaluated across all three test systems. F
 \FloatBarrier
 
 \subsubsection{Impact on Throughput Curve}
-Across all hardware configurations, pre-sorting the input has a distinct "flattening" effect on the throughput curve.
+The comparison reveals a significant divergence between the cost of sorting and the benefit of locality:
+
 \begin{itemize}
-  \item \textbf{Small Inputs (L2-Resident)}: For smaller input sizes, where the filter fits within the L2 cache, the sorted strategy is significantly slower. The overhead of the radix sort dominates the total execution time, and the benefits of memory locality are minimal since the data is already cached.
-  \item \textbf{Large Inputs (DRAM-Resident)}: As the input size grows and the filter spills into global memory, the unsorted throughput declines due to random memory access latency. Conversely, the sorted throughput remains relatively stable.
+  \item \textbf{Insertion Efficiency (Presorted)}: The \textit{Presorted} case shows that improved memory locality effectively mitigates the performance penalty usually associated with DRAM-resident filters. While the unsorted throughput collapses as soon as the filter exceeds L2 cache capacity, the presorted insertion maintains a significantly higher and more stable throughput profile.
+
+  \item \textbf{The Sorting Tax}: The substantial gap between the \textit{Presorted} and \textit{Sorted} lines highlights the extreme cost of the pre-processing step. For small, L2-resident inputs, this overhead makes the sorted approach non-viable. However, for large DRAM-resident inputs, the cost of sorting can be justified through the avoidance of random memory access stalls
 \end{itemize}
 
 \subsubsection{Architecture-Specific Behavior}
-The usefulness of this optimization is heavily dependent on the memory subsystem of the GPU.
+
+The speedup provided by pre-sorting depends heavily on the memory technology and bandwidth availability of the GPU.
 
 \begin{itemize}
-  \item \textbf{GDDR7 Systems (A \& C)}: On Systems A and C, which rely on GDDR7 memory, the sorted insertion strategy begins to show promise at the upper limits of the tested capacity. As the memory bottleneck intensifies, the improved access patterns of the sorted approach allow it to match or slightly exceed the performance of the unsorted baseline. This confirms that sorting serves as a valid optimization for scenarios that are severely bound by global memory latency.
+  \item \textbf{GDDR7 Systems (A \& C)}: On systems relying on GDDR7, the benefits of pre-sorting are massive. In the DRAM-resident scenario ($>2^{25}$ elements), the pure insertion kernel (excluding sort) achieves approximately 3x higher throughput compared to the unsorted baseline. This confirms that random memory access latency is the primary bottleneck on these architectures. However, when the sorting overhead is included, the net throughput only matches or slightly exceeds the unsorted baseline at maximum capacity.
 
-  \item \textbf{HBM3 System (B)}: On System B, the massive bandwidth of HBM3 effectively hides the random access latency of the unsorted approach. Consequently, the unsorted insertion remains significantly faster across all tested sizes. The cost of sorting simply adds overhead without providing a necessary benefit, as the memory controller can already saturate the bus with random requests.
+  \item \textbf{HBM3 System (B)}: On System B, the high-bandwidth memory already absorbs much of the random access penalty inherent to the unsorted approach. Consequently, while pre-sorting still yields a performance improvement, the speedup is less dramatic—approximately \textbf{1.3x} in the DRAM-resident case. Because the speedup factor is smaller, it fails to amortize the cost of the sort, resulting in a net loss in total throughput (including sort) compared to the standard unsorted method.
 \end{itemize}
 
 \subsection{Trade-offs and Limitations}
 
-While sorting can theoretically improve throughput for memory-bound workloads, it introduces significant practical limitations:
+The breakdown of sorted vs. unsorted performance leads to several conclusions regarding viability:
 
 \begin{itemize}
-  \item \textbf{Memory Overhead}: The sorting process is not free in terms of space. It requires auxiliary buffers to hold the sorted keys and indices, effectively doubling the peak memory usage during insertion. This halves the maximum batch size that can be processed in a single pass, which may be prohibitive for memory-constrained applications.
+  \item \textbf{Overhead vs. Gain}: While memory locality theoretically solves the random-access bottleneck, the current cost of the sorting and packing step is too high to realize these gains in an end-to-end pipeline. Unless the sorting cost can be amortized over other operations, the standard unsorted insertion remains superior for general use.
 
-  \item \textbf{Limited Gains}: Even on GDDR7 systems where the optimization is most relevant, the crossover point where sorting becomes beneficial occurs only at very large capacities. Given the substantial memory overhead, the modest throughput gains at the extreme tail end of the capacity curve may not justify the added complexity and resource consumption for general-use cases.
+  \item \textbf{Memory Overhead}: The sorting process requires auxiliary buffers for keys and indices, doubling the peak memory consumption during insertion. This effectively halves the maximum batch size.
 \end{itemize}

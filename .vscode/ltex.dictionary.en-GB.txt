@@ -107,3 +107,4 @@ TryInsert
 FindNextEmpty
 FPRs
 WordType
+speedup
