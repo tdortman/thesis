@@ -25,9 +25,9 @@ The results highlight two distinct scenarios:
 \begin{itemize}
   \item \textbf{L2-Resident Improvement}: When the filter fits into the L2 cache (up until $2^{25}$ elements), the 256-bit implementation provides a constant performance uplift of 15-20\%. By fetching entire buckets with fewer instructions, the kernel reduces execution overhead, allowing the device to better saturate the L2 bandwidth.
 
-  \item \textbf{DRAM-Resident Convergence}: As the working set spills into global memory, the performance advantage disappears. In this case, the workload becomes strictly latency-bound by DRAM access times. Whether the data is requested via 128-bit or 256-bit instructions, the memory controller is already saturated, and the instruction issue rate is no longer the bottleneck.
+  \item \textbf{DRAM-Resident Convergence}: As the working set spills into global memory, the performance advantage disappears. In this case, the workload becomes strictly bound by DRAM access times. Regardless of whether the data is requested via 128-bit or 256-bit instructions, the memory controller is already saturated, and the instruction issue rate is no longer the bottleneck.
 \end{itemize}
 
-The use of 256-bit vector loads offers a "free" performance boost for L2-resident workloads on supported hardware by improving instruction efficiency. However, it does not fix the memory bandwidth bottleneck of large, DRAM-resident Cuckoo filters.
+This shows that the use of 256-bit vector loads offers a "free" performance boost for L2-resident workloads on supported hardware by improving instruction efficiency. However, it does not fix the memory bandwidth bottleneck of large, DRAM-resident Cuckoo filters.
 
 \FloatBarrier
