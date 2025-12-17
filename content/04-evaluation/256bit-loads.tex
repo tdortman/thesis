@@ -1,0 +1,33 @@
+\section{Impact of Wider Memory Loads}
+\label{sec:eval:256bit-loads}
+
+With the introduction of the NVIDIA Blackwell architecture (Compute Capability 10.0), new PTX instructions allow for wider memory transactions. To evaluate the impact of instruction-level parallelism on query throughput, a special case utilizing the 256-bit non-coherent load instruction was added to the lookup kernel:
+
+\begin{verbatim}
+ld.global.nc.v4.u64 {%0, %1, %2, %3}, [%4];
+\end{verbatim}
+
+This instruction fetches four \texttt{uint64\_t} values (256 bits) in a single operation, bypassing the L1 cache to access the L2 cache or global memory directly. This reduces the total number of issued instructions required to fetch bucket data and lowers pressure on the instruction pipeline.
+
+\subsection{Throughput Analysis}
+
+Figure \ref{fig:256bit-loads} compares the query throughput of the standard 128-bit load implementation against the optimized 256-bit variant on System A.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/load-width-comparison.pdf}
+  \caption{Query throughput comparison between 128-bit loads and 256-bit loads on System A.}
+  \label{fig:256bit-loads}
+\end{figure}
+
+The results highlight two distinct scenarios:
+
+\begin{itemize}
+  \item \textbf{L2-Resident Improvement}: When the filter fits into the L2 cache (up until $2^{25}$ elements), the 256-bit implementation provides a constant performance uplift of 15-20\%. By fetching entire buckets with fewer instructions, the kernel reduces execution overhead, allowing the device to better saturate the L2 bandwidth.
+
+  \item \textbf{DRAM-Resident Convergence}: As the working set spills into global memory, the performance advantage disappears. In this case, the workload becomes strictly latency-bound by DRAM access times. Whether the data is requested via 128-bit or 256-bit instructions, the memory controller is already saturated, and the instruction issue rate is no longer the bottleneck.
+\end{itemize}
+
+The use of 256-bit vector loads offers a "free" performance boost for L2-resident workloads on supported hardware by improving instruction efficiency. However, it does not fix the memory bandwidth bottleneck of large, DRAM-resident Cuckoo filters.
+
+\FloatBarrier

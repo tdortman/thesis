@@ -108,3 +108,5 @@ FindNextEmpty
 FPRs
 WordType
 speedup
+ld
+nc
