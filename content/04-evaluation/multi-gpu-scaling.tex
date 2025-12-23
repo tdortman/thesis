@@ -53,7 +53,7 @@ Figure \ref{fig:multigpu-weak} illustrates the results:
 \begin{itemize}
   \item \textbf{Sub-linear Scaling}: While total throughput increases with more GPUs, it does not scale linearly. At 8 GPUs (processing $4\times$ the data of 2 GPUs), the system achieves roughly $1.95\times$ the query/delete throughput and only $1.2\times$ the insertion throughput.
 
-  \item \textbf{Communication Bottleneck}: This behaviour confirms that even with NVLink, the system is bottlenecked by the interconnect. In a distributed Cuckoo filter, every GPU must communicate with every other GPU. As $N$ increases, the density of the All-to-All communication pattern grows, introducing latency that limits the aggregate throughput.
+  \item \textbf{Communication Bottleneck}: This behaviour confirms that even with NVLink, the system is bottlenecked by the interconnect. In a distributed Cuckoo filter, every GPU must communicate with every other GPU. As the number of GPUs increases, the density of the All-to-All communication pattern grows, introducing latency that limits the aggregate throughput.
 \end{itemize}
 
 \subsection{Conclusion}
