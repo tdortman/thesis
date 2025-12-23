@@ -13,24 +13,24 @@ To distribute items across these independent filters, a deterministic partitioni
 \subsection{Data Distribution and Processing}
 \label{sec:implementation:multi-gpu-distribution}
 
-Distributing the input data from the host to the correct GPU partition is a critical and complex challenge. A naive approach involving a single "primary" GPU that partitions and distributes all data creates a severe load imbalance, leaving other GPUs idle. Therefore, a fully parallelized, multi-stage workflow was implemented:
+Distributing the input data from the host to the correct GPU partition is a complex challenge. A naive approach involving a single "primary" GPU that partitions and distributes all data creates a severe load imbalance. Therefore, a fully parallelized, multi-stage workflow was implemented leveraging the Gossip library \cite{gossip} for optimized communication:
 
 \begin{enumerate}
   \item \textbf{Initial Data Scatter}: The host-side input array is processed in large chunks. Each GPU copies a distinct and proportional sub-chunk from the host into its own device memory in parallel.
 
-  \item \textbf{Local Partitioning}: Each GPU processes its local sub-chunk, hashing each key to determine its target GPU partition.
+  \item \textbf{Destination Calculation}: Each GPU launches a lightweight kernel to hash its local keys and determine the target GPU index for each item.
 
-  \item \textbf{Communication and Exchange}: To efficiently exchange data, the NVIDIA Collective Communications Library (NCCL) is utilized. The GPUs first perform a collective communication to share the sizes of each partition they hold. This allows every GPU to allocate a sufficiently large buffer to receive all the keys destined for it. Following this, a single, highly optimized All-to-All communication is performed, where each GPU sends its locally computed partitions to their target GPUs. NCCL automatically leverages the fastest available interconnects (like NVLink) to make this exchange as efficient as possible.
+  \item \textbf{Topology-Aware Multisplit and Exchange}: To redistribute the keys to their correct owner GPUs, the implementation utilizes the Gossip library. Unlike a standard all-to-all approach, Gossip performs an efficient \textit{multisplit} operation combined with a topology-aware data exchange. It uses hints for the system's interconnect topology (distinguishing between NVLink and PCIe connections) to generate an optimized transfer plan. This ensures that the data shuffling phase maximizes the available bandwidth and minimizes contention on the interconnect.
 
-  \item \textbf{Parallel Processing}: Once the All-to-All exchange is complete, each GPU holds all the keys that belong to its partition. At this point, each GPU can proceed to execute the standard single-GPU insertion, lookup, or deletion kernel on its local data, fully in parallel with the other devices.
+  \item \textbf{Parallel Processing}: Once the exchange is complete, each GPU holds all the keys that belong to its partition. At this point, each GPU proceeds to execute the standard single-GPU insertion, lookup, or deletion kernel on its local data, fully in parallel with the other devices.
 \end{enumerate}
 
 \subsection{Result Consolidation}
 \label{sec:implementation:multi-gpu-results}
 
-For lookup and deletion operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order. To solve this efficiently, the results are sent back to the GPUs that originally held the keys (pre-partitioning). This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order. This avoids numerous small, inefficient memory copies and preserves the parallelism of the overall process.
+For lookup and deletion operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order. To solve this efficiently, the Gossip library is again utilized to reverse the exchange process, sending results back to the GPUs that originally held the keys (pre-partitioning). This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order.
 
 \subsection{Overheads}
 \label{sec:implementation:multi-gpu-overheads}
 
-The multi-GPU implementation, while powerful, introduces its own set of overheads. The data partitioning stage on each GPU requires at least one sorting pass, a reduction, and an exclusive prefix-sum to manage the data. These operations are accelerated using the Thrust library, which itself requires significant temporary storage. This increased memory pressure on each GPU means that the processable chunk size must be carefully managed to avoid running out of device memory during the partitioning phase.
+The use of the Gossip library significantly mitigates the overheads associated with manual partitioning. Previous approaches relying on \texttt{thrust::sort} and standard NCCL collectives often incurred high temporary memory costs and sorting latency. Gossip's optimized multisplit primitive reduces the auxiliary memory footprint and leverages low-level hardware features for faster data movement. However, the fundamental latency of moving data off-chip remains a bottleneck compared to single-GPU execution. The processable chunk size must still be managed to ensure that the input buffers, the exchange buffers, and the filter itself fit within device memory simultaneously.

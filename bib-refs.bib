@@ -35,6 +35,24 @@
   publisher = {ACM New York, NY, USA}
 }
 
+@inproceedings{gossip,
+  author    = {Kobus, Robin and J\"{u}nger, Daniel and Hundt, Christian and Schmidt, Bertil},
+  title     = {Gossip: Efficient Communication Primitives for Multi-GPU Systems},
+  year      = {2019},
+  isbn      = {9781450362955},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3337821.3337889},
+  doi       = {10.1145/3337821.3337889},
+  abstract  = {Nowadays, a growing number of servers and workstations feature an increasing number of GPUs. However, slow communication among GPUs can lead to poor application performance. Thus, there is a latent demand for efficient multi-GPU communication primitives on such systems. This paper focuses on the gather, scatter and all-to-all collectives, which are important operations for various algorithms including parallel sorting and distributed hashing. We present two distinct communication strategies (ring-based and flow-oriented) to generate transfer plans for their topology-aware implementation on NVLink-connected multi-GPU systems. We achieve a throughput of up to 526 GB/s for all-to-all and 148 GB/s for scatter/gather on a DGX-1 server with only a small memory overhead. Furthermore, we propose a cost-neutral alternative to the DGX-1 Volta topology that provides an expected higher throughput for the all-to-all collective while preserving the throughput in case of scatter/gather. Our Gossip library is freely available at https://github.com/Funatiq/gossip.},
+  booktitle = {Proceedings of the 48th International Conference on Parallel Processing},
+  articleno = {63},
+  numpages  = {10},
+  keywords  = {topology, multi-GPU, collective communication, CUDA},
+  location  = {Kyoto, Japan},
+  series    = {ICPP '19}
+}
+
 @article{counting-bloom,
   author   = {Li Fan and Pei Cao and Almeida, J. and Broder, A.Z.},
   journal  = {IEEE/ACM Transactions on Networking},
