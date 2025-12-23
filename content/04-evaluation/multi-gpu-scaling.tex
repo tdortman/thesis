@@ -58,4 +58,4 @@ Figure \ref{fig:multigpu-weak} illustrates the results:
 
 \subsection{Conclusion}
 
-The multi-GPU implementation effectively enables the processing of massive datasets that exceed single-device memory limits (up to 8+ billion items on 8 A100s). However, it is primarily a capacity scaling solution rather than a throughput scaling solution. For datasets that fit within a single GPU, the single-GPU implementation remains more efficient due to the elimination of communication overhead.
+The multi-GPU implementation effectively enables the processing of massive datasets that exceed single-device memory limits (up to 8+ billion items on 8 A100s). However, it is primarily a capacity scaling solution rather than a throughput scaling solution. For datasets that fit within a single GPU, the single-GPU implementation remains far more efficient due to the elimination of communication overhead.
