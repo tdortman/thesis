@@ -114,3 +114,4 @@ NVLink-connected
 ICPP
 Multisplit
 multisplit
+XORs

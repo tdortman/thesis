@@ -3,7 +3,7 @@
 \subsection{Two-Choice Filter}
 \label{sec:background:two-choice-filter}
 
-Recent work by McCoy et al. introduced the Two-Choice Filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs \cite{tcf}. The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter optimized for the architectural constraints of a GPU.
+Recent work by McCoy et al. introduced the Two-Choice Filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs \cite{tcf}. The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter optimized for the constraints of a GPU.
 
 Structurally, the TCF is similar to a Cuckoo filter. It organizes fingerprints into blocks sized to fit within a GPU cache line (e.g., 128 bytes) to ensure high memory locality. Like the Cuckoo filter, it maps each item to two candidate blocks.
 

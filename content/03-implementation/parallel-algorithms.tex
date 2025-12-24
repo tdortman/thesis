@@ -11,7 +11,7 @@ The core of this thesis is the design of parallel algorithms for the Cuckoo filt
 The parallel insertion algorithm is designed to handle a large batch of items in parallel, with each CUDA thread being responsible for inserting a single item. The process for each thread is as follows:
 
 \begin{enumerate}
-  \item \textbf{Hashing and Key Generation}: Each item is first hashed into a 64-bit value using the xxHash64 algorithm. This hash is split: the upper 32 bits derive the fingerprint, and the lower 32 bits determine the primary bucket index. Distinct hash parts are used to avoid fingerprint clustering. The alternate bucket index is calculated using the partial-key cuckoo hashing scheme (Section \ref{sec:background:cuckoo-filter}).
+  \item \textbf{Hashing and Key Generation}: Each item is first hashed into a 64-bit value using the xxHash64 algorithm, chosen for its high performance and excellent statistical properties. This hash is split: the upper 32 bits derive the fingerprint, and the lower 32 bits determine the primary bucket index. Distinct hash parts are used to avoid fingerprint clustering. The alternate bucket index is then calculated using the partial-key cuckoo hashing scheme (Section \ref{sec:background:cuckoo-filter}).
 
   \item \textbf{Direct Insertion Attempt}: The thread checks the two candidate buckets. To distribute items evenly and reduce contention on the first slots of a bucket, the thread does not start scanning at index 0. Instead, it uses the item's fingerprint to calculate a pseudo-random starting word index. It then iterates through the bucket's 64-bit words, wrapping around to the beginning. For each word, it utilizes a bitwise SWAR algorithm \cite{bit-twiddling-hacks} to generate a mask of empty slots. If a slot is found, an atomic Compare-And-Swap (CAS) attempts to insert the fingerprint.
 
@@ -131,7 +131,7 @@ The key optimization is vectorized, non-atomic memory loads combined with SWAR c
 
 The parallel deletion algorithm leverages SWAR to locate and remove items efficiently. Like the other operations, it iterates through the bucket in 64-bit words, starting at a pseudo-random offset derived from the fingerprint.
 
-The thread broadcasts the target tag and uses SWAR to find matches. If a match is found, it attempts an atomic CAS to set the specific slot to \texttt{EMPTY} (zero). If the CAS fails (due to concurrent modification), the thread reloads and retries. This ensures thread safety without locking. The operation continues until the item is removed or the entire bucket has been scanned.
+The thread broadcasts the target tag and uses SWAR to find matches. If a match is found, it attempts an atomic CAS to set the specific slot to \texttt{EMPTY} (zero). If the CAS fails (due to concurrent modification), the thread reloads and retries. This ensures thread safety without locking. The operation continues until the item is removed, or the entire bucket has been scanned.
 
 % tex-fmt: off
 \begin{algorithm}[htbp]

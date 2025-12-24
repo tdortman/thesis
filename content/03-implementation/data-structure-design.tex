@@ -6,14 +6,14 @@ The design of the GPU-accelerated Cuckoo filter emphasizes compile-time configur
 \subsection{Compile-Time Configuration}
 \label{sec:implementation:data-structure-design:comptime-config}
 
-To maximize performance by allowing the compiler to generate highly specialized code, the filter's core parameters are defined at compile-time as template arguments. These parameters are consolidated into a single configuration structure, \texttt{CuckooConfig}, which provides a clean and explicit way to instantiate the filter. The primary configuration options are:
+To maximize performance by allowing the compiler to generate highly specialized code, the filter's core parameters are defined at compile-time as template parameters. They are consolidated into a single configuration structure, \texttt{CuckooConfig}, which provides a clean and explicit way to instantiate the filter. The primary configuration options are:
 
 \begin{itemize}
   \item \texttt{bitsPerTag}: Defines the size of each fingerprint in bits. Has to be 8, 16, or 32.
 
-  \item \texttt{bucketSize}: Specifies the number of fingerprints stored in each bucket. A smaller bucket size generally leads to a lower false positive rate but can negatively impact insertion performance and overall occupancy. A default of 16 was chosen through empirical performance testing.
+  \item \texttt{bucketSize}: Specifies the number of fingerprints stored in each bucket. A smaller bucket size generally leads to a lower false positive rate but can negatively impact performance and overall occupancy. A default of 16 was chosen through performance testing (See Section \ref{sec:eval:bucket-size}).
 
-  \item \texttt{maxEvictions}: Sets the maximum number of evictions a single thread is allowed to perform during an insertion attempt before it gives up and reports a failure. The default value of 500 was determined empirically.
+  \item \texttt{maxEvictions}: Sets the maximum number of evictions a single thread is allowed to perform during an insertion attempt before it gives up and reports a failure. The default value of 500 was taken from \cite{og-cuckoo-filter}.
 
   \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels. This parameter can be tuned to optimize GPU occupancy for different hardware architectures. A default of 256 was chosen through empirical testing.
 
