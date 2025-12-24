@@ -36,7 +36,7 @@ Query performance, shown in Figure \ref{fig:query-perf}, highlights the impact o
 
 The Cuckoo filter exhibits a distinct performance profile based on the query result. Positive lookups are highly efficient: due to the large bucket size $(b=16)$, most items reside in their primary bucket, allowing the query to complete with a single memory transaction. This allows the Cuckoo filter to match or even outperform the Blocked Bloom filter when data is cached.
 
-For negative lookups, throughput is roughly halved because the algorithm must definitively check both candidate buckets. This behavior contrasts with the TCF, which utilizes cooperative groups to load both buckets in parallel for every query. While the TCF offers symmetric performance for positive and negative queries, its peak throughput is about an order of magnitude lower than the Cuckoo filter's. The GQF falls somewhat in the middle, benefiting from spatial locality during linear scans but failing to match the low latency of the bucketed approaches.
+For negative lookups, throughput is roughly halved because the algorithm must definitively check both candidate buckets. This behaviour contrasts with the TCF, which utilizes cooperative groups to load both buckets in parallel for every query. While the TCF offers symmetric performance for positive and negative queries, its peak throughput is about an order of magnitude lower than the Cuckoo filter's. The GQF falls somewhat in the middle, benefiting from spatial locality during linear scans but failing to match the low latency of the bucketed approaches.
 
 \FloatBarrier
 
