@@ -6,7 +6,7 @@ To understand how each filter interacts with the GPU's memory hierarchy, the L1 
 \subsection{L1 Cache Analysis}
 A consistent trend across all operations is the exceptionally high L1 hit rate (near 100\%) for both the TCF and the GQF, though they achieve this through different mechanisms.
 
-The TCF relies heavily on shared memory for internal computations. It utilizes cooperative groups to load blocks into shared memory and perform intra-block sorting and coordination. Since shared memory physically resides within the L1 cache configuration on modern NVIDIA architectures, these accesses are recorded as L1 hits.
+The TCF relies heavily on shared memory for internal computations. It utilizes cooperative groups to load blocks into shared memory and perform intra-block sorting and coordination. Since shared memory physically occupies the same space as the L1 cache on modern NVIDIA architectures, these accesses are recorded as L1 hits.
 
 In contrast, the GQF does not explicitly utilize shared memory but achieves high L1 efficiency through extreme spatial locality. The implementation assigns individual threads to manage specific, contiguous regions of the filter. As a thread performs operations such as linear probing or shifting elements within a run, it repeatedly accesses the same range of memory addresses. This ensures that the relevant cache lines remain resident in L1, resulting in a near-perfect hit rate despite operating directly on global memory structures.
 
