@@ -44,8 +44,6 @@ The results, visualized in Figure \ref{fig:throughput-by-fpr}, highlight the str
 
   \item \textbf{Baseline Comparison}: As expected for the DRAM-resident case, the Blocked Bloom filter generally offers the highest raw throughput due to its linear memory access patterns. However, its inability to support deletions rules it out for dynamic applications. Among the dynamic filters, the Cuckoo filter remains the closest competitor to the Bloom filter's performance across all sizes.
 
-  \item \textbf{Consistency}: The GPU Cuckoo filter demonstrates remarkable consistency. Its throughput for insertions, deletions, and queries remains high and stable across all target error rates, from $10\%$ down to $0.01\%$. This stability allows system designers to tune the filter's accuracy without fearing a sudden cliff in performance.
-
   \item \textbf{Dynamic Operation Performance}: While the GQF can match the Cuckoo filter in query throughput for specific configurations, it suffers a catastrophic penalty in dynamic operations. Its insertion and deletion throughputs are orders of magnitude lower due to the complex synchronization required to shift elements. Similarly, the TCF, while faster than the GQF for updates, still lags significantly behind the Cuckoo filter in deletion throughput.
 
   \item \textbf{Conclusion}: The GPU Cuckoo filter emerges as the most robust and well-rounded solution for high-throughput dynamic workloads. It is the only data structure capable of maintaining high performance for insertions, lookups, \textit{and} deletions simultaneously, while satisfying strict accuracy constraints.
