@@ -23,7 +23,7 @@ As shown in Figure \ref{fig:eviction-reduction}, the BFS policy successfully low
 
 As the filter fills ups, the DFS strategy (which picks a random victim immediately upon collision) sees a quick exponential increase in evictions. In contrast, the BFS strategy delays this spike significantly. By checking up to 8 candidate slots before resorting to an eviction, the BFS approach resolves many collisions locally.
 
-This reduction in evictions directly translates to a reduction in global memory writes. Every eviction saved is an atomic read-modify-write transaction avoided. This explains the performance data observed in the next section: on bandwidth-limited systems (Systems A and C), saving these memory transactions yields a net speed-up, whereas on bandwidth-rich systems (System B), the cost of the extra local checks outweighs the savings.
+This reduction in evictions directly translates to a reduction in global memory writes, since every eviction saved is an atomic read-modify-write transaction avoided.
 
 \begin{figure}[ht!]
   \centering
