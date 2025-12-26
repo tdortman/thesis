@@ -16,7 +16,7 @@ The insertion results for both memory types are presented in Figure \ref{fig:ins
 
 The GPU Cuckoo filter demonstrates exceptional competitiveness, effectively bridging the gap between static and dynamic data structures. Its insertion logic, relying on random atomic compare-and-swap operations, contrasts with the simpler, linear write patterns of the Blocked Bloom filter.
 
-\textbf{L2-Resident}: When the filter fits in cache, the Cuckoo filter achieves a significant fraction of the Blocked Bloom filter's throughput while surpassing all other filters by at least an order of magnitude.
+\textbf{L2-Resident}: When the filter fits in cache, the Cuckoo filter achieves a significant fraction of the Blocked Bloom filter's throughput while far surpassing all other filters.
 
 \textbf{DRAM-Resident}: For large datasets, the Cuckoo filter scales strongly with memory bandwidth. Throughput increases significantly when moving from GDDR7 to HBM3, confirming that the algorithm successfully saturates the memory bus. In contrast, the TCF and GQF show stagnant or regressive performance on the faster HBM3 system. This reveals somewhat of a "scalability wall": these filters are bound by the speed of Shared Memory (SRAM) and intra-warp coordination rather than global DRAM bandwidth. Consequently, the Cuckoo filter remains the fastest dynamic option by a wide margin.
 
