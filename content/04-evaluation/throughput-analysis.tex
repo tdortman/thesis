@@ -7,7 +7,7 @@ This section analyses the raw throughput of the filters in millions of operation
 \label{sec:eval:throughput:insertion}
 The insertion results for both memory types are presented in Figure \ref{fig:insert-perf}.
 
-\begin{figure}[ht!]
+\begin{figure}[htpb]
   \centering
   \includegraphics[width=1.0\textwidth]{images/perf/insert.pdf}
   \caption{Insertion Performance for L2-resident (Top) and DRAM-resident (Bottom) filters. Left side of each plot is System A (GDDR7), Right is System B (HBM3).}
@@ -27,7 +27,7 @@ The GPU Cuckoo filter demonstrates exceptional competitiveness, effectively brid
 
 Query performance, shown in Figure \ref{fig:query-perf}, highlights the impact of the Cuckoo filter's bucket layout and short-circuiting capabilities.
 
-\begin{figure}[ht!]
+\begin{figure}[htpb]
   \centering
   \includegraphics[width=1.0\textwidth]{images/perf/query.pdf}
   \caption{Lookup Performance for L2-resident (Top) and DRAM-resident (Bottom) filters. Left side of each plot is System A (GDDR7), Right is System B (HBM3).}
@@ -43,7 +43,7 @@ For negative lookups, throughput is roughly halved because the algorithm must de
 \subsection{Deletion Performance}
 \label{sec:eval:throughput:deletion}
 
-Deletion performance (Figure \ref{fig:delete-perf}) shows the most significant advantage of the GPU Cuckoo filter.
+Across all scenarios, the GPU Cuckoo filter maintains a distinct performance lead, though the magnitude of this advantage depends heavily on memory residency (See Figure \ref{fig:delete-perf}).
 
 \begin{figure}[ht!]
   \centering
@@ -52,14 +52,14 @@ Deletion performance (Figure \ref{fig:delete-perf}) shows the most significant a
   \label{fig:delete-perf}
 \end{figure}
 
-Across both memory types and hardware architectures, the Cuckoo filter is orders of magnitude faster than its competitors. This massive gap stems from fundamental algorithmic differences:
+In the L2-resident scenario, the Cuckoo filter is orders of magnitude faster than both the TCF and GQF. The low latency of the L2 cache allows the Cuckoo filter's simple atomic operations to run at a very high speed, while the complex coordination logic of the competitors becomes a significant bottleneck.
+
+However, in the DRAM-resident scenario, this gap narrows as global memory latency becomes the dominant factor for all implementations. On the GDDR7 system, the Cuckoo filter is approximately 67\% faster than the GQF, while on the HBM3 system, the lead extends to approximately 3.5$\times$. Despite the narrowing gap, the Cuckoo filter remains the fastest option due to fundamental algorithmic differences:
 
 \begin{itemize}
   \item \textbf{Cuckoo Filter}: Deletion is a simple, localized atomic operation (CAS).
-  \item \textbf{GQF}: Requires shifting elements within a run to maintain sorted order, a serial operation that maps poorly to GPUs.
-  \item \textbf{TCF}: Requires complex coordination within cooperative groups to update block state.
+  \item \textbf{GQF}: Requires shifting elements within a run to maintain sorted order. While efficient in bulk, this serial operation limits peak throughput.
+  \item \textbf{TCF}: Requires complex coordination within cooperative groups to update block state, which scales poorly compared to independent atomic accesses.
 \end{itemize}
-
-These complex maintenance operations in the GQF and TCF interact poorly with memory latency, creating a severe bottleneck that no amount of extra bandwidth (HBM3) or cache speed (L2 residency) can overcome.
 
 \FloatBarrier
