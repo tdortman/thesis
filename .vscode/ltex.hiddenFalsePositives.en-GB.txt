@@ -74,3 +74,5 @@
 {"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qmask&& \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q where \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q and \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q.\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\Qmask&& \\E(?:Dummy|Ina|Jimmy-)[0-9]+$"}
 {"rule":"CD_NN","sentence":"^\\Qmask is not 0 slot \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q FindFirstSet mask\\E$"}
+{"rule":"A_RB_NN","sentence":"^\\QWhile CPU-based dynamic filters exist, many modern applications generate data at a rate that creates a performance bottleneck, motivating the need for a massively parallel, GPU-accelerated solution.\\E$"}
+{"rule":"THE_SUPERLATIVE","sentence":"^\\QStoring a Sparse Table with 0(1) Worst Case Access Time\\E$"}

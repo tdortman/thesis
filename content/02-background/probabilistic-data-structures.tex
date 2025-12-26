@@ -51,7 +51,7 @@ Despite its widespread use, the classic Bloom filter has several notable disadva
 \subsection{Blocked Bloom Filter}
 \label{sec:background:blocked-bloom-filter}
 
-To address the issue of poor memory locality, the Blocked Bloom Filter was introduced. As this variant is a primary point of comparison in this thesis, the design warrants its own detailed explanation.
+To address the issue of poor memory locality, the Blocked Bloom Filter was introduced. As this variant is an important point of comparison in this thesis, the design warrants its own detailed explanation.
 
 Instead of a single bit array, the Blocked Bloom Filter partitions the array into an array of smaller, independent Bloom filters, called blocks. Each block is typically sized to fit within a single CPU cache line (e.g., 64 bytes). The hashing scheme is modified: a single hash function is first used to map an incoming item to a specific block. Then, the standard $k$ hash functions are used to set or check bits only within that selected block, as shown in Figure \ref{fig:blocked-bloom-filter}.
 
@@ -69,7 +69,7 @@ However, this performance gain comes at the cost of a higher false positive rate
 \subsection{Cuckoo Hashing}
 \label{sec:background:cuckoo-hashing}
 
-Cuckoo hashing, introduced by Pagh and Rodler in 2004 \cite{pagh2004cuckoo}, is a powerful hashing scheme that provides a significant advantage over many others: a worst-case $O(1)$ lookup time \cite{pagh2004cuckoo}. Its name is derived from the cuckoo bird, which is known for laying its eggs in the nests of other birds, often forcing the original occupants out. The scheme's elegance lies in its simplicity compared to previous methods that also offered worst-case constant lookup guarantees.
+Cuckoo hashing, introduced by Pagh and Rodler in 2004 \cite{pagh2004cuckoo}, is a powerful hashing scheme that provides a significant advantage over many others: a worst-case $O(1)$ lookup time \cite{pagh2004cuckoo}. Its name is derived from the cuckoo bird, which is known for laying its eggs in the nests of other birds, often forcing the original occupants out. The scheme's elegance lies in its simplicity compared to previous methods that also offered worst-case constant lookup guarantees \cite{practical-phf, fks, extendible-hashing}.
 
 In its original formulation, the scheme uses two independent hash tables, $T_1$ and $T_2$, each of size $r$, and two independent hash functions $h_1$ and $h_2$. The core invariant of Cuckoo hashing is that for any given item $x$, it is stored in one of two possible locations: either $\mathrm{T}_1[\mathrm{h}_1(x) \bmod r]$ or $\mathrm{T}_2[\mathrm{h}_2(x) \bmod r]$. A lookup operation is therefore guaranteed to be $O(1)$, as it only requires checking these two specific locations.
 
@@ -116,7 +116,7 @@ This works because the transformation is its own inverse for that specific pair 
 \subsection{Cuckoo Filter}
 \label{sec:background:cuckoo-filter}
 
-The Cuckoo filter, introduced by Fan et al., is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter, most notably by supporting deletion of items \cite{og-cuckoo-filter}. It improves upon standard Cuckoo hashing in multiple ways.
+The Cuckoo filter, introduced by Fan et al. \cite{og-cuckoo-filter}, is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter, most notably by supporting deletion of items. It improves upon standard Cuckoo hashing in multiple ways.
 
 First, instead of storing entire items, a Cuckoo filter only stores a small fingerprint for each item, which is a fixed-size sequence of bits derived from the item's hash. This significantly reduces the memory footprint. A direct consequence, however, is that traditional rehashing is not an option, as the original items are not available to be re-inserted. Therefore, the filter's size and parameters are typically static once it is created.
 

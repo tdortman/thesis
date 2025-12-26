@@ -10,6 +10,25 @@
   doi       = {10.1109/IWQoS49365.2020.9213014}
 }
 
+@online{bit-twiddling-hacks,
+  author = {Sean Eron Anderson},
+  title  = {Bit Twiddling Hacks},
+  year   = {2005},
+  url    = {https://graphics.stanford.edu/~seander/bithacks.html},
+  note   = {Accessed: 2025-12-13}
+}
+
+@article{bloom-distributed-systems,
+  title     = {Theory and practice of bloom filters for distributed systems},
+  author    = {Tarkoma, Sasu and Rothenberg, Christian Esteve and Lagerspetz, Eemil},
+  journal   = {IEEE Communications Surveys \& Tutorials},
+  volume    = {14},
+  number    = {1},
+  pages     = {131--155},
+  year      = {2011},
+  publisher = {IEEE}
+}
+
 @article{bloom-network,
   author    = {Andrei Broder and Michael Mitzenmacher},
   title     = {Network Applications of Bloom Filters: A Survey},
@@ -35,24 +54,6 @@
   publisher = {ACM New York, NY, USA}
 }
 
-@inproceedings{gossip,
-  author    = {Kobus, Robin and J\"{u}nger, Daniel and Hundt, Christian and Schmidt, Bertil},
-  title     = {Gossip: Efficient Communication Primitives for Multi-GPU Systems},
-  year      = {2019},
-  isbn      = {9781450362955},
-  publisher = {Association for Computing Machinery},
-  address   = {New York, NY, USA},
-  url       = {https://doi.org/10.1145/3337821.3337889},
-  doi       = {10.1145/3337821.3337889},
-  abstract  = {Nowadays, a growing number of servers and workstations feature an increasing number of GPUs. However, slow communication among GPUs can lead to poor application performance. Thus, there is a latent demand for efficient multi-GPU communication primitives on such systems. This paper focuses on the gather, scatter and all-to-all collectives, which are important operations for various algorithms including parallel sorting and distributed hashing. We present two distinct communication strategies (ring-based and flow-oriented) to generate transfer plans for their topology-aware implementation on NVLink-connected multi-GPU systems. We achieve a throughput of up to 526 GB/s for all-to-all and 148 GB/s for scatter/gather on a DGX-1 server with only a small memory overhead. Furthermore, we propose a cost-neutral alternative to the DGX-1 Volta topology that provides an expected higher throughput for the all-to-all collective while preserving the throughput in case of scatter/gather. Our Gossip library is freely available at https://github.com/Funatiq/gossip.},
-  booktitle = {Proceedings of the 48th International Conference on Parallel Processing},
-  articleno = {63},
-  numpages  = {10},
-  keywords  = {topology, multi-GPU, collective communication, CUDA},
-  location  = {Kyoto, Japan},
-  series    = {ICPP '19}
-}
-
 @article{counting-bloom,
   author   = {Li Fan and Pei Cao and Almeida, J. and Broder, A.Z.},
   journal  = {IEEE/ACM Transactions on Networking},
@@ -63,17 +64,6 @@
   pages    = {281-293},
   keywords = {Cache memory;Internet;Bandwidth;Computer science;Routing protocols;Telecommunication traffic;Particle measurements;Virtual prototyping;Bit rate;Data analysis},
   doi      = {10.1109/90.851975}
-}
-
-@article{partitioned-cuckoo,
-  title     = {A four-dimensional analysis of partitioned approximate filters},
-  author    = {Schmidt, Tobias and Bandle, Maximilian and Giceva, Jana},
-  journal   = {Proceedings of the VLDB Endowment},
-  volume    = {14},
-  number    = {11},
-  pages     = {2355--2368},
-  year      = {2021},
-  publisher = {VLDB Endowment}
 }
 
 @article{cuckoo-privacy-review,
@@ -108,6 +98,35 @@
   year      = {2006}
 }
 
+@article{extendible-hashing,
+  title     = {Extendible hashing—a fast access method for dynamic files},
+  author    = {Fagin, Ronald and Nievergelt, Jurg and Pippenger, Nicholas and Strong, H Raymond},
+  journal   = {ACM Transactions on Database Systems (TODS)},
+  volume    = {4},
+  number    = {3},
+  pages     = {315--344},
+  year      = {1979},
+  publisher = {ACM New York, NY, USA}
+}
+
+@article{fks,
+  author     = {Fredman, Michael L. and Koml\'{o}s, J\'{a}nos and Szemer\'{e}di, Endre},
+  title      = {Storing a Sparse Table with 0(1) Worst Case Access Time},
+  year       = {1984},
+  issue_date = {July 1984},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {31},
+  number     = {3},
+  issn       = {0004-5411},
+  url        = {https://doi.org/10.1145/828.1884},
+  doi        = {10.1145/828.1884},
+  journal    = {J. ACM},
+  month      = jun,
+  pages      = {538–544},
+  numpages   = {7}
+}
+
 @article{gaia2019ngsreadstreatment,
   title     = {NGSReadsTreatment--a Cuckoo Filter-based tool for removing duplicate reads in NGS data},
   author    = {Gaia, Antonio S{\'e}rgio Cruz and de S{\'a}, Pablo Henrique Caracciolo Gomes and de Oliveira, M{\^o}nica Silva and Veras, Adonney Allan de Oliveira},
@@ -117,6 +136,24 @@
   pages     = {11681},
   year      = {2019},
   publisher = {Nature Publishing Group UK London}
+}
+
+@inproceedings{gossip,
+  author    = {Kobus, Robin and J\"{u}nger, Daniel and Hundt, Christian and Schmidt, Bertil},
+  title     = {Gossip: Efficient Communication Primitives for Multi-GPU Systems},
+  year      = {2019},
+  isbn      = {9781450362955},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3337821.3337889},
+  doi       = {10.1145/3337821.3337889},
+  abstract  = {Nowadays, a growing number of servers and workstations feature an increasing number of GPUs. However, slow communication among GPUs can lead to poor application performance. Thus, there is a latent demand for efficient multi-GPU communication primitives on such systems. This paper focuses on the gather, scatter and all-to-all collectives, which are important operations for various algorithms including parallel sorting and distributed hashing. We present two distinct communication strategies (ring-based and flow-oriented) to generate transfer plans for their topology-aware implementation on NVLink-connected multi-GPU systems. We achieve a throughput of up to 526 GB/s for all-to-all and 148 GB/s for scatter/gather on a DGX-1 server with only a small memory overhead. Furthermore, we propose a cost-neutral alternative to the DGX-1 Volta topology that provides an expected higher throughput for the all-to-all collective while preserving the throughput in case of scatter/gather. Our Gossip library is freely available at https://github.com/Funatiq/gossip.},
+  booktitle = {Proceedings of the 48th International Conference on Parallel Processing},
+  articleno = {63},
+  numpages  = {10},
+  keywords  = {topology, multi-GPU, collective communication, CUDA},
+  location  = {Kyoto, Japan},
+  series    = {ICPP '19}
 }
 
 @inproceedings{gpu-qf,
@@ -130,6 +167,7 @@
   keywords  = {Graphics processing units;Data structures;Standards;Metadata;Throughput;Filtering algorithms;Merging;GPU computing;algorithms;data structures;approximate membership queries;Bloom filter},
   doi       = {10.1109/IPDPS.2018.00055}
 }
+
 
 @inproceedings{grashofer2018towards,
   title        = {Towards application of cuckoo filters in network security monitoring},
@@ -148,7 +186,6 @@
   year      = {1995}
 }
 
-
 @article{mullin2002optimal,
   title     = {Optimal semijoins for distributed database systems},
   author    = {Mullin, James K.},
@@ -166,14 +203,6 @@
   year   = {2025},
   url    = {https://docs.nvidia.com/cuda/cuda-c-programming-guide/},
   note   = {Accessed: 2025-10-20}
-}
-
-@online{bit-twiddling-hacks,
-  author = {Sean Eron Anderson},
-  title  = {Bit Twiddling Hacks},
-  year   = {2005},
-  url    = {https://graphics.stanford.edu/~seander/bithacks.html},
-  note   = {Accessed: 2025-12-13}
 }
 
 @inproceedings{og-cuckoo-filter,
@@ -232,6 +261,7 @@
   year      = {2001}
 }
 
+
 @article{pagh2004cuckoo,
   title     = {Cuckoo hashing},
   author    = {Pagh, Rasmus and Rodler, Flemming Friche},
@@ -243,6 +273,16 @@
   publisher = {Elsevier}
 }
 
+@article{partitioned-cuckoo,
+  title     = {A four-dimensional analysis of partitioned approximate filters},
+  author    = {Schmidt, Tobias and Bandle, Maximilian and Giceva, Jana},
+  journal   = {Proceedings of the VLDB Endowment},
+  volume    = {14},
+  number    = {11},
+  pages     = {2355--2368},
+  year      = {2021},
+  publisher = {VLDB Endowment}
+}
 
 @inproceedings{potc,
   author    = {Azar, Yossi and Broder, Andrei Z. and Karlin, Anna R. and Upfal, Eli},
@@ -258,6 +298,17 @@
   numpages  = {10},
   location  = {Montreal, Quebec, Canada},
   series    = {STOC '94}
+}
+
+@article{practical-phf,
+  title     = {Practical minimal perfect hash functions for large databases},
+  author    = {Fox, Edward A and Heath, Lenwood S and Chen, Qi Fan and Daoud, Amjad M},
+  journal   = {Communications of the ACM},
+  volume    = {35},
+  number    = {1},
+  pages     = {105--121},
+  year      = {1992},
+  publisher = {ACM New York, NY, USA}
 }
 
 @online{redis-docs,

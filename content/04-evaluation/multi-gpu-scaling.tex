@@ -10,9 +10,9 @@ To evaluate the filter's ability to scale beyond a single device, a specific set
 
 For the evaluation of multi-device scalability, the experimental setup was expanded with a fourth hardware configuration representing a high-end enterprise cluster node:
 
-% TODO: Update the OS, driver & cuda versions when the nodes are available again
+% TODO: Update the driver version when the nodes are available again
 \begin{itemize}
-  \item \textbf{System D (HBM2e/NVLink)}: An AMD EPYC 7713 (64 cores) paired with $8\times$ NVIDIA A100-SXM4 GPUs, each featuring 80 GB of HBM2e memory ($\approx$ 2 TB/s bandwidth). The GPUs are interconnected via NVLink 3.0, providing a total aggregate bandwidth of 600 GB/s. The system runs AlmaLinux 10.1 with NVIDIA driver 580.95.05 and CUDA 12.9.86.
+  \item \textbf{System D (HBM2e/NVLink)}: An AMD EPYC 7713 (64 cores) paired with $8\times$ NVIDIA A100-SXM4 GPUs, each featuring 80 GB of HBM2e memory ($\approx$ 2 TB/s bandwidth). The GPUs are interconnected via NVLink 3.0, providing a total aggregate bandwidth of 600 GB/s. The system runs AlmaLinux 8.10 with NVIDIA driver 580.95.05 and CUDA 12.8.61.
 \end{itemize}
 
 Unlike the PCIe-based tests performed on Systems A, B, and C, this configuration allows the Gossip library to leverage the high-bandwidth NVLink interconnect for the All-to-All data exchange, significantly reducing the communication latency during the partitioning phase.

@@ -3,7 +3,7 @@
 \subsection{Two-Choice Filter}
 \label{sec:background:two-choice-filter}
 
-Recent work by McCoy et al. introduced the Two-Choice Filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs \cite{tcf}. The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter optimized for the constraints of a GPU.
+Recent work by McCoy et al. \cite{tcf} introduced the Two-Choice Filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs. The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter optimized for the constraints of a GPU.
 
 Structurally, the TCF is similar to a Cuckoo filter. It organizes fingerprints into blocks sized to fit within a GPU cache line (e.g., 128 bytes) to ensure high memory locality. Like the Cuckoo filter, it maps each item to two candidate blocks.
 
@@ -15,7 +15,7 @@ The fundamental difference lies in the insertion strategy. The authors argue tha
   \item There are no evictions. If both candidate blocks are full, the insertion into the main table fails.
 \end{itemize}
 
-This approach guarantees a fixed number of memory accesses per insertion, preserving memory coherence. However, because the blocks must be small to fit in GPU cache lines, the statistical variance in load distribution increases, leading to premature failures even when the total table is not full. To address this, the TCF relies on a backing store, a small, secondary hash table to catch these overflows. This hybrid architecture allows the TCF to maintain a high overall occupancy (up to 95\%) while keeping the primary insertion logic simple and coherent.
+This approach guarantees a fixed number of memory accesses per insertion. However, because the blocks must be small enough to fit in GPU cache lines, the statistical variance in load distribution increases, leading to premature failures even when the total table is far from full. To address this, the TCF relies on a backing store, a small, secondary hash table to catch these overflows. This hybrid architecture allows the TCF to maintain a high overall occupancy (up to 95\%) while keeping the average case insertion logic simple.
 
 For implementation, the TCF leverages CUDA Cooperative Groups to coordinate threads within a warp for lock-free intra-block operations. Additionally, it offers a "Bulk API" that pre-sorts items before insertion, further maximizing memory coalescing. In summary, the TCF prioritizes a non-evicting strategy to maximize memory bandwidth, trading the complexity of eviction logic for the architectural complexity of managing a secondary overflow structure.
 
