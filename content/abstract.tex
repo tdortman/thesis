@@ -6,7 +6,7 @@
 
 Approximate Membership Query (AMQ) data structures are essential for high-throughput systems, yet the industry-standard Bloom filter lacks support for item deletion. This thesis presents the design and implementation of a high-performance, GPU-accelerated Cuckoo filter, delivered as a robust header-only library. By utilizing a parallelized eviction algorithm based on atomic operations, the implementation supports massive parallelism without explicit locking.
 
-A comprehensive evaluation across GDDR7 and HBM3 architectures reveals that the Cuckoo filter significantly outperforms state-of-the-art dynamic alternatives. It achieves insertion and deletion throughputs orders of magnitude higher than the GPU Quotient Filter (GQF) and the Two-Choice Filter (TCF). Crucially, the results demonstrate superior architectural scalability: while TCF and GQF performance stagnates on high-bandwidth hardware due to internal latency bottlenecks, the Cuckoo filter scales linearly with global memory bandwidth. This characteristic positions the Cuckoo filter as the better solution for next-generation, bandwidth-rich GPU architectures.
+A comprehensive evaluation across GDDR6X and HBM3 architectures reveals that the Cuckoo filter significantly outperforms state-of-the-art dynamic alternatives. It achieves insertion and deletion throughputs orders of magnitude higher than the GPU Quotient Filter (GQF) and the Two-Choice Filter (TCF). Crucially, the results demonstrate superior architectural scalability: while TCF and GQF performance stagnates on high-bandwidth hardware due to internal latency bottlenecks, the Cuckoo filter scales linearly with global memory bandwidth. This characteristic positions the Cuckoo filter as the better solution for next-generation, bandwidth-rich GPU architectures.
 
 \IfLanguageName{english}{
   \vspace*{20mm}
@@ -19,7 +19,7 @@ A comprehensive evaluation across GDDR7 and HBM3 architectures reveals that the 
 
   AMQ-Datenstrukturen sind für Hochdurchsatzsysteme essenziell, doch dem verbreiteten Bloom-Filter fehlt die Löschunterstützung. Diese Arbeit präsentiert einen hochperformanten, GPU-beschleunigten Cuckoo-Filter als robuste Header-only Library. Effiziente Algorithmen auf Basis atomarer Operationen ermöglichen dabei massive Parallelität ohne explizites Locking.
 
-  Evaluierungen auf GDDR7- und HBM3-Systemen zeigen, dass der Filter dynamische Alternativen deutlich übertrifft. Er erzielt Einfüge- und Löschraten, die um Größenordnungen über denen von GPU Quotient (GQF) und Two-Choice Filtern (TCF) liegen. Entscheidend ist die Skalierbarkeit: Während die Leistung der Konkurrenz auf Hardware mit hoher Bandbreite latenzbedingt stagniert, skaliert der Cuckoo-Filter linear mit der globalen Speicherbandbreite. Dies macht ihn zur führenden Lösung für zukünftige GPU-Architekturen.
+  Evaluierungen auf GDDR6X- und HBM3-Systemen zeigen, dass der Filter dynamische Alternativen deutlich übertrifft. Er erzielt Einfüge- und Löschraten, die um Größenordnungen über denen von GPU Quotient (GQF) und Two-Choice Filtern (TCF) liegen. Entscheidend ist die Skalierbarkeit: Während die Leistung der Konkurrenz auf Hardware mit hoher Bandbreite latenzbedingt stagniert, skaliert der Cuckoo-Filter linear mit der globalen Speicherbandbreite. Dies macht ihn zur führenden Lösung für zukünftige GPU-Architekturen.
 
   % reset to english
   \selectlanguage{english}

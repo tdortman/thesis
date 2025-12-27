@@ -1,7 +1,13 @@
 \section{Impact of Wider Memory Loads}
 \label{sec:eval:256bit-loads}
 
-With the introduction of the NVIDIA Blackwell architecture (Compute Capability 10.0), new PTX instructions allow for wider memory transactions. To evaluate the impact of instruction-level parallelism on query throughput, a special case utilizing the 256-bit non-coherent load instruction was added to the lookup kernel:
+With the introduction of the NVIDIA Blackwell architecture (Compute Capability 10.0), new PTX instructions allow for wider memory transactions. To evaluate the impact of instruction-level parallelism on query throughput, the testbed was expanded with a third hardware configuration specifically for this benchmark, as it is the only device supporting the necessary instruction:
+
+\begin{itemize}
+  \item \textbf{System C (GDDR7)}: An AMD EPYC 7713P (64 cores) paired with an NVIDIA RTX PRO 6000 Blackwell GPU featuring 96 GB of GDDR7 memory (1.8 TB/s). The system runs AlmaLinux 10.1 with NVIDIA driver 580.95.05 and CUDA 12.9.86.
+\end{itemize}
+
+A special version of the lookup kernel was implemented utilizing the 256-bit non-coherent load instruction:
 
 \begin{verbatim}
 ld.global.nc.v4.u64 {%0, %1, %2, %3}, [%4];
@@ -11,23 +17,23 @@ This instruction fetches four \texttt{uint64\_t} values (256 bits) in a single o
 
 \subsection{Throughput Analysis}
 
-Figure \ref{fig:256bit-loads} compares the query throughput of the standard 128-bit load implementation against the optimized 256-bit variant on System A.
+Figure \ref{fig:256bit-loads} compares the query throughput of the standard 128-bit load implementation against the optimized 256-bit variant on System C.
 
-\begin{figure}[ht!]
+\begin{figure}[htpb]
   \centering
   \includegraphics[width=1.0\textwidth]{images/load-width-comparison.pdf}
-  \caption{Query throughput comparison between 128-bit loads and 256-bit loads on System A.}
+  \caption{Query speedup going from 128-bit to 256-bit loads on System C (Blackwell architecture).}
   \label{fig:256bit-loads}
 \end{figure}
 
 The results highlight two distinct scenarios:
 
 \begin{itemize}
-  \item \textbf{L2-Resident Improvement}: When the filter fits into the L2 cache (up until $2^{25}$ elements), the 256-bit implementation provides a constant performance uplift of 15-20\%. By fetching entire buckets with fewer instructions, the kernel reduces execution overhead, allowing the device to better saturate the L2 bandwidth.
+  \item \textbf{L2-Resident Improvement}: When the filter fits into the L2 cache (up until $2^{25}$ elements), the 256-bit implementation provides a consistent performance uplift of up to 17.5\%. By fetching entire buckets with fewer instructions, the kernel reduces execution overhead, allowing the device to better saturate the L2 bandwidth.
 
   \item \textbf{DRAM-Resident Convergence}: As the working set spills into global memory, the performance advantage disappears. In this case, the workload becomes strictly bound by DRAM access times. Regardless of whether the data is requested via 128-bit or 256-bit instructions, the memory controller is already saturated, and the instruction issue rate is no longer the bottleneck.
 \end{itemize}
 
-This shows that the use of 256-bit vector loads offers a "free" performance boost for L2-resident workloads on supported hardware by improving instruction efficiency. However, it does not fix the memory bandwidth bottleneck of large, DRAM-resident Cuckoo filters.
+These findings demonstrate that while wider vector loads offer a "free" performance boost for cache-resident workloads by improving instruction efficiency, they cannot overcome the fundamental memory bandwidth bottleneck inherent to large, DRAM-resident Cuckoo filters.
 
 \FloatBarrier
