@@ -6,6 +6,7 @@ The performance evaluation was conducted on two distinct hardware configurations
 \begin{itemize}
   \item \textbf{System A (GDDR7)}: An AMD EPYC 7713P (64 cores) paired with an NVIDIA RTX PRO 6000 Blackwell GPU featuring 96 GB of GDDR7 memory (1.8 TB/s). The system runs AlmaLinux 10.1 with NVIDIA driver 580.95.05 and CUDA 12.9.86.
   \item \textbf{System B (HBM3)}: An NVIDIA GH200 Grace Hopper system with 72 ARM Neoverse V2 cores and an H100 GPU featuring 96 GB of HBM3 memory (3.4 TB/s). The system runs Ubuntu 24.04.3 with NVIDIA driver 580.105.08 and CUDA 13.0.88.
+  \item \textbf{System C (GDDR7)}: An AMD Ryzen 9 5900X (12 cores) paired with an NVIDIA RTX 5070 Ti GPU featuring 16 GB of GDDR7 memory (0.9 TB/s). The system runs NixOS 25.11 with NVIDIA driver 580.119.02 and CUDA 12.9.86.
 \end{itemize}
 
 It is important to note that these systems are not compared head-to-head to determine which is "better." Rather, they are used to evaluate how the algorithms respond to high-bandwidth memory (HBM) versus standard graphics memory (GDDR).
