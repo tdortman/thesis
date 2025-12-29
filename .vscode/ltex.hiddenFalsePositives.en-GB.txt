@@ -76,3 +76,8 @@
 {"rule":"CD_NN","sentence":"^\\Qmask is not 0 slot \\E(?:Dummy|Ina|Jimmy-)[0-9]+\\Q FindFirstSet mask\\E$"}
 {"rule":"A_RB_NN","sentence":"^\\QWhile CPU-based dynamic filters exist, many modern applications generate data at a rate that creates a performance bottleneck, motivating the need for a massively parallel, GPU-accelerated solution.\\E$"}
 {"rule":"THE_SUPERLATIVE","sentence":"^\\QStoring a Sparse Table with 0(1) Worst Case Access Time\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QKMC 3: counting and manipulating k-mer statistics\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QWe introduce KMC3, a significant improvement of the former KMC2 algorithm together with KMC tools for manipulating k-mer databases.\\E$"}
+{"rule":"SENTENCE_WHITESPACE","sentence":"^\\QProgram is freely available at http://sun.aei.polsl.pl/REFRESH/kmc.\\E$"}
+{"rule":"SENTENCE_WHITESPACE","sentence":"^\\QSupplementary data are available at Bioinformatics online.\\E$"}
+{"rule":"COMMA_COMPOUND_SENTENCE","sentence":"^\\QAs a result, more than half of the Y chromosome is missing from the GRCh38 reference sequence and it remains the last human chromosome to be finished4, 5.\\E$"}

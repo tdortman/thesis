@@ -1,0 +1,37 @@
+\section{Real-World Benchmark: Genomic K-mer Indexing}
+\label{sec:eval:kmer}
+
+While synthetic benchmarks using uniformly distributed integers are useful for showing algorithmic behaviour, real-world data can often present challenges due to skewed distributions. To validate this, a benchmark was conducted on genomic $k$-mer indexing as a primary use case for approximate membership query structures in bioinformatics.
+
+\subsection{Background and Experimental Setup}
+
+A $k$-mer is a subsequence of length $k$ derived from a biological sequence, such as DNA. In genomic analysis, counting and filtering $k$-mers is an important step for tasks like genome assembly and error correction. Since DNA consists of four base pairs (A, C, G, T), the total number of possible $k$-mers is $4^k$, which grows rather quickly.
+
+For this evaluation, the T2T-CHM13 \cite{t2t-y, t2t-chm13} dataset is used as the first complete sequence of a human genome. The raw FASTA \cite{fasta} data was pre-processed using KMC 3 \cite{kmc3} to extract all distinct 31-mers ($k$ = 31). To optimize memory usage and processing speed, the text-based $k$-mers were packed into a 2-bit-per-base binary representation, compressing the dataset roughly by a factor of four and allowing each 31-mer to fit within a single \texttt{uint64\_t}.
+
+The resulting dataset is approximately 20 GB in size (packed), which is sufficient to effectively saturate the 96 GB VRAM on System A. All filters were tested for insertion, lookup, and deletion (when supported). Note that the 256-bit load optimization (Section \ref{sec:eval:256bit-loads}) was disabled for the Cuckoo filter in this test to ensure a fair architectural comparison with the other filters.
+
+\subsection{Performance Analysis}
+
+The throughput results for the $k$-mer benchmark are presented in Figure \ref{fig:kmer-benchmark}.
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/kmer_benchmark.pdf}
+  \caption{Throughput comparison for indexing, querying, and deleting 31-mers from the full T2T-CHM13 human genome on System A. The Cuckoo filter shows a robust balance of performance across all three operations.}
+  \label{fig:kmer-benchmark}
+\end{figure}
+
+The results confirm that the Cuckoo filter's high performance translates effectively to real-world workloads:
+
+\begin{itemize}
+  \item \textbf{Query Performance}: While the Cuckoo filter does not fully match the read-only Blocked Bloom filter, it maintains a significant lead over other dynamic alternatives. It is approximately 40\% faster than the GQF and 7.7$\times$ faster than the TCF. This indicates that the Cuckoo filter's bucketed lookup strategy remains highly efficient even with the specific distribution of genomic data.
+
+  \item \textbf{Insertion Performance}: The Cuckoo filter comes within 92\% of the Blocked Bloom filter's performance. It is also slightly faster than the TCF and dramatically outperforms the GQF. This again shows the observation from the synthetic benchmarks that the GQF struggles with insertion workloads.
+
+  \item \textbf{Deletion Performance}: In deletion throughput, the Cuckoo filter is slightly slower than the GQF but remains an order of magnitude faster than the TCF.
+\end{itemize}
+
+\subsection{Conclusion}
+
+This benchmark demonstrates that the GPU Cuckoo filter is a highly versatile data structure for real-world applications. While specialized filters may match or marginally outperform it in specific operations (e.g., the Blocked Bloom filter for queries or the GQF for deletions), the Cuckoo filter is the only tested solution that delivers a consistent high performance across \textit{all} operations. This makes it particularly valuable for workloads that involve a good mix of insertions, lookups, and deletions.
