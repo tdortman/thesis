@@ -6,7 +6,7 @@ At the heart of this thesis is the need for a dynamic and efficient data structu
 \subsection{Bloom Filter}
 \label{sec:background:bloom-filter}
 
-Invented in 1970, the Bloom filter has long been the dominant probabilistic data structure for approximate membership query (AMQ) problems. Its operation is based on a simple yet effective concept: a bit array of size $m$ and a set of $k$ independent hash functions. To insert an item, the item is hashed $k$ times, and each resulting hash value is used as an index to set a bit in the array to 1. To query for an item's membership, the item is again hashed $k$ times. If all corresponding bits in the array are 1, the item is considered to possibly be in the set. However, if even one bit is 0, the item is definitively not in the set, as illustrated in Figure \ref{fig:bloom-filter}.
+Invented in 1970, the Bloom filter \cite{og-bloom} has long been the dominant probabilistic data structure for approximate membership query (AMQ) problems. Its operation is based on a simple yet effective concept: a bit array of size $m$ and a set of $k$ independent hash functions. To insert an item, the item is hashed $k$ times, and each resulting hash value is used as an index to set a bit in the array to 1. To query for an item's membership, the item is again hashed $k$ times. If all corresponding bits in the array are 1, the item is considered to possibly be in the set. However, if even one bit is 0, the item is definitively not in the set, as illustrated in Figure \ref{fig:bloom-filter}.
 
 \begin{figure}[ht!]
   \centering

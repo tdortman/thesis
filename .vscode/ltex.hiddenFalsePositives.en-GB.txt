@@ -81,3 +81,10 @@
 {"rule":"SENTENCE_WHITESPACE","sentence":"^\\QProgram is freely available at http://sun.aei.polsl.pl/REFRESH/kmc.\\E$"}
 {"rule":"SENTENCE_WHITESPACE","sentence":"^\\QSupplementary data are available at Bioinformatics online.\\E$"}
 {"rule":"COMMA_COMPOUND_SENTENCE","sentence":"^\\QAs a result, more than half of the Y chromosome is missing from the GRCh38 reference sequence and it remains the last human chromosome to be finished4, 5.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QIn this paper trade-offs among certain computational factors in hash coding are analyzed.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QThe computational factors considered are the size of the hash area (space), the time required to identify a message as a nonmember of the given set (reject time), and an allowable error frequency.\\E$"}
+{"rule":"SENTENCE_WHITESPACE","sentence":"^\\QThe new methods are intended to reduce the amount of space required to contain the hash-coded information from that associated with conventional methods.\\E$"}
+{"rule":"SENTENCE_WHITESPACE","sentence":"^\\QIn such applications, it is envisaged that overall performance could be improved by using a smaller core resident hash area in conjunction with the new methods and, when necessary, by using some secondary and perhaps time-consuming test to “catch” the small fraction of errors associated with the new methods.\\E$"}
+{"rule":"SENTENCE_WHITESPACE","sentence":"^\\QAnalysis of the paradigm problem demonstrates that allowing a small number of test messages to be falsely identified as members of the given set will permit a much smaller hash area to be used without increasing reject time.\\E$"}
+{"rule":"SMALL_NUMBER_OF","sentence":"^\\QAnalysis of the paradigm problem demonstrates that allowing a small number of test messages to be falsely identified as members of the given set will permit a much smaller hash area to be used without increasing reject time.\\E$"}
+{"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QCommun.\\E$"}
