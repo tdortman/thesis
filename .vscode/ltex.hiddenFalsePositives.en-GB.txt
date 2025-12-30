@@ -88,3 +88,6 @@
 {"rule":"SENTENCE_WHITESPACE","sentence":"^\\QAnalysis of the paradigm problem demonstrates that allowing a small number of test messages to be falsely identified as members of the given set will permit a much smaller hash area to be used without increasing reject time.\\E$"}
 {"rule":"SMALL_NUMBER_OF","sentence":"^\\QAnalysis of the paradigm problem demonstrates that allowing a small number of test messages to be falsely identified as members of the given set will permit a much smaller hash area to be used without increasing reject time.\\E$"}
 {"rule":"MORFOLOGIK_RULE_EN_GB","sentence":"^\\QCommun.\\E$"}
+{"rule":"A_INFINITIVE","sentence":"^\\QSpecifically, performance gains on System A indicate a compute throughput limitation, whereas scaling on System B confirms a dependency on memory bandwidth.\\E$"}
+{"rule":"A_INFINITIVE","sentence":"^\\QSpecifically, performance gains on System A indicate a compute bottleneck, whereas scaling on System B confirms a dependency on memory bandwidth.\\E$"}
+{"rule":"A_INFINITIVE","sentence":"^\\QSpecifically, performance gains on System A indicate a compute bottleneck, whereas scaling on System B confirms a memory bandwidth bottleneck.\\E$"}
