@@ -8,7 +8,7 @@ The key contributions of this work are:
 \begin{itemize}
   \item \textbf{High-Performance CUDA Library}: A robust, header-only CUDA library was developed. This library encapsulates the parallel algorithms for insertion, lookup, and deletion, abstracting the complexity of GPU memory management and atomic synchronization. It provides a flexible, template-based C++ interface that allows users to configure critical parameters such as fingerprint size and hashing strategy at compile time for maximum efficiency.
 
-  \item \textbf{Architectural Optimization}: The Cuckoo filter was tuned for GPU hardware, identifying a bucket size of 16 as the optimal trade-off between memory bandwidth utilization and eviction complexity.
+  \item \textbf{Architectural Optimization}: The Cuckoo filter was tuned for GPU hardware, identifying a bucket size of 16 as the optimal trade-off between memory bandwidth utilization and eviction complexity as well as supporting wider memory loads for the latest Blackwell GPUs.
 
   \item \textbf{System Extensions}: To facilitate real-world adoption, the filter was extended with an IPC wrapper for zero-copy sharing and a multi-GPU sharding mechanism to scale beyond the memory limits of a single device.
 
