@@ -17,7 +17,7 @@ To maximize performance by allowing the compiler to generate highly specialized 
 
   \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels. This parameter can be tuned to optimize GPU occupancy for different hardware architectures. A default of 256 was chosen through empirical testing.
 
-  \item \texttt{AltBucketPolicy}: A class which encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but an alternative based on the "Additive and Subtractive" Cuckoo filter \cite{add-sub-cuckoo-filter} has also been implemented to demonstrate this flexibility.
+  \item \texttt{AltBucketPolicy}: A class which encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but alternatives based on the "Additive and Subtractive" Cuckoo filter \cite{add-sub-cuckoo-filter} and an offset-based version \cite{smaller-cuckoo-filter} have also been implemented to demonstrate this flexibility.
 
   \item \texttt{evictionPolicy}: The policy used to handle insertions into full buckets. The default implementation employs a Breadth-First Search (BFS) strategy. Unlike the traditional greedy (DFS) approach which immediately evicts a random victim, the BFS policy first scans the alternate buckets of the existing items to find an empty slot. As detailed in Section \ref{sec:implementation:optimisation-techniques:eviction}, this strategy minimizes the length of eviction chains and reduces global memory traffic.
 

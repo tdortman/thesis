@@ -1,0 +1,37 @@
+\section{Impact of Bucket Policies}
+\label{sec:eval:bucket-policies}
+
+As detailed in Section \ref{sec:implementation:optimisation-techniques:bucket-policies}, the standard XOR-based partial-key cuckoo hashing imposes a strict power-of-two constraint on the number of buckets. While this allows for efficient bitwise arithmetic, it can lead to significant memory over-provisioning (up to 2$\times$) for datasets that do not align with powers of two.
+
+To evaluate the cost of flexibility, the standard XOR policy was benchmarked against the AddSub (Additive/Subtractive) and Offset (Choice-bit) policies on System B with a fixed load factor of 95\%.
+
+The results for both L2-resident and DRAM-resident scenarios are presented in Figure \ref{fig:bucket-policies}.
+
+\subsection{L2-Resident Performance}
+
+In the L2-resident scenario, the filters are primarily bound by instruction latency and cache bandwidth. The results show that the XOR policy maintains a notable performance advantage specifically for positive queries, where it achieves approximately 34\% higher throughput than the alternatives.
+
+The alternative policies require integer modulo operations to calculate bucket indices, whereas the XOR policy utilizes simple bitwise masking. In this low-latency environment, the computational overhead of these modulo instructions becomes visible. Given that memory capacity is rarely a bottleneck for small, cache-sized filters, the performance penalty of the alternative policies outweighs the benefit of flexible sizing. Therefore, for small datasets, the standard XOR policy remains the optimal choice.
+
+\subsection{DRAM-Resident Performance}
+
+In the DRAM-resident scenario, where performance is primarily dictated by global memory bandwidth, things change:
+
+\begin{itemize}
+  \item \textbf{AddSub Performance}: The Additive/Subtractive policy is consistently outperformed by the other policies. It is approximately 20\% slower for positive queries and slightly slower for the other operations. This suggests that its specific calculation overhead or register pressure interact poorly with the memory latency hiding mechanisms on the GPU.
+
+  \item \textbf{Offset Policy Viability}: The Offset-based policy matches the performance of the XOR baseline almost perfectly across all operations. Because the workload is memory-bound, the additional compute cycles required for the offset calculation are effectively hidden by the DRAM latency.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/bucket-policy/small.pdf}
+  \vspace{0.2cm}
+  \includegraphics[width=1.0\textwidth]{images/bucket-policy/large.pdf}
+  \caption{Throughput comparison of the various Bucket Policies on System B.}
+  \label{fig:bucket-policies}
+\end{figure}
+
+\subsection{Conclusion}
+
+For massive, memory-bound datasets, the Offset policy is a highly attractive alternative. It delivers throughput equivalent to the XOR baseline while eliminating the power-of-two restriction, allowing users to fit significantly larger datasets into a fixed VRAM budget (e.g., fitting a 5GB filter into 6GB of VRAM, which would require 8GB with the XOR policy). This memory saving comes at the minor cost of a slightly increased false-positive rate (due to the choice bit reducing the effective fingerprint size by 1 bit), a trade-off that is often acceptable for maximizing capacity.
