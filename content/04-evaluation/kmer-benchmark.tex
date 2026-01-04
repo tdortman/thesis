@@ -9,7 +9,7 @@ A $k$-mer is a subsequence of length $k$ derived from a biological sequence, suc
 
 For this evaluation, the T2T-CHM13v2.0 \cite{t2t-y, t2t-chm13} dataset is used as the first complete sequence of a human genome. The raw FASTA \cite{fasta} data was pre-processed using KMC 3 \cite{kmc3} to extract all distinct 31-mers ($k$ = 31). To optimize memory usage and processing speed, the text-based $k$-mers were packed into a 2-bit-per-base binary representation, compressing the dataset roughly by a factor of four and allowing each 31-mer to fit within a single \texttt{uint64\_t}.
 
-The resulting dataset is approximately 20 GB in size (packed), which is sufficient to effectively saturate the 96 GB VRAM on System A. All filters were tested for insertion, lookup, and deletion (when supported). Note that the 256-bit load optimization (Section \ref{sec:eval:256bit-loads}) was disabled for the Cuckoo filter in this test to ensure a fair architectural comparison with the other filters.
+The resulting dataset is approximately 20 GB in size (packed), which is sufficient to effectively saturate the 96 GB of VRAM on System A. All filters were tested for insertion, lookup, and deletion (when supported). Note that the 256-bit load optimization (Section \ref{sec:eval:256bit-loads}) was disabled for the Cuckoo filter in this test to ensure a fair architectural comparison with the other filters.
 
 \subsection{Performance Analysis}
 
