@@ -38,7 +38,7 @@ The throughput impact of the BFS policy presents a trade-off between computation
 \subsubsection{L2-Resident Workloads}
 In the L2-resident scenario (Figure \ref{fig:evict:small}), the standard DFS policy consistently outperforms the BFS policy across all systems.
 
-In this scenario, the latency penalty of an eviction (loading a new bucket) is minimal. At the same time, the BFS policy incurs a higher instruction overhead per step because it must perform atomic checks on up to 8 candidate slots within the loaded buckets. In this bandwidth-abundant, low-latency environment, the computational cost of these extra checks outweighs the savings from reduced evictions, making the simpler greedy approach faster.
+In this scenario, the latency penalty of an eviction (loading a new bucket) is minimal. At the same time, the BFS policy incurs a higher instruction overhead per step because it must perform atomic checks on up to half the slots within the loaded buckets. In this bandwidth-abundant, low-latency environment, the computational cost of these extra checks outweighs the savings from reduced evictions, making the simpler greedy approach faster.
 
 \begin{figure}[H]
   \centering
