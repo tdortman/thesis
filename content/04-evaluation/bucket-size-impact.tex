@@ -6,9 +6,9 @@ The \texttt{bucketSize} parameter, defining the number of fingerprints stored in
 \subsection{Performance Trade-offs}
 
 \begin{itemize}
-  \item \textbf{Small Buckets}: Configuring the filter with very small buckets negatively impacts performance. With fewer slots per bucket, the probability of a collision increases, as does the likelihood that a bucket is full. This increases the average number of buckets that must be accessed and loaded from memory to complete an insertion or a lookup, resulting in higher latency.
+  \item \textbf{Small Buckets}: Configuring the filter with very small buckets negatively impacts performance. With fewer slots per bucket, the likelihood that a primary bucket is full increases significantly. This increases the average number of buckets that must be accessed and loaded from memory to complete an insertion or a lookup, resulting in higher latency.
 
-  \item \textbf{Large Buckets}: Excessively large buckets introduce hardware-level inefficiencies. If a bucket's size exceeds the GPU's cache line size (typically 128 bytes), fetching a single logical bucket requires multiple physical memory transactions. In the worst case, this doubles the number of cache lines that must be fetched, effectively halving the effective memory bandwidth.
+  \item \textbf{Large Buckets}: Excessively large buckets introduce hardware-level inefficiencies. If a bucket's size exceeds the GPU's cache line size (typically 128 bytes), fetching a single logical bucket requires multiple physical memory transactions. In the worst case this doubles the number of cache lines that must be fetched, effectively halving the memory bandwidth.
 \end{itemize}
 
 \subsection{Optimal Configuration}
