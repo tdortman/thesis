@@ -37,7 +37,7 @@ Such a filter uses $1.44 \log_2(1/\epsilon)$ bits per element.
 Despite its widespread use, the classic Bloom filter has several notable disadvantages:
 
 \begin{itemize}
-  \item \textbf{No Deletion}: The standard implementation does not support the removal of items, as clearing a bit could inadvertently remove other items that hash to the same location. Variants like the \textit{Counting Bloom Filter} \cite{counting-bloom} address this by using counters instead of single bits, but at a significant cost to space efficiency.
+  \item \textbf{No Deletion}: The standard implementation does not support the removal of items, as clearing a bit could inadvertently remove other items that hash to the same location. Variants like the Counting Bloom Filter \cite{counting-bloom} address this by using counters instead of single bits, but at a significant cost to space efficiency.
 
   \item \textbf{Linear Complexity}: Lookup and insertion performance is dependent on the number of hash functions, which scales linearly with $m$. This can lead to performance bottlenecks in high-throughput scenarios.
 
@@ -69,20 +69,28 @@ However, this performance gain comes at the cost of a higher false positive rate
 \subsection{Cuckoo Hashing}
 \label{sec:background:cuckoo-hashing}
 
-Cuckoo hashing, introduced by Pagh and Rodler in 2004 \cite{pagh2004cuckoo}, is a powerful hashing scheme that provides a significant advantage over many others: a worst-case $O(1)$ lookup time \cite{pagh2004cuckoo}. Its name is derived from the cuckoo bird, which is known for laying its eggs in the nests of other birds, often forcing the original occupants out. The scheme's elegance lies in its simplicity compared to previous methods that also offered worst-case constant lookup guarantees \cite{practical-phf, fks, extendible-hashing}.
+Cuckoo hashing, introduced by Pagh and Rodler in 2004 \cite{pagh2004cuckoo}, is a powerful hashing scheme that provides a significant advantage over many others: a worst-case $O(1)$ lookup time. Its name is derived from the cuckoo bird, which is known for laying its eggs in the nests of other birds, often forcing the original occupants out. The scheme's elegance lies in its simplicity compared to previous methods that also offered worst-case constant lookup guarantees \cite{practical-phf, fks, extendible-hashing}.
 
-In its original formulation, the scheme uses two independent hash tables, $T_1$ and $T_2$, each of size $r$, and two independent hash functions $h_1$ and $h_2$. The core invariant of Cuckoo hashing is that for any given item $x$, it is stored in one of two possible locations: either $\mathrm{T}_1[\mathrm{h}_1(x) \bmod r]$ or $\mathrm{T}_2[\mathrm{h}_2(x) \bmod r]$. A lookup operation is therefore guaranteed to be $O(1)$, as it only requires checking these two specific locations.
+In its original formulation, the scheme uses two independent hash tables, $T_1$ and $T_2$, each of size $r$, and two independent hash functions $h_1$ and $h_2$.
+
+The core invariant of Cuckoo hashing is that for any given item $x$, it is stored in one of two possible locations:
+
+$$
+T_1[h_1(x) \bmod r] \quad \text{or} \quad T_2[h_2(x) \bmod r]
+$$
+
+A lookup operation is therefore guaranteed to run in $O(1)$, as it only requires checking these two specific locations.
 
 The insertion process is more involved and follows the distinct "cuckoo" eviction protocol, as illustrated in Figure \ref{fig:cuckoo-hashing}. The steps are as follows:
 
 \begin{enumerate}
   \item For a new item $x$, its two potential locations $i_1 = h_1(x) \bmod r$ and \\ $i_2 = h_2(x) \bmod r$ are computed.
 
-  \item If either $\mathrm{T}_1[\mathrm{i}_1]$ or $\mathrm{T}_2[\mathrm{i}_2]$ is empty, the item is placed there, and the insertion is complete.
+  \item If either $T_1[i_1]$ or $T_2[i_2]$ is empty, the item is placed there, and the insertion is complete.
 
   \item If both slots are occupied, an existing item (say $y$) is evicted from one of the location (e.g. $i_1$) and $x$ is placed there.
 
-  \item The evicted item $y$ is then reinserted into its alternate location. If $y$ was in $T_1$, it now attempts to move to $\mathrm{T}_2[\mathrm{i}_2]$. This move may, in turn, cause another eviction, leading to a chain of evictions.
+  \item The evicted item $y$ is then reinserted into its alternate location. If $y$ was in $T_1$, it now attempts to move to $T_2[i_2]$. This move may, in turn, cause another eviction, leading to a chain of evictions.
 
   \item To prevent infinite loops, a maximum number of evictions is set. If this limit is reached, the table is considered full, and all items must be rehashed with a new pair of hash functions, potentially into larger tables.
 \end{enumerate}
@@ -116,7 +124,7 @@ This works because the transformation is its own inverse for that specific pair 
 \subsection{Cuckoo Filter}
 \label{sec:background:cuckoo-filter}
 
-The Cuckoo filter, introduced by Fan et al. \cite{og-cuckoo-filter}, is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter, most notably by supporting deletion of items. It improves upon standard Cuckoo hashing in multiple ways.
+The Cuckoo filter, introduced by Fan et al. \cite{og-cuckoo-filter}, is a probabilistic data structure that adapts the principles of Cuckoo hashing to provide a highly space-efficient and performant alternative to the Bloom filter, most notably by supporting the deletion of items. It improves upon standard Cuckoo hashing in multiple ways.
 
 First, instead of storing entire items, a Cuckoo filter only stores a small fingerprint for each item, which is a fixed-size sequence of bits derived from the item's hash. This significantly reduces the memory footprint. A direct consequence, however, is that traditional rehashing is not an option, as the original items are not available to be re-inserted. Therefore, the filter's size and parameters are typically static once it is created.
 

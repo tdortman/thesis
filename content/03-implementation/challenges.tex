@@ -8,7 +8,7 @@ Based on the GPU architecture and programming principles discussed in Chapter \r
 
   \item \textbf{Parallelizing the Eviction Path}: During an insertion, if both candidate buckets are full, an existing item must be evicted and reinserted into its alternate location. This eviction process can cascade, leading to multiple evictions. Parallelizing this process is complex, as it requires careful coordination to ensure that threads do not interfere with each other's operations or create deadlocks.
 
-  \item \textbf{Optimizing for Coalesced Memory Access}: GPUs are highly sensitive to memory access patterns. Coalesced memory accesses, where threads in a warp access contiguous memory locations, are crucial for achieving high throughput. The random-access nature of Cuckoo filter operations can lead to scattered, uncoalesced memory accesses, which severely degrade performance. Developing strategies like data sorting to improve memory locality is essential.
+  \item \textbf{Optimizing for Coalesced Memory Access}: The random-access nature of Cuckoo filter operations can lead to scattered, uncoalesced memory accesses, which severely degrade performance. Developing strategies like data sorting to improve memory locality is essential.
 
   \item \textbf{Balancing Occupancy and Register Pressure}: Achieving a high and balanced occupancy across the filter is key to its space efficiency. However, complex insertion logic can increase the number of registers used per thread. High register usage can limit the number of active warps on an SM, thereby reducing occupancy and the hardware's ability to hide memory latency.
 \end{itemize}

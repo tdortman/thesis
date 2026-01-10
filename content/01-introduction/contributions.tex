@@ -10,5 +10,5 @@ This thesis presents a comprehensive study on accelerating probabilistic data st
 
   \item \textbf{System-Level Integration Extensions}: Moving beyond a simple filter, two extensions are created to facilitate real-world adoption. First, an Inter-Process Communication (IPC) wrapper is developed to enable zero-copy sharing of the filter between processes. Second, a multi-GPU implementation is provided that transparently partitions data across multiple devices, allowing the filter to scale beyond the memory limits of a single card.
 
-  \item \textbf{Comprehensive Evaluation}: A rigorous analysis is conducted comparing the GPU Cuckoo filter against CPU baselines and other GPU-accelerated filters. The results demonstrate that the implementation achieves competitive throughput with the static Blocked Bloom filter while far surpassing all other tested dynamic filters.
+  \item \textbf{Comprehensive Evaluation}: A rigorous analysis is conducted comparing the GPU Cuckoo filter against CPU baselines and other GPU-accelerated filters. The results demonstrate that the implementation achieves competitive throughput with the Blocked Bloom filter while far surpassing all other tested dynamic filters.
 \end{itemize}
