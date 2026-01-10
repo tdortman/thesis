@@ -33,7 +33,7 @@ This reduction in evictions directly translates to a reduction in global memory 
 \FloatBarrier
 
 \subsection{Performance Analysis}
-The throughput impact of the BFS policy presents a trade-off between computational complexity (checking 8 candidates per step) and memory bandwidth efficiency (avoiding global memory accesses caused by evictions).
+The throughput impact of the BFS policy presents a trade-off between computational complexity and memory bandwidth efficiency (avoiding global memory accesses caused by evictions).
 
 \subsubsection{L2-Resident Workloads}
 In the L2-resident scenario (Figure \ref{fig:evict:small}), the standard DFS policy consistently outperforms the BFS policy across all systems.
