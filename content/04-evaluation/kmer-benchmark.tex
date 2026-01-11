@@ -27,7 +27,7 @@ The results confirm that the Cuckoo filter's high performance translates well to
 \begin{itemize}
   \item \textbf{Query Performance}: While the Cuckoo filter does not fully match the Blocked Bloom filter, it maintains a significant lead over other dynamic alternatives. It is approximately 72\% faster than the GQF and roughly 10$\times$ faster than the TCF. This indicates that the Cuckoo filter's bucketed lookup strategy remains highly efficient even with the specific distribution of genomic data.
 
-  \item \textbf{Insertion Performance}: While the Cuckoo filter trails the static Blocked Bloom filter in this high-bandwidth scenario, it remains the fastest among dynamic data structures, outperforming the TCF by 19\% and the GQF by 3.8$\times$. This reinforces the observation that the GQF's locking overhead is a severe bottleneck for insertion workloads.
+  \item \textbf{Insertion Performance}: While the Cuckoo filter trails the append-only Blocked Bloom filter in this high-bandwidth scenario, it remains the fastest among dynamic data structures, outperforming the TCF by 19\% and the GQF by 3.8$\times$. This reinforces the observation that the GQF's locking overhead is a severe bottleneck for insertion workloads.
 
   \item \textbf{Deletion Performance}: In deletion throughput, the Cuckoo filter demonstrates superior performance. It is 2.1$\times$ faster than the GQF and nearly 35$\times$ faster than the TCF. This highlights the efficiency of the atomic-CAS deletion logic, which scales exceptionally well compared to the other filters' internal logic.
 \end{itemize}

@@ -18,7 +18,7 @@ All performance tests use 16-bit fingerprints (with equivalent space allocation 
 To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared against the following data structures:
 
 \begin{itemize}
-  \item \textbf{GPU Blocked Bloom Filter}: Sourced from the \textit{cuCollections} library, serving as a high-performance baseline for a static (non-deletable) filter. \cite{cuCollections}
+  \item \textbf{GPU Blocked Bloom Filter}: Sourced from the \textit{cuCollections} library, serving as a high-performance baseline for an append-only filter. \cite{cuCollections}
 
   \item \textbf{Original CPU Cuckoo Filter}: The reference implementation from the original 2014 paper by Fan et al. \cite{og-cuckoo-filter}.
 

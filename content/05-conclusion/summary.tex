@@ -1,7 +1,7 @@
 \section{Summary of Contributions}
 \label{sec:conclusion:summary}
 
-This thesis presented the design, implementation, and evaluation of a high-performance Cuckoo filter accelerated by Graphics Processing Units. The primary motivation was to address the performance gap between static probabilistic data structures, like the Bloom filter, and dynamic ones needed for high-churn applications.
+This thesis presented the design, implementation, and evaluation of a high-performance Cuckoo filter accelerated by Graphics Processing Units. The primary motivation was to address the performance gap between append-only probabilistic data structures, like the Bloom filter, and dynamic ones needed for high-churn applications.
 
 The key contributions of this work are:
 
@@ -12,5 +12,5 @@ The key contributions of this work are:
 
   \item \textbf{System Extensions}: To facilitate real-world adoption, the filter was extended with an IPC wrapper for zero-copy sharing and a multi-GPU sharding mechanism to scale beyond the memory limits of a single device.
 
-  \item \textbf{Rigorous Evaluation}: A comprehensive analysis was conducted across different memory technologies (GDDR7 and HBM3). The results demonstrate that the implementation successfully bridges the gap between static and dynamic filters, offering update capabilities orders of magnitude faster than existing alternatives like the Quotient Filter while maintaining query throughput competitive with the Blocked Bloom filter.
+  \item \textbf{Rigorous Evaluation}: A comprehensive analysis was conducted across different memory technologies (GDDR7 and HBM3). The results demonstrate that the implementation successfully bridges the gap between append-only and dynamic filters, offering update capabilities orders of magnitude faster than existing alternatives while maintaining query throughput competitive with the Blocked Bloom filter.
 \end{itemize}

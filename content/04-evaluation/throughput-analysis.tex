@@ -14,7 +14,7 @@ The insertion results for both memory types are presented in Figure \ref{fig:ins
   \label{fig:insert-perf}
 \end{figure}
 
-The GPU Cuckoo filter demonstrates exceptional competitiveness, effectively bridging the gap between static and dynamic data structures. Its insertion logic, relying on random atomic compare-and-swap operations, contrasts with the simpler, linear write patterns of the Blocked Bloom filter.
+The GPU Cuckoo filter demonstrates exceptional competitiveness, effectively bridging the gap between append-only and dynamic data structures. Its insertion logic, relying on random atomic compare-and-swap operations, contrasts with the simpler, linear write patterns of the Blocked Bloom filter.
 
 \textbf{L2-Resident}: When the filter fits in cache, the Cuckoo filter achieves a significant fraction of the Blocked Bloom filter's throughput while far surpassing all other filters.
 
