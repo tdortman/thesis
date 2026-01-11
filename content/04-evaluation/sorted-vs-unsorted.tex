@@ -1,7 +1,7 @@
 \section{Sorted vs. Unsorted Insertion}
 \label{sec:eval:sorted-insertion}
 
-To investigate the potential for enhancing insertion throughput by improving memory locality, an alternative insertion strategy was implemented and evaluated. This strategy, detailed in Section \ref{sec:implementation:optimisation-techniques:sorted}, pre-sorts the input keys by their primary bucket index before launching the insertion kernel. The goal is to maximize coalesced memory accesses by ensuring that adjacent threads target the same or nearby memory regions.
+To investigate the potential for enhancing insertion throughput by improving memory locality, an alternative insertion strategy was implemented and evaluated. This strategy, detailed in Section \ref{sec:implementation:optimisation-techniques:sorted}, pre-sorts the input keys by their primary bucket index before launching the insertion kernel. The goal is to maximize coalesced memory accesses by ensuring that adjacent threads target the same or nearby buckets.
 
 To strictly isolate the benefits of memory locality from the computational overhead of the sorting algorithm, a \textit{Presorted} metric was also introduced. This metric measures the throughput of the insertion kernel assuming the data has already been sorted "for free", whereas \textit{Sorted} reflects the end-to-end throughput including the radix sort and packing overhead.
 

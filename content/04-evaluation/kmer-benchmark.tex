@@ -9,7 +9,7 @@ A $k$-mer is a subsequence of length $k$ derived from a biological sequence, suc
 
 For this evaluation, the T2T-CHM13v2.0 \cite{t2t-y, t2t-chm13} dataset is used as the first complete sequence of a human genome. The raw FASTA \cite{fasta} data was pre-processed using KMC 3 \cite{kmc3} to extract all distinct 31-mers ($k$ = 31). To optimize memory usage and processing speed, the text-based $k$-mers were packed into a 2-bit-per-base binary representation, compressing the dataset roughly by a factor of four and allowing each 31-mer to fit within a single \texttt{uint64\_t}.
 
-The resulting dataset is approximately 20 GB in size (packed), which is sufficient to effectively saturate the 96 GB of VRAM on System A. All filters were tested for insertion, lookup, and deletion (when supported). Note that the 256-bit load optimization (Section \ref{sec:eval:256bit-loads}) was disabled for the Cuckoo filter in this test to ensure a fair architectural comparison with the other filters.
+The resulting dataset is approximately 20 GB in size (packed), which is sufficient to effectively saturate the 96 GB of VRAM on System B. All filters were tested for insertion, lookup, and deletion (when supported).
 
 \subsection{Performance Analysis}
 
@@ -18,20 +18,20 @@ The throughput results for the $k$-mer benchmark are presented in Figure \ref{fi
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=1.0\textwidth]{images/kmer_benchmark.pdf}
-  \caption{Throughput comparison for inserting, querying, and deleting 31-mers from the full T2T-CHM13 human genome on System A. The Cuckoo filter shows a robust balance of performance across all three operations.}
+  \caption{Throughput comparison for inserting, querying, and deleting 31-mers from the full T2T-CHM13 human genome on System B. The Cuckoo filter shows a robust balance of performance across all three operations.}
   \label{fig:kmer-benchmark}
 \end{figure}
 
 The results confirm that the Cuckoo filter's high performance translates well to real-world workloads:
 
 \begin{itemize}
-  \item \textbf{Query Performance}: While the Cuckoo filter does not fully match the Blocked Bloom filter, it maintains a significant lead over other dynamic alternatives. It is approximately 40\% faster than the GQF and 7.7$\times$ faster than the TCF. This indicates that the Cuckoo filter's bucketed lookup strategy remains highly efficient even with the specific distribution of genomic data.
+  \item \textbf{Query Performance}: While the Cuckoo filter does not fully match the Blocked Bloom filter, it maintains a significant lead over other dynamic alternatives. It is approximately 72\% faster than the GQF and roughly 10$\times$ faster than the TCF. This indicates that the Cuckoo filter's bucketed lookup strategy remains highly efficient even with the specific distribution of genomic data.
 
-  \item \textbf{Insertion Performance}: The Cuckoo filter comes within 92\% of the Blocked Bloom filter's performance. It is also slightly faster than the TCF and dramatically outperforms the GQF. This again shows the observation from the synthetic benchmarks that the GQF struggles with insertion workloads.
+  \item \textbf{Insertion Performance}: While the Cuckoo filter trails the static Blocked Bloom filter in this high-bandwidth scenario, it remains the fastest among dynamic data structures, outperforming the TCF by 19\% and the GQF by 3.8$\times$. This reinforces the observation that the GQF's locking overhead is a severe bottleneck for insertion workloads.
 
-  \item \textbf{Deletion Performance}: In deletion throughput, the Cuckoo filter is slightly slower than the GQF but remains an order of magnitude faster than the TCF.
+  \item \textbf{Deletion Performance}: In deletion throughput, the Cuckoo filter demonstrates superior performance. It is 2.1$\times$ faster than the GQF and nearly 35$\times$ faster than the TCF. This highlights the efficiency of the atomic-CAS deletion logic, which scales exceptionally well compared to the other filters' internal logic.
 \end{itemize}
 
 \subsection{Conclusion}
 
-This benchmark demonstrates that the GPU Cuckoo filter is a highly versatile data structure for real-world applications. While specialized filters may match or outperform it in specific operations (e.g., the Blocked Bloom filter for queries or the GQF for deletions), the Cuckoo filter is the only tested solution that delivers a consistent high performance across \textit{all} operations. This makes it particularly valuable for workloads that involve a good mix of insertions, lookups, and deletions.
+This benchmark demonstrates that the GPU Cuckoo filter is a highly versatile data structure for real-world applications. While the Blocked Bloom filter remains the throughput leader for read-only or append-only tasks, the Cuckoo filter is the only tested solution that delivers a consistent high performance across \textit{all} operations. This makes it particularly valuable for workloads that involve a good mix of insertions, lookups, and deletions.
