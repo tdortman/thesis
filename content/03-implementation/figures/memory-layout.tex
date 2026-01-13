@@ -103,10 +103,6 @@
       \node[below=2pt of fp\i, font=\tiny, text=gray] (idx\i) {\range};
     }
 
-    % Brace
-    \draw[decorate, decoration={brace, amplitude=6pt, mirror}, thick, gray!80]
-    ($(fp0.south west) + (0, -0.45)$) -- ($(fp7.south east) + (0, -0.45)$)
-    node[midway, below=8pt, font=\small\bfseries, text=textDark] {Total 64 bits};
 
     \begin{scope}[on background layer]
       % Zoom 1: Bucket -> Words
