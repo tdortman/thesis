@@ -37,7 +37,9 @@ The filter's primary data storage is a single, contiguous array of fixed-size bu
   \item Fingerprints (tags) are tightly packed within these 64-bit words. For example, a 64-bit word can hold eight 8-bit fingerprints or four 16-bit fingerprints.
 \end{itemize}
 
-While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off.
+While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off. Figure~\ref{fig:memory-layout} visualizes this hierarchical memory organization.
+
+\input{content/03-implementation/figures/memory-layout}
 
 Furthermore, this enables the use of SWAR (SIMD Within A Register) techniques. Bitwise magic numbers can be used to search for empty slots (zero detection) or matching tags (XOR comparison) in parallel within a single register \cite{bit-twiddling-hacks}. This eliminates the need for branching loops when iterating over slots within a word.
 

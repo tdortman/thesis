@@ -1,0 +1,126 @@
+
+\definecolor{primaryBlue}{RGB}{0, 85, 150}      % Deep Blue
+\definecolor{activeFill}{RGB}{235, 242, 250}    % Very light blue fill
+\definecolor{accentTeal}{RGB}{0, 140, 140}      % Teal
+\definecolor{tealFill}{RGB}{240, 250, 250}      % Very light teal fill
+\definecolor{textDark}{RGB}{40, 40, 40}         % Soft Black
+\newcommand{\vsep}{1.2cm}                       % The exact gap between levels
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      font=\sffamily,
+      node distance=1.2cm and 0.5cm,
+      % Style Definitions
+      basebox/.style={
+        draw=gray!80,
+        line width=0.8pt,
+        rounded corners=2pt,
+        minimum height=1.0cm,
+        align=center,
+        fill=white,
+        text=textDark,
+        blur shadow={shadow blur steps=4, shadow xshift=1pt, shadow yshift=-1pt}
+      },
+      % Level 1: Bucket Styles
+      bucket/.style={
+        basebox,
+        minimum width=2.2cm
+      },
+      bucketActive/.style={
+        bucket,
+        draw=primaryBlue,
+        line width=1.2pt,
+        fill=activeFill
+      },
+      % Level 2: Word Styles
+      word/.style={
+        basebox,
+        minimum width=1.8cm,
+        minimum height=0.9cm
+      },
+      wordActive/.style={
+        word,
+        draw=accentTeal,
+        line width=1.2pt,
+        fill=tealFill
+      },
+      % Level 3: Fingerprint Styles
+      fp/.style={
+        draw=gray!60,
+        fill=white,
+        minimum width=0.95cm,
+        minimum height=0.8cm,
+        font=\small\bfseries,
+        inner sep=0pt,
+        outer sep=0pt,
+        anchor=west
+      },
+      % Labels
+      mainLabel/.style={
+        font=\large\bfseries,
+        text=textDark,
+        yshift=0.2cm
+      },
+      subLabel/.style={
+        font=\footnotesize,
+        color=gray!90!black
+      }
+    ]
+
+    % We place Bucket 2 first at (0,0) to serve as the visual anchor/center
+    \node[bucketActive] (b2) at (0, 0) {Bucket 2};
+    \node[bucket, left=0pt of b2] (b1) {Bucket 1};
+    \node[bucket, left=0pt of b1] (b0) {Bucket 0};
+
+    \node[bucket, right=0pt of b2] (b3) {Bucket 3};
+    \node[right=0pt of b3, font=\large] (dots) {$\cdots$};
+    \node[bucket, right=0pt of dots] (bn) {Bucket $n$};
+
+    % Words Centered below Bucket 2
+    \node[wordActive, below=\vsep of b2] (w1) {Word 1};
+    \node[word, left=0pt of w1] (w0) {Word 0};
+    \node[word, right=0pt of w1] (w2) {Word 2};
+
+    % Annotation
+    \node[right=0.3cm of w2, font=\footnotesize, text=gray] {(64 bits each)};
+
+    \coordinate[below=\vsep of w1] (level3_top_edge);
+
+    \node[fp, anchor=north east] (fp3) at (level3_top_edge) {FP$_3$};
+    \node[fp, anchor=north west] (fp4) at (level3_top_edge) {FP$_4$};
+
+    \node[fp, left=0pt of fp3] (fp2) {FP$_2$};
+    \node[fp, left=0pt of fp2] (fp1) {FP$_1$};
+    \node[fp, left=0pt of fp1] (fp0) {FP$_0$};
+
+    \node[fp, right=0pt of fp4] (fp5) {FP$_5$};
+    \node[fp, right=0pt of fp5] (fp6) {FP$_6$};
+    \node[fp, right=0pt of fp6] (fp7) {FP$_7$};
+
+    % Bit Indices
+    \foreach \i/\range in {0/0--7, 1/8--15, 2/16--23, 3/24--31, 4/32--39, 5/40--47, 6/48--55, 7/56--63} {
+      \node[below=2pt of fp\i, font=\tiny, text=gray] (idx\i) {\range};
+    }
+
+    % Brace
+    \draw[decorate, decoration={brace, amplitude=6pt, mirror}, thick, gray!80]
+    ($(fp0.south west) + (0, -0.45)$) -- ($(fp7.south east) + (0, -0.45)$)
+    node[midway, below=8pt, font=\small\bfseries, text=textDark] {Total 64 bits};
+
+    \begin{scope}[on background layer]
+      % Zoom 1: Bucket -> Words
+      \fill[activeFill!80] (b2.south west) -- (w0.north west) -- (w2.north east) -- (b2.south east) -- cycle;
+      \draw[dashed, draw=primaryBlue!40, thick] (b2.south west) -- (w0.north west);
+      \draw[dashed, draw=primaryBlue!40, thick] (b2.south east) -- (w2.north east);
+
+      % Zoom 2: Word -> Fingerprints
+      \fill[tealFill!80] (w1.south west) -- (fp0.north west) -- (fp7.north east) -- (w1.south east) -- cycle;
+      \draw[dashed, draw=accentTeal!40, thick] (w1.south west) -- (fp0.north west);
+      \draw[dashed, draw=accentTeal!40, thick] (w1.south east) -- (fp7.north east);
+    \end{scope}
+
+  \end{tikzpicture}
+  \caption{Memory Layout of the Cuckoo Filter. Data is hierarchically structured from Buckets to Words, with fingerprints tightly packed into 64-bit words (here 8-bit fingerprints).}
+  \label{fig:memory-layout}
+\end{figure}
