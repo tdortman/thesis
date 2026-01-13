@@ -5,6 +5,7 @@
 \definecolor{tealFill}{RGB}{240, 250, 250}      % Very light teal fill
 \definecolor{textDark}{RGB}{40, 40, 40}         % Soft Black
 \newcommand{\vsep}{1.2cm}                       % The exact gap between levels
+\newcommand{\fpwidth}{0.95cm}                   % Consistent width for FP boxes
 
 \begin{figure}[htbp]
   \centering
@@ -49,51 +50,50 @@
       fp/.style={
         draw=gray!60,
         fill=white,
-        minimum width=0.95cm,
+        minimum width=\fpwidth,
         minimum height=0.8cm,
         font=\small\bfseries,
         inner sep=0pt,
-        outer sep=0pt,
-        anchor=west
+        outer sep=0pt
       },
       % Labels
       mainLabel/.style={
         font=\large\bfseries,
         text=textDark,
         yshift=0.2cm
-      },
-      subLabel/.style={
-        font=\footnotesize,
-        color=gray!90!black
       }
     ]
 
-    % We place Bucket 2 first at (0,0) to serve as the visual anchor/center
+    \node[mainLabel] at (0, 1.0) {Buckets Array};
+
+    % Bucket 2 is the anchor at (0,0)
     \node[bucketActive] (b2) at (0, 0) {Bucket 2};
+
+    % Neighbours
     \node[bucket, left=0pt of b2] (b1) {Bucket 1};
     \node[bucket, left=0pt of b1] (b0) {Bucket 0};
-
     \node[bucket, right=0pt of b2] (b3) {Bucket 3};
-    \node[right=0pt of b3, font=\large] (dots) {$\cdots$};
-    \node[bucket, right=0pt of dots] (bn) {Bucket $n$};
+    \node[right=0.2cm of b3, font=\large] (dots) {$\cdots$};
+    \node[bucket, right=0.2cm of dots] (bn) {Bucket $n$};
 
-    % Words Centered below Bucket 2
-    \node[wordActive, below=\vsep of b2] (w1) {Word 1};
+    % Words
+    \coordinate (l2_center) at ($(b2.south) + (0, -\vsep)$);
+
+    \node[wordActive, anchor=north east] (w1) at (l2_center) {Word 1};
+    \node[word, anchor=north west] (w2) at (l2_center) {Word 2};
     \node[word, left=0pt of w1] (w0) {Word 0};
-    \node[word, right=0pt of w1] (w2) {Word 2};
+    \node[word, right=0pt of w2] (w3) {Word 3};
 
-    % Annotation
-    \node[right=0.3cm of w2, font=\footnotesize, text=gray] {(64 bits each)};
+    \node[right=0.3cm of w3, font=\footnotesize, text=gray] {(64 bits each)};
 
-    \coordinate[below=\vsep of w1] (level3_top_edge);
+    % Fingerprints
+    \coordinate (l3_top_edge) at ($(w1.south) + (0, -\vsep)$);
 
-    \node[fp, anchor=north east] (fp3) at (level3_top_edge) {FP$_3$};
-    \node[fp, anchor=north west] (fp4) at (level3_top_edge) {FP$_4$};
-
+    \node[fp, anchor=north east] (fp3) at (l3_top_edge) {FP$_3$};
+    \node[fp, anchor=north west] (fp4) at (l3_top_edge) {FP$_4$};
     \node[fp, left=0pt of fp3] (fp2) {FP$_2$};
     \node[fp, left=0pt of fp2] (fp1) {FP$_1$};
     \node[fp, left=0pt of fp1] (fp0) {FP$_0$};
-
     \node[fp, right=0pt of fp4] (fp5) {FP$_5$};
     \node[fp, right=0pt of fp5] (fp6) {FP$_6$};
     \node[fp, right=0pt of fp6] (fp7) {FP$_7$};
@@ -110,9 +110,9 @@
 
     \begin{scope}[on background layer]
       % Zoom 1: Bucket -> Words
-      \fill[activeFill!80] (b2.south west) -- (w0.north west) -- (w2.north east) -- (b2.south east) -- cycle;
+      \fill[activeFill!80] (b2.south west) -- (w0.north west) -- (w3.north east) -- (b2.south east) -- cycle;
       \draw[dashed, draw=primaryBlue!40, thick] (b2.south west) -- (w0.north west);
-      \draw[dashed, draw=primaryBlue!40, thick] (b2.south east) -- (w2.north east);
+      \draw[dashed, draw=primaryBlue!40, thick] (b2.south east) -- (w3.north east);
 
       % Zoom 2: Word -> Fingerprints
       \fill[tealFill!80] (w1.south west) -- (fp0.north west) -- (fp7.north east) -- (w1.south east) -- cycle;
