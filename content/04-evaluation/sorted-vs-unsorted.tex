@@ -38,7 +38,7 @@ The comparison reveals a significant divergence between the cost of sorting and 
 \begin{itemize}
   \item \textbf{Insertion Efficiency (Presorted)}: The \textit{Presorted} case shows that improved memory locality effectively mitigates the performance penalty usually associated with DRAM-resident filters. While the unsorted throughput collapses as soon as the filter exceeds L2 cache capacity, the presorted insertion maintains a significantly higher and more stable throughput profile.
 
-  \item \textbf{The Sorting Tax}: The substantial gap between the \textit{Presorted} and \textit{Sorted} lines highlights the extreme cost of the pre-processing step. For small, L2-resident inputs, this overhead makes the sorted approach non-viable. However, for large DRAM-resident inputs, the cost of sorting can be justified through the avoidance of random memory access stalls
+  \item \textbf{The Sorting Tax}: The substantial gap between the \textit{Presorted} and \textit{Sorted} lines highlights the extreme cost of the pre-processing step. For small, L2-resident inputs, this overhead makes the sorted approach non-viable. However, for large DRAM-resident inputs, the cost of sorting might be justified through the avoidance of random memory access stalls
 \end{itemize}
 
 \subsubsection{Architecture-Specific Behavior}
@@ -46,7 +46,7 @@ The comparison reveals a significant divergence between the cost of sorting and 
 The speedup provided by pre-sorting depends heavily on the memory technology and bandwidth availability of the GPU.
 
 \begin{itemize}
-  \item \textbf{GDDR7 Systems (A \& C)}: On systems relying on GDDR7, the benefits of pre-sorting are massive. In the DRAM-resident scenario ($>2^{25}$ elements), the pure insertion kernel (excluding sort) achieves approximately 3x higher throughput compared to the unsorted baseline. This confirms that random memory access latency is the primary bottleneck on these architectures. However, when the sorting overhead is included, the net throughput only matches or slightly exceeds the unsorted baseline at maximum capacity.
+  \item \textbf{GDDR7 Systems (A \& C)}: On systems relying on GDDR7, the benefits of pre-sorting are massive. In the DRAM-resident scenario ($>2^{25}$ elements), the pure insertion kernel (excluding sort) achieves approximately 3x higher throughput compared to the unsorted baseline. This confirms that random memory accesses are the primary bottleneck on these architectures. However, when the sorting overhead is included, the net throughput only matches or slightly exceeds the unsorted baseline at maximum capacity.
 
   \item \textbf{HBM3 System (B)}: On System B, the high-bandwidth memory already absorbs much of the random access penalty inherent to the unsorted approach. Consequently, while pre-sorting still yields a performance improvement, the speedup is less dramatic. Because the speedup factor is smaller, it fails to amortize the cost of the sort, resulting in a net loss in total throughput (including sort) compared to the standard unsorted method.
 \end{itemize}
@@ -58,5 +58,5 @@ The breakdown of sorted vs. unsorted performance leads to several conclusions re
 \begin{itemize}
   \item \textbf{Overhead vs. Gain}: While memory locality theoretically solves the random-access bottleneck, the current cost of the sorting and packing step is too high to realize these gains in an end-to-end pipeline. Unless the sorting cost can be amortized over other operations, the standard unsorted insertion remains superior for general use.
 
-  \item \textbf{Memory Overhead}: The sorting process requires auxiliary buffers for keys and indices, doubling the peak memory consumption during insertion. This effectively halves the maximum batch size.
+  \item \textbf{Memory Overhead}: The sorting process requires auxiliary buffers for keys and indices, doubling the peak memory usage during insertion. This effectively halves the maximum batch size.
 \end{itemize}
