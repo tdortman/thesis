@@ -16,7 +16,7 @@ The standard eviction process uses a greedy, depth-first-search (DFS) approach, 
 \subsection{Flexible Bucket Placement Policies}
 \label{sec:implementation:optimisation-techniques:bucket-policies}
 
-The standard partial-key cuckoo hashing scheme relies on the XOR operation to determine alternate bucket locations $(i_2 = i_1 \oplus hash(fp))$. For this bijective property to map validly onto the buckets, the number of them must strictly be a power of two. This constraint introduces a significant memory footprint issue: if a dataset requires slightly more capacity than $2^n$, the filter must be sized to $2^{n+1}$, result in nearly 50\% higher memory usage in the worst case.
+The standard partial-key cuckoo hashing scheme relies on the XOR operation to determine alternate bucket locations $(i_2 = i_1 \oplus hash(fp))$. For this bijective property to map validly onto the buckets, the number of them must strictly be a power of two. This constraint introduces a significant memory footprint issue: if a dataset requires slightly more capacity than $2^n$, the filter must be sized to $2^{n+1}$, resulting in nearly 50\% higher memory usage in the worst case.
 
 To mitigate this over-provisioning, two alternative bucket placement policies were implemented. These strategies allow for more granular sizing of the filter, decoupling the capacity from powers of two.
 
