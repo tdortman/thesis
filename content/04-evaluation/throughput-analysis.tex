@@ -54,7 +54,7 @@ Across all scenarios, the GPU Cuckoo filter maintains a distinct performance lea
 
 In the L2-resident scenario, the Cuckoo filter is orders of magnitude faster than both the TCF and GQF. The low latency of the L2 cache allows the Cuckoo filter's simple atomic operations to run at a very high speed, while the complex coordination logic of the competitors becomes a significant bottleneck.
 
-However, in the DRAM-resident scenario, this gap narrows as global memory latency becomes the dominant factor for all implementations. On the GDDR7 system, the Cuckoo filter is approximately 67\% faster than the GQF, while on the HBM3 system, the lead extends to approximately 3.5$\times$. Despite the narrowing gap, the Cuckoo filter remains the fastest option due to fundamental algorithmic differences:
+However, in the DRAM-resident scenario, this gap narrows as global memory latency becomes the dominant factor for all implementations. On the GDDR7 system, the Cuckoo filter at 50\% load factor is approximately 67\% faster than the GQF, while on the HBM3 system, the lead extends to approximately 3.5$\times$. Despite the narrowing gap, the Cuckoo filter remains the fastest option due to fundamental algorithmic differences:
 
 \begin{itemize}
   \item \textbf{Cuckoo Filter}: Deletion is a simple, localized atomic operation (CAS).
