@@ -91,3 +91,8 @@
 {"rule":"A_INFINITIVE","sentence":"^\\QSpecifically, performance gains on System A indicate a compute throughput limitation, whereas scaling on System B confirms a dependency on memory bandwidth.\\E$"}
 {"rule":"A_INFINITIVE","sentence":"^\\QSpecifically, performance gains on System A indicate a compute bottleneck, whereas scaling on System B confirms a dependency on memory bandwidth.\\E$"}
 {"rule":"A_INFINITIVE","sentence":"^\\QSpecifically, performance gains on System A indicate a compute bottleneck, whereas scaling on System B confirms a memory bandwidth bottleneck.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet insertManySorted(const T* dkeys, const sizet n, bool* doutput = nullptr).\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet insertMany(const T* dkeys, const sizet n, bool* doutput = nullptr).\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qvoid clear(): Resets the internal state of the filter by setting all buckets and the occupancy counter to zero.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qfloat loadFactor(): Returns the current load factor of the filter, calculated as the number of occupied slots divided by the total capacity.\\E$"}
+{"rule":"UPPERCASE_SENTENCE_START","sentence":"^\\Qsizet countOccupiedSlots(): A debugging utility that provides a ground-truth count of occupied slots.\\E$"}

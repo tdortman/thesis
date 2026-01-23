@@ -61,7 +61,7 @@ Each SM is a powerful parallel processor in its own right, containing several co
   \item \textbf{Load/Store Units}: Manage the movement of data between memory spaces.
 \end{itemize}
 
-Threads are not only grouped into blocks but are also managed by the SM in groups of 32 called \textit{warps}. A warp is the fundamental unit of scheduling on the GPU. All 32 threads in a warp execute in a Single-Instruction-Multiple-Thread (SIMT) fashion, meaning they run in lockstep and execute the same instruction at the same time. This SIMT execution model is the root cause of the most important performance considerations in GPU programming.
+Threads are not only grouped into blocks but are also managed by the SM in groups of 32 called \textit{warps}. A warp is the fundamental unit of scheduling on the GPU. All 32 threads in a warp execute in a Single-Instruction-Multiple-Thread (SIMT) fashion, meaning they run in lockstep and execute the same instruction at the same time. This SIMT execution model is the root cause of some of the most important performance considerations in GPU programming.
 
 \subsection{Memory Hierarchy}
 \label{sec:background:memory-hierarchy}

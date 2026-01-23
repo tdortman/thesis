@@ -1,7 +1,7 @@
 \section{Probabilistic Data Structures}
 \label{sec:background:probabilistic-data-structures}
 
-At the heart of this thesis is the need for a dynamic and efficient data structure for approximate set membership. This section reviews the key structures that form the basis of the work presented. The analysis begins with the classic Bloom filter and its locality-optimized variant, which serves as an important performance baseline. Following this is an explanation of the mechanics of Cuckoo hashing, the eviction-based strategy that enables the dynamic properties of the target data structure. Finally, the Cuckoo filter is detailed, showing how it combines these concepts to create a powerful and flexible alternative.
+At the heart of this thesis is the need for a dynamic and efficient data structure for approximate set membership. This section reviews the key structures that form the basis of the work presented. The analysis begins with the classic Bloom filter and its locality-optimized variant, which serves as an important performance baseline. Following this is an explanation of the mechanics of Cuckoo hashing, the eviction-based strategy that enables the dynamic properties of the target data structure. Finally, the Cuckoo filter is detailed, showing how it combines these concepts to create a powerful alternative.
 
 \subsection{Bloom Filter}
 \label{sec:background:bloom-filter}
@@ -37,7 +37,7 @@ Such a filter uses $1.44 \log_2(1/\epsilon)$ bits per element.
 Despite its widespread use, the classic Bloom filter has several notable disadvantages:
 
 \begin{itemize}
-  \item \textbf{No Deletion}: The standard implementation does not support the removal of items, as clearing a bit could inadvertently remove other items that hash to the same location. Variants like the Counting Bloom Filter \cite{counting-bloom} address this by using counters instead of single bits, but at a significant cost to space efficiency.
+  \item \textbf{No Deletion}: The standard implementation does not support the removal of items, as clearing a bit could inadvertently remove other items that hash to the same location. Variants like the Counting Bloom \mbox{Filter} \cite{counting-bloom} address this by using counters instead of single bits, but at a significant cost to space efficiency.
 
   \item \textbf{Linear Complexity}: Lookup and insertion performance is dependent on the number of hash functions, which scales linearly with $m$. This can lead to performance bottlenecks in high-throughput scenarios.
 
@@ -90,7 +90,7 @@ The insertion process is more involved and follows the distinct "cuckoo" evictio
 
   \item If both slots are occupied, an existing item (say $y$) is evicted from one of the location (e.g. $i_1$) and $x$ is placed there.
 
-  \item The evicted item $y$ is then reinserted into its alternate location. If $y$ was in $T_1$, it now attempts to move to $T_2[i_2]$. This move may, in turn, cause another eviction, leading to a chain of evictions.
+  \item The evicted item $y$ is then reinserted into its own alternate location. If $y$ was evicted from $T_1$, it attempts to move to $T_2[h_2(y) \bmod r]$. This move may, in turn, cause another eviction, leading to a chain of displacements.
 
   \item To prevent infinite loops, a maximum number of evictions is set. If this limit is reached, the table is considered full, and all items must be rehashed with a new pair of hash functions, potentially into larger tables.
 \end{enumerate}
@@ -113,13 +113,13 @@ Pagh and Rodler describe a trick, attributed to John Tromp, that achieves this. 
   \item $i_2 = (h_2(x) - h_1(x)) \bmod m$
 \end{itemize}
 
-With this specific construction, a symmetric function can be used to jump between the two locations. If an item $x$ is currently at a location $i$, its alternate location $i'$ can be calculated using the mapping
+With this specific construction, a function can be used to jump between the two locations. If an item $x$ is currently at a location $i$, its alternate location $i'$ can be calculated using the mapping
 
 \begin{equation}
   i' = (h_2(x) - i) \bmod m
 \end{equation}
 
-This works because the transformation is its own inverse for that specific pair of locations. Applying it to $i_1$ yields $i_2$, and applying it again to $i_2$ yields $i_1$. This concept of a state-free and symmetric mapping is the direct precursor to the partial-key hashing scheme used in Cuckoo filters.
+This works because the transformation is its own inverse for that specific pair of locations. Applying it to $i_1$ yields $i_2$, and applying it again to $i_2$ yields $i_1$. This concept of a state-free mapping is the direct precursor to the partial-key hashing scheme used in Cuckoo filters.
 
 \subsection{Cuckoo Filter}
 \label{sec:background:cuckoo-filter}
@@ -128,14 +128,14 @@ The Cuckoo filter, introduced by Fan et al. \cite{og-cuckoo-filter}, is a probab
 
 First, instead of storing entire items, a Cuckoo filter only stores a small fingerprint for each item, which is a fixed-size sequence of bits derived from the item's hash. This significantly reduces the memory footprint. A direct consequence, however, is that traditional rehashing is not an option, as the original items are not available to be re-inserted. Therefore, the filter's size and parameters are typically static once it is created.
 
-Second, it replaces the standard Cuckoo hashing scheme with partial-key cuckoo hashing. This clever technique establishes a symmetric dependency between the two potential bucket locations and the item's fingerprint. A single hash function is used to compute an initial location $i_1$ and a fingerprint $fp$. The alternate location $i_2$ is then derived using the XOR operation:
+Second, it replaces the standard Cuckoo hashing scheme with partial-key cuckoo hashing. This clever technique establishes a dependency between the two potential bucket locations and the item's fingerprint. A single hash function is used to compute an initial location $i_1$ and a fingerprint $fp$. The alternate location $i_2$ is then derived using the XOR operation:
 
 \begin{equation}
   i_2 = i_1 \oplus \mathrm{hash}(fp)
   \label{eq:partial-cuckoo-hashing}
 \end{equation}
 
-Thanks to the symmetric nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus \mathrm{hash}(fp)$. This allows an evicted fingerprint to calculate its alternate location from its current position and its own fingerprint alone, an important feature since the original item is not stored.
+Thanks to the nature of XOR, this relationship works both ways, such that $i_1 = i_2 \oplus \mathrm{hash}(fp)$. This allows an evicted fingerprint to calculate its alternate location from its current position and its own fingerprint alone, an important feature since the original item is not stored.
 
 \subsubsection{Design and Performance Characteristics}
 \label{sec:background:cuckoo-filter:design-perf}

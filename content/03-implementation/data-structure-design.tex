@@ -52,34 +52,58 @@ Due to a limitation of CUDA C++ where kernels cannot be class members, the imple
 
 The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a traditional C-style API that operates on raw device pointers and item counts, and, if the Thrust library is available, a set of convenience wrappers that accept \texttt{thrust::device\_vector} objects.
 
-\subsubsection{\texttt{explicit CuckooFilter(size\_t capacity)}}
+\subsubsection{Initialization}
+
+\begin{verbatim}
+explicit CuckooFilter(size_t capacity)
+\end{verbatim}
 
 The constructor takes a single argument for the desired capacity in terms of the number of items. It guarantees that at least this many items can be stored. Depending on the chosen \texttt{AltBucketPolicy}, the actual allocated capacity may be larger. For example, the default XOR-based strategy requires the number of buckets to be a power of two, so the requested capacity is rounded up to the next suitable size.
 
-\subsubsection{\texttt{size\_t insertMany(const T* d\_keys, const size\_t n)}}
+\subsubsection{Batch Insertion}
 
-This function attempts to insert a batch of \texttt{n} items from a buffer in device memory pointed to by \texttt{d\_keys}. It is the caller's responsibility to ensure the pointer is valid and the buffer is sufficiently large. The function returns the updated total number of occupied slots in the filter after the insertion attempt.
+\begin{verbatim}
+size_t insertMany(const T* d_keys, const size_t n,
+                  bool* d_output = nullptr)
+\end{verbatim}
 
-\subsubsection{\texttt{size\_t insertManySorted(const T* d\_keys, const size\_t n)}}
+This function attempts to insert a batch of \texttt{n} items from a buffer in device memory pointed to by \texttt{d\_keys}. It is the caller's responsibility to ensure the pointer is valid and the buffer is sufficiently large. If the optional \texttt{d\_output} buffer is provided, the success or failure of each individual insertion is reported. The function returns the updated total number of occupied slots in the filter after the insertion attempt.
 
-To address the performance penalties of random memory access, this variant introduces a pre-sorting step. The algorithm computes bucket indices and fingerprints, packs them into key-value pairs, and sorts them via CUB's radix sort before insertion begins. This ensures that consecutive threads target contiguous memory regions. While this strategy yields performance gains for massive datasets by minimizing DRAM transaction overhead, the added computational cost of sorting makes it less efficient for smaller filters that already fit within the GPU cache.
+\subsubsection{Sorted Batch Insertion}
 
-\subsubsection{\texttt{void containsMany(const T* d\_keys, const size\_t n, bool* d\_output)}}
+\begin{verbatim}
+size_t insertManySorted(const T* d_keys, const size_t n,
+                        bool* d_output = nullptr)
+\end{verbatim}
+
+To address the performance penalties of random memory access, this variant introduces a pre-sorting step. The algorithm computes bucket indices and fingerprints, packs them, and sorts them via CUB's radix sort before insertion begins. This ensures that consecutive threads target contiguous memory regions. While this strategy can yield performance gains for massive datasets by minimizing DRAM transaction overhead, the added computational cost of sorting makes it less efficient for smaller filters that already fit within the GPU cache.
+
+\subsubsection{Batch Lookup}
+
+\begin{verbatim}
+void containsMany(const T* d_keys, const size_t n,
+                  bool* d_output)
+\end{verbatim}
 
 Performs a batch lookup for \texttt{n} items. The results are written to the \texttt{d\_output} device buffer, where the boolean at each index corresponds to whether the item at the same index in \texttt{d\_keys} was found.
 
-\subsubsection{\texttt{size\_t deleteMany(const T* d\_keys, const size\_t n, bool* d\_output = nullptr)}}
+\subsubsection{Batch Deletion}
 
-Performs a batch deletion of \texttt{n} items. If the optional \texttt{d\_output} buffer is provided, the success or failure of each individual deletion is reported in the same manner as the lookup operation.
+\begin{verbatim}
+size_t deleteMany(const T* d_keys, const size_t n,
+                  bool* d_output = nullptr)
+\end{verbatim}
 
-\subsubsection{\texttt{void clear()}}
+Performs a batch deletion of \texttt{n} items. If \texttt{d\_output} is provided, it indicates which items were successfully removed. The function returns the updated total number of occupied slots in the filter after the deletion attempt.
 
-Resets the internal state of the filter by setting all buckets and the occupancy counter to zero. This operation does not deallocate any device memory.
+\subsubsection{State Management and Debugging}
 
-\subsubsection{\texttt{float loadFactor()}}
+The following utility functions are provided for filter maintenance and verification:
 
-Returns the current load factor of the filter, calculated as the number of occupied slots divided by the total capacity.
+\begin{itemize}
+  \item \texttt{void clear()}: Resets the internal state of the filter by setting all buckets and the occupancy counter to zero. This operation does not deallocate any device memory.
 
-\subsubsection{\texttt{size\_t countOccupiedSlots()}}
+  \item \texttt{float loadFactor()}: Returns the current load factor of the filter, calculated as the number of occupied slots divided by the total capacity.
 
-A debugging utility that provides a ground-truth count of occupied slots. It operates by copying the entire filter data to the host and manually counting every non-zero fingerprint. As this is an extremely slow, synchronous operation, it should only be used for verification purposes if the internal atomic counter is suspected to be inaccurate.
+  \item \texttt{size\_t countOccupiedSlots()}: A debugging utility that provides a ground-truth count of occupied slots. It operates by copying the entire filter data to the host and manually counting every non-zero fingerprint. As this is an extremely slow, synchronous operation, it should only be used for verification purposes if the internal atomic counter is suspected to be inaccurate.
+\end{itemize}
