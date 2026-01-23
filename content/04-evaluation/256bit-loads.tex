@@ -1,7 +1,7 @@
 \section{Impact of Wider Memory Loads}
 \label{sec:eval:256bit-loads}
 
-With the introduction of the NVIDIA Blackwell architecture (Compute Capability 10.0), new PTX instructions allow for wider memory transactions. To evaluate the impact of instruction-level parallelism on query throughput, a special case utilizing the 256-bit non-coherent load instruction was added to the lookup kernel:
+With the introduction of the NVIDIA Blackwell architecture (Compute Capability 10.0), new instructions have been added to the Parallel Thread Execution (PTX) ISA to allow for wider memory transactions.\footnote{NVIDIA PTX ISA Documentation: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html\#data-movement-and-conversion-instructions-ld} To evaluate the impact of instruction-level parallelism on query throughput, a special case utilizing the 256-bit non-coherent load instruction was added to the lookup kernel:
 
 \begin{verbatim}
 ld.global.nc.v4.u64 {%0, %1, %2, %3}, [%4];

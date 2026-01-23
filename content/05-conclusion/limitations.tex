@@ -4,7 +4,7 @@
 Despite the success of the implementation, certain limitations remain:
 
 \begin{itemize}
-  \item \textbf{Insertion Performance at Capacity}: As the filter approaches maximum capacity ($>95\%$), the insertion throughput degrades significantly due to long eviction chains. While the BFS eviction policy helps with this, the fundamental algorithmic bottleneck persists.
+  \item \textbf{Insertion Performance at Capacity}: As the filter approaches maximum capacity (over 95\%), the insertion throughput degrades significantly due to long eviction chains. While the BFS eviction policy helps with this, the fundamental algorithmic bottleneck persists.
 
   \item \textbf{Insertion Failures}: Unlike a Bloom filter, which always accepts new items (at the cost of a rising false-positive rate), a Cuckoo filter has a non-zero probability of failing to insert an item entirely. This requires the consuming application to implement robust error handling, such as a fallback storage mechanism or a trigger to resize and rebuild the filter.
 

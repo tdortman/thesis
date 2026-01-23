@@ -15,9 +15,9 @@ The tests use a fixed capacity of either $2^{22}$ (L2-resident) or $2^{28}$ (DRA
 \subsection{Eviction Reduction Analysis}
 \label{sec:eval:eviction-policies:reduction}
 
-The premise of the BFS eviction policy is that by investing more computational effort to search for a "local" empty slot, the filter can avoid triggering long, expensive eviction chains. To validate this hypothesis, the average number of evictions performed per inserted item was measured.
+The premise of the BFS eviction policy is that by investing more effort to search for a "local" empty slot, the filter can avoid triggering long, expensive eviction chains. To validate this hypothesis, the average number of evictions performed per inserted item was measured.
 
-As shown in Figure \ref{fig:eviction-reduction}, the BFS policy successfully lowers the eviction rate compared to the greedy DFS approach.
+Figure \ref{fig:eviction-reduction} shows that the BFS policy successfully lowers the eviction rate compared to the greedy DFS approach.
 
 As the filter fills ups, the DFS strategy (which picks a random victim immediately) sees a quick increase in evictions. In contrast, the BFS strategy delays this spike significantly. By checking up to half the bucket before resorting to an eviction, the BFS approach resolves many collisions locally.
 
