@@ -28,7 +28,7 @@ Distributing the input data from the host to the correct GPU partition is a comp
 \subsection{Result Consolidation}
 \label{sec:implementation:multi-gpu-results}
 
-For lookup and deletion operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order. To solve this efficiently, the Gossip library is again utilized to reverse the exchange process, sending results back to the GPUs that originally held the keys (pre-partitioning). This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order.
+For operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order. To solve this efficiently, the Gossip library is again utilized to reverse the exchange process, sending results back to the GPUs that originally held the keys (pre-partitioning). This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order.
 
 \subsection{Overheads}
 \label{sec:implementation:multi-gpu-overheads}
