@@ -135,3 +135,7 @@ ASCF
 AddSub
 PTX
 lddata-movement-and-conversion-instructions-ld
+MDCF
+SlimDB
+ethernet
+cuckooswitch
