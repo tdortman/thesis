@@ -14,3 +14,6 @@ GDDR
 HBM
 Two-Choice
 latenzbedingt
+Approximate
+Queries
+Hochdurchsatzsystemen
