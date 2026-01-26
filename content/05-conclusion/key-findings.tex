@@ -1,7 +1,7 @@
 \section{Key Findings}
 \label{sec:conclusion:findings}
 
-The evaluation yielded a lot of insight regarding the interaction between AMQ data structures and modern GPU architectures:
+The evaluation yielded significant insight regarding the interaction between AMQ data structures and modern GPU architectures:
 
 \begin{itemize}
   \item \textbf{Memory Bandwidth Scalability}: The Cuckoo filter is primarily memory-bound. Unlike the Two-Choice Filter or Quotient Filter, which are limited by shared memory latency and compute overhead, the Cuckoo filter's throughput scales linearly with global memory bandwidth. This makes it uniquely positioned to benefit from hardware advancements like HBM3e and HBM4.

@@ -1,18 +1,4 @@
-\section{Motivation}
-\label{sec:intro:motivation}
-
-\subsection{Problem Statement}
-\label{sec:intro:problem}
-
-In the era of big data, the ability to perform high-speed set membership queries is a fundamental requirement for applications ranging from network traffic analysis \cite{bloom-network} to large-scale distributed systems \cite{bloom-distributed-systems}. Determining whether an element belongs to a set is a frequent and performance-critical operation. While exact data structures provide definitive answers, their memory footprint and computational overhead can make them impractical for massive datasets. This has led to the widespread adoption of probabilistic data structures, which trade a small, manageable false-positive probability for significant gains in space and time efficiency.
-
-For years, the Bloom filter has been the standard probabilistic data structure for approximate set membership. Its primary limitation, however, is the inability to delete elements, making it unsuitable for dynamic datasets. While there are variations that do support deletion, they incur prohibitive space overheads that often negate their practical viability. Due to this the Cuckoo filter has emerged as a powerful alternative, offering native support for deletions and often superior space efficiency, particularly at low false-positive rates.
-
-Despite these advantages, the performance of Cuckoo filters on CPUs can quickly become a bottleneck in high-throughput environments. The sequential nature of the insertion algorithm, which may involve displacing multiple existing items, severely limits scalability.
-
-This performance gap motivates the exploration of massively parallel hardware. However, porting a Cuckoo filter to a GPU is not a straightforward translation, as the algorithm's reliance on sequential eviction chains and random memory accesses conflicts with the GPU's desire for massive parallelism and structured, contiguous memory access patterns. This thesis addresses these architectural mismatches by designing, implementing, and evaluating a GPU-accelerated Cuckoo filter. The main objective is to leverage the massive parallelism of modern GPUs to handle insertions, lookups, and deletions, thereby achieving a significant performance leap over existing CPU-based implementations.
-
-\subsection{Use Cases}
+\section{Use Cases}
 \label{sec:intro:use-cases}
 
 The demand for high-speed, dynamic set membership testing shows up across numerous domains. While CPU-based dynamic filters exist, many modern applications generate data at a rate that creates a performance bottleneck, motivating the need for a massively parallel, GPU-accelerated solution. Some of the areas that could benefit from such a filter are as follows:
