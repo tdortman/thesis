@@ -50,7 +50,7 @@ Due to a limitation of CUDA C++ where kernels cannot be class members, the imple
 \subsection{Public API}
 \label{sec:implementation:api}
 
-The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a traditional C-style API that operates on raw device pointers and item counts, and, if the Thrust library is available, a set of convenience wrappers that accept \texttt{thrust::device\_vector} objects.
+The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a traditional C-style API that operates on raw device pointers and item counts, and, as well as a set of convenience wrappers that accept \texttt{thrust::device\_vector} objects.
 
 \subsubsection{Initialization}
 

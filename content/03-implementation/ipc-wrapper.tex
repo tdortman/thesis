@@ -16,7 +16,7 @@ The server runs a single worker thread that continuously dequeues requests from 
 
 The queue is blocking by design, meaning a client attempting to enqueue a request into a full queue will wait until a slot becomes available. On top of this, the server supports both a graceful shutdown, where it stops accepting new requests but processes all outstanding items, and a forced shutdown that cancels all pending requests.
 
-To simplify its use, a client library abstracts away the low-level IPC details. An optional Thrust wrapper is also provided to allow for seamless interaction with \texttt{thrust::device\_vector}. This architecture could be enhanced in several ways in the future:
+To simplify its use, a client library abstracts away the low-level IPC details. An additional Thrust wrapper is also provided to allow for seamless interaction with \texttt{thrust::device\_vector}. This architecture could be enhanced in several ways in the future:
 
 \begin{itemize}
   \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximize throughput in high-concurrency scenarios.
