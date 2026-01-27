@@ -1,9 +1,9 @@
-\section{Eviction Policies}
+\subsection{Eviction Policies}
 \label{sec:eval:eviction-policies}
 
 To evaluate the impact of the insertion strategy on performance and stability, a comparative analysis was conducted between the standard DFS eviction policy and the proposed BFS heuristic.
 
-\subsection{Experimental Setup}
+\subsubsection{Experimental Setup}
 For this analysis and the subsequent evaluation of sorted insertion (Section \ref{sec:eval:sorted-insertion}), the experimental setup was expanded with a third hardware configuration to provide finer-grained data on GDDR7 performance scaling:
 
 \begin{itemize}
@@ -12,7 +12,7 @@ For this analysis and the subsequent evaluation of sorted insertion (Section \re
 
 The tests use a fixed capacity of either $2^{22}$ (L2-resident) or $2^{28}$ (DRAM-resident) slots. To accurately measure performance in the critical high-load scenario, the insertion workload is split based on the target load factor $\alpha$. For each data point, the filter is first pre-filled with 75\% of the total items required to reach the target load (i.e., $0.75 \cdot \alpha \cdot capacity$). Subsequently, the remaining 25\% of items are inserted to reach the final target load $\alpha$, and the throughput of this second phase is recorded. This ensures that the measurement captures the performance behaviour specifically as the filter transitions from a moderately full state to the final target occupancy, effectively isolating the impact of the eviction strategy.
 
-\subsection{Eviction Reduction Analysis}
+\subsubsection{Eviction Reduction Analysis}
 \label{sec:eval:eviction-policies:reduction}
 
 The premise of the BFS eviction policy is that by investing more effort to search for a "local" empty slot, the filter can avoid triggering long, expensive eviction chains. To validate this hypothesis, the average number of evictions performed per inserted item was measured.
@@ -32,26 +32,35 @@ This reduction in evictions directly translates to a reduction in global memory 
 
 \FloatBarrier
 
-\subsection{Performance Analysis}
+\subsubsection{Performance Analysis}
+
 The throughput impact of the BFS policy presents a trade-off between computational complexity and memory bandwidth efficiency (avoiding global memory accesses caused by evictions).
 
-\subsubsection{L2-Resident Workloads}
-In the L2-resident scenario (Figure \ref{fig:evict:small}), the standard DFS policy consistently outperforms the BFS policy across all systems.
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{images/evict/small.pdf}
+    \caption{L2-Resident}
+    \label{fig:evict:small}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{images/evict/large.pdf}
+    \caption{DRAM-Resident}
+    \label{fig:evict:large}
+  \end{subfigure}
+
+  \caption{Insert throughput comparison under different eviction policies.}
+  \label{fig:evict:comparison}
+\end{figure}
+
+In the \textbf{L2-resident} scenario (Figure \ref{fig:evict:small}), the standard DFS policy consistently outperforms the BFS policy across all systems.
 
 In this scenario, the latency penalty of an eviction (loading a new bucket) is minimal. At the same time, the BFS policy incurs a higher instruction overhead per step because it must perform atomic checks on up to half the slots within the loaded buckets. In this bandwidth-abundant, low-latency environment, the computational cost of these extra checks outweighs the savings from reduced evictions, making the simpler greedy approach faster.
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=1.0\textwidth]{images/evict/small.pdf}
-  \caption{Insert Throughput on System A (Top), System B (Middle) \& System C (Bottom) (L2-Resident).}
-  \label{fig:evict:small}
-\end{figure}
-
-\FloatBarrier
-
-\subsubsection{DRAM-Resident Workloads}
-
-For large filters that exceed the L2 cache, the performance dynamics become highly dependent on the specific balance between compute resources and memory subsystems. Figure \ref{fig:evict:large} illustrates the throughput comparison on all three systems.
+In the \textbf{DRAM-resident} scenario (Figure \ref{fig:evict:large}), the performance dynamics become highly dependent on the specific balance between compute resources and memory subsystems:
 
 \begin{itemize}
   \item \textbf{System A}: On the RTX Pro 6000, the BFS policy offers negligible benefits. This system features the highest core count of all testbeds, and its massive parallelism allows the GPU to effectively hide the latency of the sequential DFS memory accesses by aggressively switching between warps. Because the hardware is already mitigating the penalty of the DFS chains via parallelism, the BFS strategy yields barely any gain.
@@ -60,12 +69,5 @@ For large filters that exceed the L2 cache, the performance dynamics become high
 
   \item \textbf{System C}: On the consumer-grade GDDR7 card, the BFS policy is consistently faster. Unlike System A, this GPU lacks the extreme core count required to fully hide DFS latency and unlike System B, it lacks the massive bandwidth to brute force the problem. Here, the BFS policy wins simply by conservation of bandwidth. As shown in Section \ref{sec:eval:eviction-policies:reduction}, BFS significantly reduces the number of evictions. On a bandwidth-constrained device, avoiding these extra memory transactions translates directly to higher throughput.
 \end{itemize}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=1.0\textwidth]{images/evict/large.pdf}
-  \caption{Insert Throughput on System A (Top), System B (Middle) \& System C (Bottom) (DRAM-Resident).}
-  \label{fig:evict:large}
-\end{figure}
 
 \FloatBarrier

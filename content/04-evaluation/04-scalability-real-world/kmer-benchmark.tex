@@ -1,9 +1,9 @@
-\section{Real-World Benchmark: Genomic K-mer Indexing}
+\subsection{Real-World Benchmark: Genomic K-mer Indexing}
 \label{sec:eval:kmer}
 
 While synthetic benchmarks using uniformly distributed integers are useful for showing algorithmic behaviour, real-world data can often present challenges due to skewed distributions. To validate this, a benchmark was conducted on genomic $k$-mer indexing as a primary use case for approximate membership query structures in bioinformatics.
 
-\subsection{Background and Experimental Setup}
+\subsubsection{Background and Experimental Setup}
 
 A $k$-mer is a subsequence of length $k$ derived from a biological sequence, such as DNA. In genomic analysis, counting and filtering $k$-mers is an important step for tasks like genome assembly and error correction. Since DNA consists of four base pairs (A, C, G, T), the total number of possible $k$-mers is $4^k$, which grows rather quickly.
 
@@ -11,7 +11,7 @@ For this evaluation, the T2T-CHM13v2.0 \cite{t2t-y, t2t-chm13} dataset is used a
 
 The resulting dataset is approximately 20 GB in size (packed), which is sufficient to effectively saturate the 96 GB of VRAM on System B. All filters were tested for insertion, positive lookup, and deletion (when supported).
 
-\subsection{Performance Analysis}
+\subsubsection{Performance Analysis}
 
 The throughput results for the $k$-mer benchmark are presented in Figure \ref{fig:kmer-benchmark}.
 
@@ -32,6 +32,6 @@ The results confirm that the Cuckoo filter's high performance translates well to
   \item \textbf{Deletion Performance}: In deletion throughput, the Cuckoo filter demonstrates superior performance. It is 2.1$\times$ faster than the GQF and nearly 35$\times$ faster than the TCF. This highlights the efficiency of the atomic-CAS deletion logic, which scales exceptionally well compared to the other filters' internal logic.
 \end{itemize}
 
-\subsection{Conclusion}
+\subsubsection{Conclusion}
 
 This benchmark demonstrates that the GPU Cuckoo filter is a highly versatile data structure for real-world applications. While the Blocked Bloom filter remains the throughput leader for read-only or append-only tasks, the Cuckoo filter is the only tested solution that delivers a consistent high performance across \textit{all} operations. This makes it particularly valuable for workloads that involve a good mix of insertions, lookups, and deletions.

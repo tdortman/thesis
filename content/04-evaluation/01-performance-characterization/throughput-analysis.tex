@@ -1,11 +1,11 @@
-\section{Throughput Analysis}
+\subsection{Throughput Analysis}
 \label{sec:eval:throughput}
 
 This section analyses the raw throughput of the filters in millions of operations per second (MOPS). To understand the impact of the memory hierarchy, each operation is evaluated under two distinct conditions: a small filter ($n=2^{22}$, approx. 4.2 million items) that fits entirely within the L2 cache, and a large filter ($n=2^{28}$, approx. 268 million items) that resides in DRAM.
 
 The specific speedup multipliers and performance comparisons cited throughout this section represent the performance on System B (HBM3) with an 80\% target load factor as well as positive lookups.
 
-\subsection{Insertion Performance}
+\subsubsection{Insertion Performance}
 \label{sec:eval:throughput:insertion}
 The insertion results for both memory types are presented in Figure \ref{fig:insert-perf}.
 
@@ -24,7 +24,7 @@ The GPU Cuckoo filter demonstrates exceptional competitiveness, effectively brid
 
 \FloatBarrier
 
-\subsection{Lookup Performance}
+\subsubsection{Lookup Performance}
 \label{sec:eval:throughput:lookup}
 
 Query performance, shown in Figure \ref{fig:query-perf}, highlights the impact of the Cuckoo filter's bucket layout and short-circuiting capabilities.
@@ -44,7 +44,7 @@ The Cuckoo filter exhibits a distinct performance profile based on the query res
 
 \FloatBarrier
 
-\subsection{Deletion Performance}
+\subsubsection{Deletion Performance}
 \label{sec:eval:throughput:deletion}
 
 Across all scenarios, the GPU Cuckoo filter maintains a distinct performance lead, though the magnitude of this advantage depends heavily on memory residency (See Figure \ref{fig:delete-perf}).

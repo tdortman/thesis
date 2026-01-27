@@ -12,7 +12,7 @@ It is important to note that these systems are not compared head-to-head to dete
 
 All performance tests use 16-bit fingerprints (with equivalent space allocation for the Blocked Bloom filter) and random 64-bit integers as input keys.
 
-\subsection{Reference Implementations}
+\subsubsection{Reference Implementations}
 \label{sec:eval:baselines}
 To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared against the following data structures:
 
@@ -28,7 +28,7 @@ To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared 
   \item \textbf{GPU Counting Quotient Filter (GQF)}: A highly space-efficient probabilistic data structure sourced from the same study as the TCF. This implementation supports counting and resizing on top of the other operations. \cite{tcf}
 \end{itemize}
 
-\subsection{Evaluation Metrics}
+\subsubsection{Evaluation Metrics}
 \label{sec:eval:metrics}
 The implementations are assessed using the following metrics:
 

@@ -1,17 +1,10 @@
-\section{False Positive Rate}
+\subsection{False Positive Rate}
 \label{sec:eval:fpr}
 
-\subsection{Empirical Accuracy Analysis}
+\subsubsection{Empirical Accuracy Analysis}
 \label{sec:eval:fpr:empirical}
 
 To evaluate the reliability of the implemented filters, the empirical false-positive rate was measured across a range of filter capacities. For each test, the filters were populated to a constant 95\% load factor using random keys. The total memory size was varied from $2^{15}$ to $2^{30}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint. The results are presented in Figure \ref{fig:fpr-vs-memory}:
-
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=1.0\textwidth]{images/fpr.pdf}
-  \caption{Comparison of False Positive Rates (FPR) versus total memory size for various filter implementations at a 95\% load factor.}
-  \label{fig:fpr-vs-memory}
-\end{figure}
 
 \begin{itemize}
   \item \textbf{Blocked Bloom Filter}: The Blocked Bloom filter demonstrates the highest false-positive rate among all tested structures, ranging from approximately 0.5\% to 6\%. This is a known characteristic of the blocked design: partitioning the bit array into small, fixed-size blocks prevents the "averaging" of hash collisions across the entire filter. Consequently, a few heavily congested blocks can disproportionately skew the overall error rate. It is notably the only filter where the false-positive rate degrades this much as the total memory size increases.
@@ -23,19 +16,21 @@ To evaluate the reliability of the implemented filters, the empirical false-posi
   \item \textbf{Comparison with TCF}: The GPU Cuckoo filter significantly outperforms the TCF regarding accuracy. The TCF exhibits an error rate roughly an order of magnitude higher (ranging between 0.2\% and 0.5\%). While the TCF is more accurate than the Blocked Bloom filter, the Cuckoo filter and GQF designs offer superior accuracy for this workload.
 \end{itemize}
 
-\subsection{Performance vs. Accuracy Trade-off}
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/fpr.pdf}
+  \caption{Comparison of False Positive Rates (FPR) versus total memory size for various filter implementations at a 95\% load factor.}
+  \label{fig:fpr-vs-memory}
+\end{figure}
+
+\FloatBarrier
+
+\subsubsection{Performance vs. Accuracy Trade-off}
 \label{sec:eval:fpr:tradeoff}
 
 In real-world applications, filters are often chosen based on strict False Positive Rate requirements (e.g. $\leq 1\%$ or $\leq 0.1\%$). To evaluate how the filters perform under these constraints, a parameter sweep was conducted to identify the configuration that yields the highest throughput for a given target FPR.
 
 These tests were performed on System B (HBM3) with capacities of $2^{22}$ (L2-resident) and $2^{28}$ (DRAM-resident) slots. The CPU implementations are excluded from this comparison as their throughput is simply insufficient. To represent a realistic workload where the presence of items is uncertain, the query throughput is reported as a weighted average of positive and negative lookups, with a 50\% hit rate.
-
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=1.0\textwidth]{images/throughput-by-fpr.pdf}
-  \caption{Maximum achievable throughput for Insert, Query, and Delete operations while adhering to strict False Positive Rate targets. Top: L2-resident,  Bottom: DRAM-resident. Note the logarithmic scale on the Y-axis.}
-  \label{fig:throughput-by-fpr}
-\end{figure}
 
 The results, visualized in Figure \ref{fig:throughput-by-fpr}, highlight the strengths of the Cuckoo filter as a general-purpose structure:
 
@@ -48,5 +43,12 @@ The results, visualized in Figure \ref{fig:throughput-by-fpr}, highlight the str
 
   \item \textbf{Conclusion}: The GPU Cuckoo filter emerges as the most robust and well-rounded solution for high-throughput dynamic workloads. It is the only tested data structure capable of maintaining high performance for insertions, lookups, \textit{and} deletions simultaneously, while satisfying strict accuracy constraints.
 \end{itemize}
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=1.0\textwidth]{images/throughput-by-fpr.pdf}
+  \caption{Maximum achievable throughput for Insert, Query, and Delete operations while adhering to strict False Positive Rate targets. Top: L2-resident,  Bottom: DRAM-resident. Note the logarithmic scale on the Y-axis.}
+  \label{fig:throughput-by-fpr}
+\end{figure}
 
 \FloatBarrier
