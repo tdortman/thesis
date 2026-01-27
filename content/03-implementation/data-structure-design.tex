@@ -1,7 +1,7 @@
 \section{Data Structure Design}
 \label{sec:implementation:data-structure-design}
 
-The design of the GPU-accelerated Cuckoo filter emphasizes compile-time configuration and a memory layout optimized for parallel access patterns. This section details these design choices, from the high-level configuration structure down to the public-facing API.
+The design of the GPU-accelerated Cuckoo filter emphasizes compile-time configuration and a memory layout optimized for cache-friendly access patterns. This section details these design choices, from the high-level configuration structure down to the public-facing API.
 
 \subsection{Compile-Time Configuration}
 \label{sec:implementation:data-structure-design:comptime-config}
@@ -19,7 +19,7 @@ To maximize performance by allowing the compiler to generate highly specialized 
 
   \item \texttt{AltBucketPolicy}: A class which encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket. The default implementation uses the standard XOR-based partial-key cuckoo hashing, but alternatives based on the "Additive and Subtractive" Cuckoo filter \cite{add-sub-cuckoo-filter} and an offset-based version \cite{smaller-cuckoo-filter} have also been implemented to demonstrate this flexibility (See Sections \ref{sec:implementation:optimisation-techniques:bucket-policies} \& \ref{sec:eval:bucket-policies}).
 
-  \item \texttt{evictionPolicy}: The policy used to handle insertions into full buckets. The default implementation employs a Breadth-First Search (BFS) strategy. Unlike the traditional greedy (DFS) approach which immediately evicts a random victim, the BFS policy first scans the alternate buckets of the existing items to find an empty slot. As detailed in Section \ref{sec:implementation:optimisation-techniques:eviction}, this strategy minimizes the length of eviction chains and reduces global memory traffic (See Sections \ref{sec:implementation:optimisation-techniques:eviction} \& \ref{sec:eval:eviction-policies}).
+  \item \texttt{evictionPolicy}: The policy used to handle insertions into full buckets. The default implementation employs a Breadth-First Search (BFS) strategy. Unlike the traditional greedy (DFS) approach which immediately evicts a random victim, the BFS policy first scans the alternate buckets of the existing items to find an empty slot. This strategy minimizes the length of eviction chains and reduces global memory traffic (See Sections \ref{sec:implementation:optimisation-techniques:eviction} \& \ref{sec:eval:eviction-policies}).
 
   \item \texttt{WordType}: Specifies the underlying integer type used for atomic operations and fingerprint storage. The default is \texttt{uint64\_t}, which is generally optimal for modern GPU architectures. However, this can be reconfigured (e.g., to \texttt{uint32\_t}) to align with specific hardware characteristics regarding atomic throughput. A benchmarking utility is provided to help users determine the optimal setting, which is primarily useful in cache-resident workloads.
 \end{itemize}
@@ -37,11 +37,11 @@ The filter's primary data storage is a single, contiguous array of fixed-size bu
   \item Fingerprints (tags) are tightly packed within these 64-bit words. For example, a 64-bit word can hold eight 8-bit fingerprints or four 16-bit fingerprints.
 \end{itemize}
 
-While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off. Figure~\ref{fig:memory-layout} visualizes this hierarchical memory organization.
+While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off. Figure \ref{fig:memory-layout} visualizes this hierarchical memory organization.
 
 \input{content/03-implementation/figures/memory-layout}
 
-Furthermore, this enables the use of SWAR (SIMD Within A Register) techniques. Bitwise magic numbers can be used to search for empty slots (zero detection) or matching tags (XOR comparison) in parallel within a single register \cite{bit-twiddling-hacks}. This eliminates the need for branching loops when iterating over slots within a word.
+Furthermore, this enables the use of SWAR (SIMD Within A Register) techniques. Empty slots can be detected directly via bitwise zero-detection, while tag matches are found by first replicating the query tag across a word, XOR-ing it with the packed tags, and applying the same zero-detection \cite{bit-twiddling-hacks}. This eliminates the need for branching loops when scanning slots within a word.
 
 The filter's state is maintained by a single global atomic counter that tracks the total number of occupied slots. This counter resides in device memory and is updated atomically by the insertion and deletion kernels. Its value is only lazily copied to the host when an explicit query is made, minimizing host-device communication.
 

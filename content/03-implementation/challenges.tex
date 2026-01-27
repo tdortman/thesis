@@ -6,7 +6,7 @@ Based on the GPU architecture and programming principles discussed in Chapter \r
 \begin{itemize}
   \item \textbf{Managing Concurrency and Race Conditions}: A naive parallel implementation where thousands of GPU threads attempt to read and write to the same buckets simultaneously would lead to race conditions and data corruption. Designing an efficient, lock-free mechanism using atomic operations to handle these concurrent memory accesses is one of the primary challenges.
 
-  \item \textbf{Parallelizing the Eviction Path}: During an insertion, if both candidate buckets are full, an existing item must be evicted and reinserted into its alternate location. This eviction process can cascade, leading to multiple evictions. Parallelizing this process is complex, as it requires careful coordination to ensure that threads do not interfere with each other's operations or create deadlocks.
+  \item \textbf{Parallelizing the Eviction Path}: During an insertion, if both candidate buckets are full, an existing item must be evicted and reinserted into its alternate location. This process can cascade, leading to multiple evictions. Parallelization is complex, as it requires careful coordination to ensure that threads do not interfere with each other's operations or create deadlocks.
 
   \item \textbf{Optimizing for Coalesced Memory Access}: The random-access nature of Cuckoo filter operations can lead to scattered, uncoalesced memory accesses, which severely degrade performance. Developing strategies like data sorting to improve memory locality is essential.
 
