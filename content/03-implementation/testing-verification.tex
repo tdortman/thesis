@@ -23,13 +23,13 @@ The core empirical validation follows a standardized, multi-stage procedure usin
 
   \item \textbf{No-False-Negatives Test}: A query is performed for all the previously inserted keys. The test passes only if every key is successfully found, confirming that no false negatives have occurred.
 
-  \item \textbf{False-Positive Rate Measurement}: The empirical false-positive rate is measured by querying one million distinct keys known not to be in the filter (drawn from the disjoint range $[2^{32}, 2^{64}-1]$). The observed rate of positive matches is then calculated and compared against the theoretically expected rate to ensure it falls within an acceptable margin.
+  \item \textbf{False Positive Rate Measurement}: The empirical false positive rate is measured by querying one million distinct keys known not to be in the filter (drawn from the disjoint range $[2^{32}, 2^{64}-1]$). The observed rate of positive matches is then calculated and compared against the theoretically expected rate to ensure it falls within an acceptable margin.
 
   \item \textbf{Deletion Correctness and Stability Test}: Half of the initially inserted items are deleted. A subsequent query for the entire original set of keys is then conducted to verify three conditions:
     \begin{itemize}
       \item All non-deleted items must still be found.
       \item The vast majority of deleted items must no longer be found
-      \item The rate of any remaining positive hits for the deleted items must be statistically consistent with the filter's theoretical false-positive rate.
+      \item The rate of any remaining positive hits for the deleted items must be statistically consistent with the filter's theoretical false positive rate.
     \end{itemize}
 \end{enumerate}
 
