@@ -1,28 +1,26 @@
 \subsection{Throughput Analysis}
 \label{sec:eval:throughput}
 
-This section analyses the raw throughput of the filters in millions of operations per second (MOPS). To understand the impact of the memory hierarchy, each operation is evaluated under two distinct conditions: a small filter ($n=2^{22}$, approx. 4.2 million items) that fits entirely within the L2 cache, and a large filter ($n=2^{28}$, approx. 268 million items) that resides in DRAM.
+The raw throughput of the filters is measured in millions of operations per second (MOPS). To understand the impact of the memory hierarchy, each operation is evaluated under two distinct conditions: a small filter ($n=2^{22}$, approx. 4.2 million items) that fits entirely within the L2 cache, and a large filter ($n=2^{28}$, approx. 268 million items) that resides in DRAM. For all figures in this section, the left plot corresponds to System A and the right plot corresponds to System B.
 
-The specific speedup multipliers and performance comparisons cited throughout this section represent the performance on System B (HBM3) with an 80\% target load factor as well as positive lookups.
+The specific speedup multipliers and performance comparisons cited throughout this section represent the performance on System B with an 80\% target load factor as well as positive lookups.
 
 \subsubsection{Insertion Performance}
 \label{sec:eval:throughput:insertion}
-The insertion results for both memory types are presented in Figure \ref{fig:insert-perf}.
+The insertion results for both systems are presented in Figure \ref{fig:insert-perf}.
 
 \begin{figure}[htpb]
   \centering
-  \includegraphics[width=1.0\textwidth]{images/perf/insert.pdf}
-  \caption{Insertion Performance for L2-resident (Top) and DRAM-resident (Bottom) filters. Left side of each plot is System A (GDDR7), Right is System B (HBM3).}
+  \includegraphics[width=\textwidth]{images/perf/insert.pdf}
+  \caption{Insertion Performance. Top: L2-Resident, Bottom: DRAM-Resident}
   \label{fig:insert-perf}
 \end{figure}
 
-The GPU Cuckoo filter demonstrates exceptional competitiveness, effectively bridging the gap between append-only and dynamic data structures. Its insertion logic, relying on random atomic compare-and-swap operations, contrasts with the simpler, linear write patterns of the Blocked Bloom filter.
+The GPU Cuckoo filter demonstrates exceptional competitiveness, effectively bridging the gap between static and dynamic data structures. Its insertion logic, relying on random atomic compare-and-swap operations, contrasts with the simpler, linear write patterns of the Blocked Bloom filter.
 
-\textbf{L2-Resident}: When the filter fits in cache, the Cuckoo filter achieves a significant fraction (60\%) of the Blocked Bloom filter's throughput while far surpassing all other dynamic filters. Specifically, it performs $6.3\times$ faster than the TCF and $585\times$ faster than the GQF, verifying that the GQF's complex element-shifting logic incurs a massive penalty in high-throughput, low-latency scenarios.
+\textbf{L2-Resident}: When the filter fits in cache, the Cuckoo filter achieves a significant fraction (60\%) of the Blocked Bloom filter's throughput while far surpassing all other dynamic filters. Specifically, it performs $6.3\times$ faster than the TCF and $585\times$ faster than the GQF, verifying that the GQF's complex element-shifting logic incurs a massive penalty in high-throughput, low-latency scenarios. The massive parallelism also yields a $360\times$ speedup over the sequential CPU implementation.
 
-\textbf{DRAM-Resident}: For large datasets, the Cuckoo filter scales strongly with memory bandwidth. Throughput increases significantly when moving from GDDR7 to HBM3, confirming that the algorithm successfully saturates the memory bus. In contrast, the TCF and GQF show stagnant or regressive performance on the faster HBM3 system. Consequently, on the high-bandwidth System B, the Cuckoo filter is $1.9\times$ faster than the TCF and $9.6\times$ faster than the GQF.
-
-\FloatBarrier
+\textbf{DRAM-Resident}: For large datasets, the Cuckoo filter scales strongly with memory bandwidth. Throughput increases significantly when moving from GDDR7 to HBM3, confirming that the algorithm successfully saturates the memory bus. In contrast, the TCF and GQF show stagnant or regressive performance on the faster HBM3 system. Consequently, on the high-bandwidth System B, the Cuckoo filter is $1.9\times$ faster than the TCF and $9.6\times$ faster than the GQF. The ability to saturate HBM allows the GPU implementation to widen the gap against the CPU baseline even further, achieving a $583\times$ speedup.
 
 \subsubsection{Lookup Performance}
 \label{sec:eval:throughput:lookup}
@@ -31,34 +29,32 @@ Query performance, shown in Figure \ref{fig:query-perf}, highlights the impact o
 
 \begin{figure}[htpb]
   \centering
-  \includegraphics[width=1.0\textwidth]{images/perf/query.pdf}
-  \caption{Lookup Performance for L2-resident (Top) and DRAM-resident (Bottom) filters. Left side of each plot is System A (GDDR7), Right is System B (HBM3).}
+  \includegraphics[width=\textwidth]{images/perf/query.pdf}
+  \caption{Query Performance. Top: L2-Resident, Bottom: DRAM-Resident. Note the consistent gap between positive lookups (solid lines) and negative lookups (dashed lines) for the GPU Cuckoo filter.}
   \label{fig:query-perf}
 \end{figure}
 
-The Cuckoo filter exhibits a distinct performance profile based on the query result. Positive lookups are highly efficient: due to the large bucket size $(b=16)$, most items reside in their primary bucket, allowing the query to complete with a single memory transaction.
+The Cuckoo filter exhibits a distinct performance profile based on the query result. Positive lookups are highly efficient, due to the large bucket size ($b=16$) most items reside in their primary bucket, allowing the query to complete with a single memory transaction. Negative lookups on the other hand have their throughput roughly halved because the algorithm must definitively check both candidate buckets.
 
-\textbf{L2-Resident}: In the cache-resident scenario, this efficiency allows the Cuckoo filter to outperform the append-only Blocked Bloom filter by $1.4\times$. When compared to other dynamic structures, the lead is even more pronounced: it is $42\times$ faster than the TCF and $6\times$ faster than the GQF.
+\textbf{L2-Resident}: In the cache-resident scenario, this efficiency allows the Cuckoo filter to outperform the append-only Blocked Bloom filter by $1.4\times$. When compared to other dynamic structures, the lead is even more pronounced: it is $42\times$ faster than the TCF and $6\times$ faster than the GQF. The GPU version of the Cuckoo filter is also $974\times$ faster than the CPU version.
 
-\textbf{DRAM-Resident}: When the workload becomes bound by global memory bandwidth, the Cuckoo filter effectively matches the throughput of the Blocked Bloom filter. It maintains a clear lead over the alternatives, being $11.3\times$ faster than the TCF and $2.6\times$ faster than the GQF.
-
-\FloatBarrier
+\textbf{DRAM-Resident}: When the workload becomes bound by global memory bandwidth, the Cuckoo filter effectively matches the throughput of the Blocked Bloom filter. At the same time it maintains a clear lead over the alternatives, being $11.3\times$ faster than the TCF and $2.6\times$ faster than the GQF. The GPU version of the Cuckoo filter is also $1504\times$ faster than the CPU version.
 
 \subsubsection{Deletion Performance}
 \label{sec:eval:throughput:deletion}
 
-Across all scenarios, the GPU Cuckoo filter maintains a distinct performance lead, though the magnitude of this advantage depends heavily on memory residency (See Figure \ref{fig:delete-perf}).
+Deletion performance (Figure \ref{fig:delete-perf}) illustrates the most significant advantage of the GPU Cuckoo filter. Note that the Partitioned CPU Cuckoo Filter is excluded from this comparison, as its reference implementation does not support item deletion.
 
-\begin{figure}[ht!]
+\begin{figure}[htpb]
   \centering
-  \includegraphics[width=1.0\textwidth]{images/perf/delete.pdf}
-  \caption{Deletion Performance for L2-resident (Top) and DRAM-resident (Bottom) filters. Left side of each plot is System A (GDDR7), Right is System B (HBM3).}
+  \includegraphics[width=\textwidth]{images/perf/delete.pdf}
+  \caption{Deletion Performance. Top: L2-Resident, Bottom: DRAM-Resident. Note the logarithmic scale.}
   \label{fig:delete-perf}
 \end{figure}
 
-\textbf{L2-Resident}: The Cuckoo filter is orders of magnitude faster than the competition. The low latency of the L2 cache allows the Cuckoo filter's simple atomic operations to run at a very high speed, exceeding the throughput of the TCF by $100\times$ and the GQF by $273\times$.
+\textbf{L2-Resident}: The Cuckoo filter is orders of magnitude faster than the competition. The low latency of the L2 cache allows the Cuckoo filter's simple atomic operations to run at a very high speed, exceeding the throughput of the TCF by $100\times$ and the GQF by $273\times$. This efficiency also yields a $356\times$ speedup over the standard CPU implementation.
 
-\textbf{DRAM-Resident}: Here, this gap narrows as global memory latency becomes the dominant factor, yet the Cuckoo filter retains its leadership. On System B, it performs $35.3\times$ faster than the TCF and $3.8\times$ faster than the GQF. Despite the narrowing gap, the Cuckoo filter remains the fastest option due to fundamental algorithmic differences:
+\textbf{DRAM-Resident}: Here, this gap narrows as global memory latency becomes the dominant factor, yet the Cuckoo filter retains its leadership. It performs $35.3\times$ faster than the TCF and $3.8\times$ faster than the GQF. The advantage over the CPU remains massive, with a $559\times$ speedup. Despite the narrowing gap, the Cuckoo filter remains the fastest option due to fundamental algorithmic differences:
 
 \begin{itemize}
   \item \textbf{Cuckoo Filter}: Deletion is a simple, localized atomic operation (CAS).
