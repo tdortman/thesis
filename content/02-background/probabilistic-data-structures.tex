@@ -128,6 +128,8 @@ The Cuckoo filter, introduced by Fan et al. \cite{og-cuckoo-filter}, is a probab
 
 First, instead of storing entire items, a Cuckoo filter only stores a small fingerprint for each item, which is a fixed-size sequence of bits derived from the item's hash. This significantly reduces the memory footprint. A direct consequence, however, is that traditional rehashing is not an option, as the original items are not available to be re-inserted. Therefore, the filter's size and parameters are typically static once it is created.
 
+To further maximize space efficiency, the filter is structured as an array of buckets. Rather than mapping an item to a single slot, each index in the array corresponds to a bucket capable of holding a fixed number of fingerprints, denoted as $b$ (typically $b=4$). This design allows the filter to achieve high load factors by reducing the probability of insertion failures caused by collisions, a significant improvement over the $\approx 50\%$ limit of standard Cuckoo hashing with single-item slots.
+
 Second, it replaces the standard Cuckoo hashing scheme with partial-key Cuckoo hashing. This clever technique establishes a dependency between the two potential bucket locations and the item's fingerprint. A single hash function is used to compute an initial location $i_1$ and a fingerprint $fp$. The alternate location $i_2$ is then derived using the XOR operation:
 
 \begin{equation}
