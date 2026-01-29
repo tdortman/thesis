@@ -13,7 +13,7 @@ The \texttt{bucketSize} parameter, defining the number of fingerprints stored in
 
 \subsubsection{Optimal Configuration}
 
-The experiments in Figure \ref{fig:bucket-size} identify distinct optimal configurations for insertion and lookup operations depending on the working set size:
+The experiments in Figure \ref{fig:bucket-size} identify distinct optimal configurations for insertion and lookup operations depending on the working set size. Note that deletion is not included in this section, as its memory access pattern (sequentially loading 64-bit atomic words) is identical to insertion.
 
 \begin{itemize}
   \item \textbf{Insertion}: A bucket size of 16 fingerprints was found to be the fastest configuration in all tested scenarios. This size appears to offer the optimal trade-off, providing enough slots to minimize eviction chains without incurring the bandwidth penalty of multi-cache-line fetches.

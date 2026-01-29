@@ -1,9 +1,9 @@
 \section{IPC Wrapper}
 \label{sec:implementation:ipc-wrapper}
 
-To allow the GPU-accelerated Cuckoo filter to be used as a high-performance, system-wide service, an IPC wrapper was developed. This wrapper exposes the filter's functionality through a client-server architecture, with a core focus on enabling true zero-copy data transfer for maximum efficiency.
+To allow the GPU-accelerated Cuckoo filter to be used as a high-performance, system-wide service, an IPC wrapper was developed. This wrapper exposes the filter's functionality through a client-server architecture, with a core focus on enabling zero-copy data transfer for maximum efficiency.
 
-The architecture is built upon two primary mechanisms: a shared memory queue for communication and CUDA's IPC API for data access. A fixed-size ring buffer, chosen for its superior performance and simplicity, is created in a POSIX shared memory segment to act as a command queue. The key is how input data is handled. Instead of sending buffers through the queue, a client performs the following steps:
+The architecture is built upon two mechanisms: a shared memory queue for communication and CUDA's IPC API for data access. A fixed-size ring buffer, chosen for its superior performance and simplicity, is created in a POSIX shared memory segment to act as a command queue. The key is how input data is handled. Instead of sending buffers through the queue, a client performs the following steps:
 
 \begin{enumerate}
   \item Allocate memory in its own GPU memory space for the batch of items to be processed.

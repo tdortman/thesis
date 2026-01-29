@@ -8,7 +8,7 @@ To handle datasets that exceed the memory capacity of a single graphics card, a 
 
 The core design choice was to instantiate a completely independent Cuckoo filter instance on each GPU, each managing its own dedicated device memory. While a single, logically distributed filter was considered, the practical overhead of managing eviction chains across the high-latency interconnect between GPUs was deemed prohibitive, as it would severely compromise insertion performance.
 
-To distribute items across these independent filters, a deterministic partitioning scheme is used. Each key is assigned to a specific GPU based on the result of $\mathrm{hash}(key) \bmod n$, where $n$ is the number of GPUs. While a uniform hash function would ideally distribute keys evenly, minor variances are expected in practice. To account for this and prevent premature insertion failures on one device, each GPU's filter is allocated slightly more capacity (2\%) than its proportional share.
+To distribute items across these independent filters, a deterministic partitioning scheme is used. Each key is assigned to a specific GPU based on the result of $\mathrm{hash}(key) \bmod n$, where $n$ is the number of GPUs. While a uniform hash function would ideally distribute keys perfectly evenly, minor variances are expected in practice. To account for this and prevent premature insertion failures on one device, each GPU's filter is allocated slightly more capacity (2\%) than its proportional share.
 
 \subsection{Data Distribution and Processing}
 \label{sec:implementation:multi-gpu-distribution}

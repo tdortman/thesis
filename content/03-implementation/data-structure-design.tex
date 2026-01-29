@@ -37,7 +37,7 @@ The filter's primary data storage is a single, contiguous array of fixed-size bu
   \item Fingerprints (tags) are tightly packed within these 64-bit words. For example, a 64-bit word can hold eight 8-bit fingerprints or four 16-bit fingerprints.
 \end{itemize}
 
-While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off. Figure \ref{fig:memory-layout} visualizes this hierarchical memory organization.
+While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off. Figure \ref{fig:memory-layout} visualizes this hierarchical memory layout.
 
 \input{content/03-implementation/figures/memory-layout}
 
@@ -45,12 +45,10 @@ Furthermore, this enables the use of SWAR (SIMD Within A Register) techniques. E
 
 The filter's state is maintained by a single global atomic counter that tracks the total number of occupied slots. This counter resides in device memory and is updated atomically by the insertion and deletion kernels. Its value is only lazily copied to the host when an explicit query is made, minimizing host-device communication.
 
-Due to a limitation of CUDA C++ where kernels cannot be class members, the implementation passes a pointer to the filter's class instance to each launched kernel. This allows the threads to access the filter's configuration and state, such as data pointers and capacity, as needed.
-
 \subsection{Public API}
 \label{sec:implementation:api}
 
-The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a traditional C-style API that operates on raw device pointers and item counts, and, as well as a set of convenience wrappers that accept \texttt{thrust::device\_vector} objects.
+The filter exposes a comprehensive public interface for easy integration. Two sets of APIs are provided: a traditional C-style API that operates on raw device pointers and item counts, and, as well as a set of overloaded methods that accept \texttt{thrust::device\_vector} objects.
 
 \subsubsection{Initialization}
 
@@ -76,7 +74,7 @@ size_t insertManySorted(const T* d_keys, const size_t n,
                         bool* d_output = nullptr)
 \end{verbatim}
 
-To address the performance penalties of random memory access, this variant introduces a pre-sorting step. The algorithm computes bucket indices and fingerprints, packs them, and sorts them via CUB's radix sort before insertion begins. This ensures that consecutive threads target contiguous memory regions. While this strategy can yield performance gains for massive datasets by minimizing DRAM transaction overhead, the added computational cost of sorting makes it less efficient for smaller filters that already fit within the GPU cache.
+To address the performance penalties of random memory access, this variant introduces a pre-sorting step. The algorithm computes bucket indices and fingerprints, packs them, and sorts them before insertion begins. This ensures that consecutive threads target contiguous memory regions.
 
 \subsubsection{Batch Lookup}
 

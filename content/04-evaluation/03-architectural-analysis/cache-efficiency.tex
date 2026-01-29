@@ -1,7 +1,7 @@
 \subsection{Cache Efficiency}
 \label{sec:eval:cache}
 
-To understand how each filter interacts with the GPU's memory hierarchy, the L1 and L2 cache hit rates were measured by profiling the relevant kernels using NVIDIA Nsight Compute (ncu) on System B. While cache hit rate is not a direct proxy for overall throughput, it provides crucial insight into the memory access patterns and architectural bottlenecks of each implementation. The results for Insert, Query, and Delete operations are presented in Figures \ref{fig:cache-l1} and \ref{fig:cache-l2}.
+To understand how each filter interacts with the GPU's memory hierarchy, the L1 and L2 cache hit rates were measured by profiling the relevant kernels using NVIDIA Nsight Compute (ncu) on System B. While cache hit rate is not a direct proxy for overall throughput, it provides insight into the memory access patterns and architectural bottlenecks of each implementation. The results for Insert, Query, and Delete operations are presented in Figures \ref{fig:cache-l1} and \ref{fig:cache-l2}.
 
 \subsubsection{L1 Cache Analysis}
 A consistent trend across all operations is the exceptionally high L1 hit rate (near 100\%) for both the TCF and the GQF.
@@ -10,7 +10,7 @@ The TCF achieves this through a specific staging strategy. It utilizes cooperati
 
 In contrast, the GQF achieves high L1 efficiency through extreme spatial and temporal locality. The implementation assigns individual threads to manage specific, contiguous regions of the filter. As a thread performs operations such as linear probing or shifting elements within a run, it repeatedly accesses the same small range of global memory addresses. This high reuse frequency ensures that the relevant cache lines remain resident in L1, resulting in a high hit rate despite operating directly on global memory.
 
-The Cuckoo filter, conversely, exhibits a moderate L1 hit rate (typically between 30\% and 60\%). This reflects its reliance on random hashing. While some lookups within the same bucket may be served by the L1 cache, the fundamental algorithm requires threads to jump to arbitrary locations in global memory. These random accesses frequently miss the L1 cache, preventing the near-perfect rates seen in the locality-optimized implementations.
+The Cuckoo filter, conversely, exhibits a moderate L1 hit rate (typically between 30\% and 60\%). While some lookups within the same bucket may be served by the L1 cache, the fundamental algorithm requires threads to jump to arbitrary locations in global memory. These random accesses frequently miss the L1 cache, preventing the near-perfect rates seen in the locality-optimized implementations.
 
 \begin{figure}[htbp]
   \centering

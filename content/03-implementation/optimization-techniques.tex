@@ -6,7 +6,7 @@ Beyond the core algorithm design, some noteworthy optimization strategies were e
 \subsection{Sorted Insertion}
 \label{sec:implementation:optimisation-techniques:sorted}
 
-One version of the insertion algorithm was implemented to enhance memory locality. Before the main insertion kernel is launched, the items are first packed into a temporary structure where the upper bits represent the primary bucket index and the lower bits contain the fingerprint. This array is then sorted in parallel on the GPU using CUB's high-performance radix sort. Doing this ensures that consecutive threads in the subsequent insertion kernel are likely to be working on items that map to the same or nearby buckets. This approach led to a measurable performance increase once the filter size far exceeded the GPU's L2 cache and memory bandwidth is not abundant, as the random memory accesses of the standard approach were more heavily penalized. However, for filters that fit entirely within the L2 cache (which has a hit rate of over 90\% in these cases), the overhead of the initial packing and sorting pass made this version considerably slower and not worth using (see Section \ref{sec:eval:sorted-insertion}).
+One version of the insertion algorithm was implemented to enhance memory locality. Before the main insertion kernel is launched, the items are first packed into a temporary structure where the upper bits represent the primary bucket index and the lower bits contain the fingerprint. This array is then sorted in parallel on the GPU using CUB's high-performance radix sort. Doing this ensures that consecutive threads in the subsequent insertion kernel are likely to be working on items that map to the same or nearby buckets. This approach led to a measurable performance increase once the filter size far exceeded the GPU's L2 cache and memory bandwidth is not abundant, as the random memory accesses of the standard approach were more heavily penalized. However, for filters that fit entirely within the L2 cache, the overhead of the initial packing and sorting pass made this version considerably slower and not worth using (see Section \ref{sec:eval:sorted-insertion}).
 
 \subsection{Alternative Eviction Strategy}
 \label{sec:implementation:optimisation-techniques:eviction}
@@ -16,7 +16,7 @@ The standard eviction process uses a greedy, depth-first-search (DFS) approach, 
 \subsection{Flexible Bucket Placement Policies}
 \label{sec:implementation:optimisation-techniques:bucket-policies}
 
-The standard partial-key cuckoo hashing scheme relies on the XOR operation to determine alternate bucket locations $(i_2 = i_1 \oplus hash(fp))$. For this bijective property to map validly onto the buckets, the number of them must strictly be a power of two. This constraint introduces a significant memory footprint issue: if a dataset requires slightly more capacity than $2^n$, the filter must be sized to $2^{n+1}$, resulting in nearly 50\% higher memory usage in the worst case.
+The standard partial-key cuckoo hashing scheme relies on the XOR operation to determine alternate bucket locations $(i_2 = i_1 \oplus hash(fp))$. For this to map validly onto the buckets, the number of them must strictly be a power of two \cite{cuckoo-false-negatives}. This constraint introduces a significant memory footprint issue: if a dataset requires slightly more capacity than $2^n$, the filter must be sized to $2^{n+1}$, resulting in nearly 50\% higher memory usage in the worst case.
 
 To mitigate this over-provisioning, two alternative bucket placement policies were implemented. These strategies allow for more granular sizing of the filter, decoupling the capacity from powers of two.
 
@@ -37,13 +37,13 @@ This arithmetic symmetry replaces the bitwise symmetry of XOR, allowing the filt
 The second policy, derived from the work of Schmitz et al. \cite{smaller-cuckoo-filter}, uses an asymmetric offset combined with a "choice bit". In this scheme, one bit of the stored fingerprint is reserved to indicate whether the item is currently in its primary or alternate location.
 
 \begin{itemize}
-  \item If the choice bit is 0, the item is in its primary bucket $b$. The alternate bucket is calculated as:
+  \item If the choice bit is 0, the item is in its primary bucket $i_1$. The alternate bucket is calculated as:
     \[
-      b' = (b + \text{offset}(fp)) \bmod m
+      i_2 = (i_1 + \text{offset}(fp)) \bmod m
     \]
-  \item If the choice bit is 1, the item is in its alternate bucket $b'$. The primary bucket is calculated as:
+  \item If the choice bit is 1, the item is in its alternate bucket $i_2$. The primary bucket is calculated as:
     \[
-      b = (b' - \text{offset}(fp)) \bmod m
+      i_1 = (i_2 - \text{offset}(fp)) \bmod m
     \]
 \end{itemize}
 

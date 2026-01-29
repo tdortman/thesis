@@ -9,10 +9,10 @@ To evaluate the filter's ability to scale beyond a single device, a specific set
 For the evaluation of multi-device scalability, the experimental setup was expanded with a fourth hardware configuration representing a high-end enterprise cluster node:
 
 \begin{itemize}
-	\item \textbf{System D (HBM2e/NVLink)}: An AMD EPYC 7713 (64 cores) paired with $8\times$ NVIDIA A100-SXM4 GPUs, each featuring 80 GB of HBM2e memory ($\approx$ 2 TB/s bandwidth). The GPUs are interconnected via NVLink 3.0, providing a total aggregate bandwidth of 600 GB/s. The system runs AlmaLinux 8.10 with NVIDIA driver 580.95.05 and CUDA 12.8.61.
+	\item \textbf{System D (HBM2E/NVLink)}: An AMD EPYC 7713 (64 cores) paired with $8\times$ NVIDIA A100-SXM4 GPUs, each featuring 80 GB of HBM2E memory ($\approx$ 2 TB/s bandwidth). The GPUs are interconnected via NVLink 3.0, providing an aggregate bandwidth of 600 GB/s. The system runs AlmaLinux 8.10 with NVIDIA driver 580.95.05 and CUDA 12.8.61.
 \end{itemize}
 
-Unlike the PCIe-based tests performed on Systems A, B, and C, this configuration allows the Gossip library to leverage the high-bandwidth NVLink interconnect for the All-to-All data exchange, significantly reducing the communication latency during the partitioning phase.
+This configuration allows the Gossip library to leverage the high-bandwidth NVLink interconnect for the All-to-All data exchange, significantly reducing the communication latency during the partitioning phase.
 
 \subsubsection{Strong Scaling}
 \label{sec:eval:multigpu:strong}
@@ -48,7 +48,7 @@ Weak scaling measures how throughput changes as the number of GPUs increases whi
 
 Figure \ref{fig:multigpu-weak} illustrates the results:
 \begin{itemize}
-	\item \textbf{Sub-linear Scaling}: While total throughput increases with more GPUs, it does not scale linearly. At 8 GPUs (processing $4\times$ the data of 2 GPUs), the system achieves roughly $1.95\times$ the query/delete throughput and only $1.2\times$ the insertion throughput.
+	\item \textbf{Sub-linear Scaling}: While total throughput increases with more GPUs, it does not scale linearly. At 8 GPUs, the system achieves roughly $1.95\times$ the query/delete throughput and only $1.2\times$ the insertion throughput.
 
 	\item \textbf{Communication Bottleneck}: This behaviour confirms that even with NVLink, the system is bottlenecked by the interconnect. In a distributed Cuckoo filter, every GPU must communicate with every other GPU. As the number of GPUs increases, the density of the All-to-All communication pattern grows, introducing latency that limits the aggregate throughput.
 \end{itemize}

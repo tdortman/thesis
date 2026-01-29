@@ -4,7 +4,7 @@
 The evaluation yielded significant insight regarding the interaction between AMQ data structures and modern GPU architectures:
 
 \begin{itemize}
-  \item \textbf{Memory Bandwidth Scalability}: The Cuckoo filter is primarily memory-bound. Unlike the Two-Choice Filter or Quotient Filter, which are limited by shared memory latency and compute overhead, the Cuckoo filter's throughput scales linearly with global memory bandwidth. This makes it uniquely positioned to benefit from hardware advancements like HBM3e and HBM4.
+  \item \textbf{Memory Bandwidth Scalability}: The Cuckoo filter is primarily memory-bound. Unlike the Two-Choice Filter or Quotient Filter, which are limited by shared memory latency and compute overhead, the Cuckoo filter's throughput scales linearly with global memory bandwidth. This makes it uniquely positioned to benefit from hardware advancements like HBM3E and HBM4.
 
   \item \textbf{The Cost of False Positives}: While the implementation achieves extremely high throughput, this comes at a cost. To maximize insertion speed, the filter utilizes larger buckets, which increases the false positive rate compared to CPU-based implementations (0.045\% vs 0.005\%). However, this trade-off allows the filter to handle billions of mutations per second, a feat unreachable by CPU-based alternatives.
 

@@ -1,12 +1,14 @@
 \section{Summary of Contributions}
 \label{sec:conclusion:summary}
 
-This thesis presented the design, implementation, and evaluation of a high-performance Cuckoo filter accelerated by Graphics Processing Units. The primary motivation was to address the performance gap between append-only probabilistic data structures, like the Bloom filter, and dynamic ones needed for high-churn applications.
+This thesis presented the design, implementation, and evaluation of a high-performance Cuckoo filter accelerated by Graphics Processing Units. While the initial objective was simply to achieve a significant speedup over traditional CPU-based implementations, the efficiency of the proposed parallel algorithms prompted a change in goals. The focus expanded to a new target: challenging the throughput dominance of append-only filters.
+
+The resulting work demonstrates that the trade-off between dynamic capabilities and raw performance is not inevitable. By effectively closing the gap with the Blocked Bloom filter, this thesis establishes that dynamic, deletable filters can be deployed in high-throughput environments without becoming a system bottleneck.
 
 The key contributions of this work are:
 
 \begin{itemize}
-  \item \textbf{High-Performance CUDA Library}: A robust, header-only CUDA library was developed. This library encapsulates the parallel algorithms for insertion, lookup, and deletion, abstracting the complexity of GPU memory management and atomic synchronization. It provides a flexible, template-based C++ interface that allows users to configure critical parameters at compile time for maximum efficiency.
+  \item \textbf{High-Performance CUDA Library}: A robust, header-only CUDA library was developed. This library encapsulates the parallel algorithms for insertion, lookup, and deletion, abstracting the complexity of GPU memory management and atomic synchronization. It allows users to configure parameters at compile time for maximum efficiency.
 
   \item \textbf{Architectural Optimization}: The Cuckoo filter was tuned for GPU hardware, identifying a bucket size of 16 as the optimal trade-off between memory bandwidth utilization and eviction complexity as well as supporting wider memory loads for the latest Blackwell GPUs.
 
