@@ -6,7 +6,7 @@ This thesis presents a comprehensive study on accelerating probabilistic data st
 \begin{itemize}
   \item \textbf{High-Performance CUDA Library}: The design and implementation of a parallel Cuckoo filter supporting insertion, lookup, and deletion are presented. The source code is available as an open-source header-only library.\footnote{Available at: \url{https://github.com/tdortman/cuckoo-filter/}}
 
-  \item \textbf{Advanced Optimization Techniques}: Several optimization strategies are explored and evaluated to maximize occupancy and memory bandwidth. These include a sorted-insertion algorithm to improve memory locality, a modified eviction strategy designed to reduce the number of random memory accesses at high load factors and the ability to swap out the original XOR-based partial-key cuckoo hashing for alternatives.
+  \item \textbf{Advanced Optimization Techniques}: Several optimization strategies are explored and evaluated to maximize occupancy and memory bandwidth. These include a sorted-insertion algorithm to improve memory locality, a modified eviction strategy designed to reduce the number of random memory accesses at high load factors and the ability to swap out the original XOR-based partial-key Cuckoo hashing for alternatives.
 
   \item \textbf{System-Level Integration Extensions}: Moving beyond a simple filter, two extensions are created to facilitate real-world adoption. First, an Inter-Process Communication (IPC) wrapper is developed to enable zero-copy sharing of the filter between processes. Second, a multi-GPU implementation is provided that transparently partitions data across multiple devices, allowing the filter to scale beyond the memory limits of a single card.
 

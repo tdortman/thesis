@@ -1,7 +1,7 @@
 \subsection{Impact of Bucket Policies}
 \label{sec:eval:bucket-policies}
 
-As detailed in Section \ref{sec:implementation:optimisation-techniques:bucket-policies}, the standard XOR-based partial-key cuckoo hashing imposes a strict power-of-two constraint on the number of buckets. While this allows for efficient bitwise arithmetic, it can lead to significant memory over-provisioning (up to 2$\times$) for datasets that do not align with powers of two.
+As detailed in Section \ref{sec:implementation:optimisation-techniques:bucket-policies}, the standard XOR-based partial-key Cuckoo hashing imposes a strict power-of-two constraint on the number of buckets. While this allows for efficient bitwise arithmetic, it can lead to significant memory over-provisioning (up to 2$\times$) for datasets that do not align with powers of two.
 
 To evaluate the cost of flexibility, the standard XOR policy was benchmarked against the AddSub (Additive/Subtractive) and Offset (Choice-bit) policies on System B with a fixed load factor of 95\%.
 

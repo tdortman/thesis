@@ -17,15 +17,15 @@ All performance tests use 16-bit fingerprints (with equivalent space allocation 
 To provide a comprehensive analysis, the proposed GPU Cuckoo filter is compared against the following data structures:
 
 \begin{itemize}
-  \item \textbf{GPU Blocked Bloom Filter}: Sourced from the \textit{cuCollections} library, serving as a high-performance baseline for an append-only filter. \cite{cuCollections}
+  \item \textbf{GPU Blocked Bloom filter}: Sourced from the \textit{cuCollections} library, serving as a high-performance baseline for an append-only filter. \cite{cuCollections}
 
-  \item \textbf{Original CPU Cuckoo Filter}: The reference implementation from the original 2014 paper by Fan et al. \cite{og-cuckoo-filter}.
+  \item \textbf{Original CPU Cuckoo filter}: The reference implementation from the original 2014 paper by Fan et al. \cite{og-cuckoo-filter}.
 
-  \item \textbf{Partitioned CPU Cuckoo Filter}: A variant \cite{partitioned-cuckoo} utilizing multithreading (one thread per partition) to maximize CPU throughput without the overhead of SIMD instructions, which were found to degrade performance in this specific context. Note that this filter was excluded from the System B (ARM-based) benchmarks, as it has a hard dependency on x86-64 intrinsics that prevents compilation.
+  \item \textbf{Partitioned CPU Cuckoo filter}: A variant \cite{partitioned-cuckoo} utilizing multithreading (one thread per partition) to maximize CPU throughput without the overhead of SIMD instructions, which were found to degrade performance in this specific context. Note that this filter was excluded from the System B (ARM-based) benchmarks, as it has a hard dependency on x86-64 intrinsics that prevents compilation.
 
-  \item \textbf{Bulk Two-Choice Filter (TCF)}: A modern, GPU-focused AMQ data structure that serves as a direct competitor. \cite{tcf}
+  \item \textbf{Bulk Two-Choice filter (TCF)}: A modern, GPU-focused AMQ data structure that serves as a direct competitor. \cite{tcf}
 
-  \item \textbf{GPU Counting Quotient Filter (GQF)}: A highly space-efficient probabilistic data structure sourced from the same study as the TCF. This implementation supports counting and resizing on top of the other operations. \cite{tcf}
+  \item \textbf{GPU Counting Quotient filter (GQF)}: A highly space-efficient probabilistic data structure sourced from the same study as the TCF. This implementation supports counting and resizing on top of the other operations. \cite{tcf}
 \end{itemize}
 
 \subsubsection{Evaluation Metrics}

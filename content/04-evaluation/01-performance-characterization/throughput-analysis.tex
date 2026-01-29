@@ -43,7 +43,7 @@ The Cuckoo filter exhibits a distinct performance profile based on the query res
 \subsubsection{Deletion Performance}
 \label{sec:eval:throughput:deletion}
 
-Deletion performance (Figure \ref{fig:delete-perf}) illustrates the most significant advantage of the GPU Cuckoo filter. Note that the Partitioned CPU Cuckoo Filter is excluded from this comparison, as its reference implementation does not support item deletion.
+Deletion performance (Figure \ref{fig:delete-perf}) illustrates the most significant advantage of the GPU Cuckoo filter. Note that the Partitioned CPU Cuckoo filter is excluded from this comparison, as its reference implementation does not support item deletion.
 
 \begin{figure}[htpb]
   \centering
@@ -57,7 +57,7 @@ Deletion performance (Figure \ref{fig:delete-perf}) illustrates the most signifi
 \textbf{DRAM-Resident}: Here, this gap narrows as global memory latency becomes the dominant factor, yet the Cuckoo filter retains its leadership. It performs $35.3\times$ faster than the TCF and $3.8\times$ faster than the GQF. The advantage over the CPU remains massive, with a $559\times$ speedup. Despite the narrowing gap, the Cuckoo filter remains the fastest option due to fundamental algorithmic differences:
 
 \begin{itemize}
-  \item \textbf{Cuckoo Filter}: Deletion is a simple, localized atomic operation (CAS).
+  \item \textbf{Cuckoo filter}: Deletion is a simple, localized atomic operation (CAS).
   \item \textbf{GQF}: Requires shifting elements within a run to maintain sorted order. While efficient in bulk, this serial operation limits peak throughput.
   \item \textbf{TCF}: Requires complex coordination within cooperative groups to update block state, which scales poorly compared to independent atomic accesses.
 \end{itemize}

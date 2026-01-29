@@ -103,7 +103,6 @@
       \node[below=2pt of fp\i, font=\tiny, text=gray] (idx\i) {\range};
     }
 
-
     \begin{scope}[on background layer]
       % Zoom 1: Bucket -> Words
       \fill[activeFill!80] (b2.south west) -- (w0.north west) -- (w3.north east) -- (b2.south east) -- cycle;
@@ -117,6 +116,6 @@
     \end{scope}
 
   \end{tikzpicture}
-  \caption{Memory Layout of the Cuckoo Filter. Data is hierarchically structured from Buckets to Words, with fingerprints tightly packed into 64-bit words (here 8-bit fingerprints).}
+  \caption{Memory Layout of the Cuckoo filter. Data is hierarchically structured from Buckets to Words, with fingerprints tightly packed into 64-bit words (here 8-bit fingerprints).}
   \label{fig:memory-layout}
 \end{figure}
