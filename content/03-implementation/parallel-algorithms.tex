@@ -25,28 +25,28 @@ To maintain an accurate count of the total items in the filter without creating 
   \caption{Parallel Insertion}
   \label{alg:parallel-insertion}
   \begin{algorithmic}[1]
-    \Function{Insert}{key}
-      \State $h \gets \mathrm{hash}(\text{key})$
-      \State $fp \gets \mathrm{fingerprint}(h)$
-      \State $i_1 \gets \mathrm{primary\_index}(h)$
-      \State $i_2 \gets \mathrm{alternate\_index}(i_1, fp)$
+    \Function{Insert}{\texttt{key}}
+      \State \texttt{h} $\gets$ \Call{Hash}{\texttt{key}}
+      \State \texttt{fp} $\gets$ \Call{Fingerprint}{\texttt{h}}
+      \State $i_1$ $\gets$ \Call{PrimaryIndex}{\texttt{h}}
+      \State $i_2$ $\gets$ \Call{AlternateIndex}{$i_1$, \texttt{fp}}
 
-      \LComment{Phase 1: Try direct insertion using SWAR}
-      \If{\Call{TryInsert}{$i_1$, $fp$} \textbf{or} \Call{TryInsert}{$i_2$, $fp$}}
+      \LComment{Phase 1: Try direct insertion}
+      \If{\Call{TryInsert}{$i_1$, \texttt{fp}} \textbf{or} \Call{TryInsert}{$i_2$, \texttt{fp}}}
         \State \textbf{return} \texttt{Success}
       \EndIf
 
       \LComment{Phase 2: Eviction Chain}
-      \State $b \gets$ randomly pick $i_1$ or $i_2$
-      \State $\text{tag} \gets fp$
+      \State \texttt{b} $\gets$ randomly pick $i_1$ or $i_2$
+      \State \texttt{tag} $\gets$ \texttt{fp}
 
-      \For{$n = 1$ \textbf{to} \text{maxEvictions}}
-        \State $s \gets$ random slot index in bucket $b$
+      \For{\texttt{n} $= 1$ \textbf{to} \texttt{maxEvictions}}
+        \State \texttt{s} $\gets$ random slot index in bucket \texttt{b}
         \LComment{Atomically swap current tag with new tag}
-        \State $\text{tag} \gets \text{AtomicExchange}(\text{bucket}[b].\text{slot}[s],\ \text{tag})$
-        \State $b \gets \text{alternate\_index}(b, \text{tag})$
+        \State \texttt{tag} $\gets$ \Call{AtomicExchange}{\texttt{bucket}[\texttt{b}].\texttt{slot}[\texttt{s}], \texttt{tag}}
+        \State \texttt{b} $\gets$ \Call{AlternateIndex}{\texttt{b}, \texttt{tag}}
 
-        \If{\Call{TryInsert}{bucket $b$, \text{tag}}}
+        \If{\Call{TryInsert}{\texttt{bucket}[\texttt{b}], \texttt{tag}}}
           \State \textbf{return} \texttt{Success}
         \EndIf
       \EndFor
@@ -57,20 +57,23 @@ To maintain an accurate count of the total items in the filter without creating 
     \EndFunction
     \Statex
    \Function{TryInsert}{bucket, tag}
-      \State $start \gets (\text{tag} \bmod \text{bucketSize}) / \text{tagsPerWord}$
-      \For{$i = 0$ \textbf{to} $\text{wordCount} - 1$}
-        \State $idx \gets (start + i) \bmod \text{wordCount}$
-        \State \texttt{word} $\gets$ \texttt{bucket}[idx]
+      \State \texttt{start} $\gets$ (\texttt{tag} $\bmod$ \texttt{bucketSize}) / \texttt{tagsPerWord}
 
-        \While{\texttt{word} has empty slots}
-          \State \texttt{slot} $\gets$ \Call{FindNextEmpty}{\texttt{word}}
-          \If{\text{AtomicCAS}(\texttt{word}, \texttt{EMPTY} $\to$ \texttt{tag} at \texttt{slot})}
-            \State \textbf{return} \texttt{True}
+      \For{\texttt{i} $= 0$ \textbf{to} \texttt{wordsPerBucket} $- 1$}
+        \State \texttt{idx} $\gets$ (\texttt{start} $+$ \texttt{i}) $\bmod$ \texttt{wordsPerBucket}
+        \State \texttt{word} $\gets$ \texttt{bucket}[\texttt{idx}]
+        \State \texttt{mask} $\gets$ \Call{ZeroMask}{\texttt{word}}
+
+        \While{\texttt{mask} is not 0}
+          \State \texttt{slot} $\gets$ \Call{FindFirstSet}{\texttt{mask}}
+          \If{\Call{AtomicCAS}{\&\texttt{slot}, \texttt{EMPTY}, \texttt{tag}}}
+            \State \textbf{return} \texttt{Success}
           \EndIf
           \State Reload \texttt{word}
+          \State \texttt{mask} $\gets$ \Call{ZeroMask}{\texttt{word}}
         \EndWhile
       \EndFor
-      \State \textbf{return} \texttt{False}
+      \State \textbf{return} \texttt{Failure}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
@@ -90,26 +93,26 @@ The key optimization is vectorized, non-atomic memory loads combined with SWAR c
   \caption{Parallel Lookup}
   \label{alg:parallel-lookup}
   \begin{algorithmic}[1]
-    \Function{Contains}{key}
-      \State $h \gets \mathrm{hash}(\text{key})$
-      \State $fp \gets \mathrm{fingerprint}(h)$
-      \State $i_1 \gets \mathrm{primary\_index}(h)$
-      \State $i_2 \gets \mathrm{alternate\_index}(i_1, fp)$
+    \Function{Contains}{\texttt{key}}
+      \State \texttt{h} $\gets$ \Call{Hash}{\texttt{key}}
+      \State \texttt{fp} $\gets$ \Call{Fingerprint}{\texttt{h}}
+      \State $i_1$ $\gets$ \Call{PrimaryIndex}{\texttt{h}}
+      \State $i_2$ $\gets$ \Call{AlternateIndex}{$i_1$, \texttt{fp}}
 
       \LComment{Check both buckets (read-only, no locking needed)}
-      \State \textbf{return} \Call{Find}{$i_1$, $fp$} \textbf{or} \Call{Find}{$i_2$, $fp$}
+      \State \textbf{return} \Call{Find}{$i_1$, \texttt{fp}} \textbf{or} \Call{Find}{$i_2$, \texttt{fp}}
     \EndFunction
     \Statex
-    \Function{Find}{bucket, tag}
-      \State \texttt{pattern} $\gets$ \Call{BroadcastTag}{tag}
+    \Function{Find}{\texttt{bucket}, \texttt{tag}}
+      \State \texttt{pattern} $\gets$ \Call{BroadcastTag}{\texttt{tag}}
 
       \LComment{Random start index aligned to 128-bit boundary}
-      \State $start \gets (\text{tag} \bmod \text{bucketSize}) / \text{tagsPerWord}$
-      \State $start \gets \text{FloorToEven}(start)$
+      \State \texttt{start} $\gets$ (\texttt{tag} $\bmod$ \texttt{bucketSize}) / \texttt{tagsPerWord}
+      \State \texttt{start} $\gets$ \Call{FloorToEven}{\texttt{start}}
 
-      \For{$i = 0$ \textbf{to} $\text{wordCount} - 1$ \textbf{step} 2}
-        \State $idx \gets (start + i) \bmod \text{wordCount}$
-        \State $w_1, w_2 \gets$ \Call{LoadWords}{bucket, $idx$}
+      \For{\texttt{i} $= 0$ \textbf{to} \texttt{wordsPerBucket} $- 1$ \textbf{step} $2$}
+        \State \texttt{idx} $\gets$ (\texttt{start} $+$ \texttt{i}) $\bmod$ \texttt{wordsPerBucket}
+        \State $w_1$, $w_2$ $\gets$ \Call{LoadWords}{\texttt{bucket}, \texttt{idx}}
 
         \LComment{Use SWAR to check for matches in parallel}
         \If{\Call{HasZeroByte}{$w_1 \oplus \texttt{pattern}$} \textbf{or} \Call{HasZeroByte}{$w_2 \oplus \texttt{pattern}$}}
@@ -136,35 +139,37 @@ The thread broadcasts the target tag and uses SWAR to find matches. If a match i
   \caption{Parallel Deletion}
   \label{alg:parallel-deletion}
   \begin{algorithmic}[1]
-    \Function{Remove}{key}
-      \State $h \gets \mathrm{hash}(\text{key})$
-      \State $fp \gets \mathrm{fingerprint}(h)$
-      \State $i_1 \gets \mathrm{primary\_index}(h)$
-      \State $i_2 \gets \mathrm{alternate\_index}(i_1, fp)$
+    \Function{Remove}{\texttt{key}}
+      \State \texttt{h} $\gets$ \Call{Hash}{\texttt{key}}
+      \State \texttt{fp} $\gets$ \Call{Fingerprint}{\texttt{h}}
+      \State $i_1$ $\gets$ \Call{PrimaryIndex}{\texttt{h}}
+      \State $i_2$ $\gets$ \Call{AlternateIndex}{$i_1$, \texttt{fp}}
 
       \LComment{Attempt to remove from either valid location}
-      \State \textbf{return} \Call{Remove}{$i_1$, $fp$} \textbf{or} \Call{Remove}{$i_2$, $fp$}
+      \State \textbf{return} \Call{TryRemove}{$i_1$, \texttt{fp}} \textbf{or} \Call{TryRemove}{$i_2$, \texttt{fp}}
     \EndFunction
     \Statex
-    \Function{Remove}{bucket, targetTag}
-      \State $start \gets (\text{tag} \bmod \text{bucketSize}) / \text{tagsPerWord}$
+    \Function{TryRemove}{\texttt{bucket}, \texttt{targetTag}}
+      \State \texttt{start} $\gets$ (\texttt{tag} $\bmod$ \texttt{bucketSize}) / \texttt{tagsPerWord}
 
-      \For{$i = 0$ \textbf{to} $\text{wordCount} - 1$}
-        \State $idx \gets (start + i) \bmod \text{wordCount}$
-        \State \texttt{word} $\gets$ \texttt{bucket}[idx]
-        \State \texttt{mask} $\gets$ \Call{SWAR\_Match}{\texttt{word}, \texttt{targetTag}}
+      \State \texttt{pattern} $\gets$ \Call{BroadcastTag}{\texttt{targetTag}}
+
+      \For{\texttt{i} $= 0$ \textbf{to} \texttt{wordsPerBucket} $- 1$}
+        \State \texttt{idx} $\gets$ (\texttt{start} $+$ \texttt{i}) $\bmod$ \texttt{wordsPerBucket}
+        \State \texttt{word} $\gets$ \texttt{bucket}[\texttt{idx}]
+        \State \texttt{mask} $\gets$ \Call{ZeroMask}{\texttt{word} $\oplus$ \texttt{pattern}}
 
         \While{\texttt{mask} is not 0}
            \State \texttt{slot} $\gets$ \Call{FindFirstSet}{\texttt{mask}}
 
            \LComment{Attempt to atomically set specific slot to EMPTY}
-           \If{\text{AtomicCAS}(\texttt{word}, \texttt{targetTag} $\to$ \texttt{EMPTY} at \texttt{slot})}
+           \If{\Call{AtomicCAS}{\&\texttt{slot}, \texttt{targetTag}, \texttt{EMPTY}}}
              \State \textbf{return} \texttt{Success}
            \EndIf
 
            \LComment{Reload and re-check if CAS failed}
            \State Reload \texttt{word}
-           \State \texttt{mask} $\gets$ \Call{SWAR\_Match}{\texttt{word}, \texttt{targetTag}}
+           \State \texttt{mask} $\gets$ \Call{ZeroMask}{\texttt{word} $\oplus$ \texttt{pattern}}
         \EndWhile
       \EndFor
       \State \textbf{return} \texttt{Failure}

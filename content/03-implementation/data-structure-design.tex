@@ -41,7 +41,7 @@ While this packed layout necessitates the use of bitwise shift and mask operatio
 
 \input{content/03-implementation/figures/memory-layout}
 
-Furthermore, this enables the use of SWAR (SIMD Within A Register) techniques. Empty slots can be detected directly via bitwise zero-detection, while tag matches are found by first replicating the query tag across a word, XOR-ing it with the packed tags, and applying the same zero-detection \cite{bit-twiddling-hacks}. This eliminates the need for branching loops when scanning slots within a word.
+Furthermore, this enables the use of SWAR (SIMD Within A Register) techniques. Empty slots can be detected directly via bitwise zero-detection, while tag matches are found by first broadcasting the query tag across a word, XOR-ing it with the packed tags, and applying the same zero-detection \cite{bit-twiddling-hacks}. This eliminates the need for branching loops when scanning slots within a word.
 
 The filter's state is maintained by a single global atomic counter that tracks the total number of occupied slots. This counter resides in device memory and is updated atomically by the insertion and deletion kernels. Its value is only lazily copied to the host when an explicit query is made, minimizing host-device communication.
 

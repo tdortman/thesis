@@ -139,3 +139,10 @@ MDCF
 SlimDB
 ethernet
 cuckooswitch
+&slot
+idx
+ZeroMask
+AlternateIndex
+PrimaryIndex
+FloorToEven
+wordsPerBucket
