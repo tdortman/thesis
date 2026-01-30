@@ -146,3 +146,8 @@ AlternateIndex
 PrimaryIndex
 FloorToEven
 wordsPerBucket
+&bucket
+wordIdx
+slotIdx
+ExtractTag
+&buckets
