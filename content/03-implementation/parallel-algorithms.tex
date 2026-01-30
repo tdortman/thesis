@@ -127,8 +127,9 @@ The key optimization is vectorized, non-atomic memory loads combined with SWAR c
         \State $w_1$, $w_2$ $\gets$ \Call{LoadWords}{\texttt{bucket}, \texttt{idx}}
 
         \LComment{Use SWAR to check for matches in parallel}
-        \If{\Call{HasZeroByte}{$w_1 \oplus \texttt{pattern}$} \textbf{or} \Call{HasZeroByte}{$w_2 \oplus \texttt{pattern}$}}
-          \State \textbf{return} \texttt{Success}
+        \If{\Call{HasZeroSegment}{$w_1 \oplus \texttt{pattern}$} \textbf{or} \\
+            \phantom{\textbf{if} }\Call{HasZeroSegment}{$w_2 \oplus \texttt{pattern}$} \\}
+          \State \hspace{-\algorithmicindent}\phantom{\textbf{if} }\textbf{return} \texttt{Success}
         \EndIf
       \EndFor
       \State \textbf{return} \texttt{Failure}
