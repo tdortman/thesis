@@ -4,9 +4,12 @@
 Despite the success of the implementation, certain limitations remain:
 
 \begin{itemize}
-  \item \textbf{Insertion Performance at Capacity}: As the filter approaches maximum capacity (over 95\%), the insertion throughput degrades significantly due to long eviction chains. While the BFS eviction policy helps with this, the fundamental algorithmic bottleneck persists.
+  \item \textbf{Insertion Performance at Capacity}: As the filter approaches maximum capacity (over 95\%), the insertion throughput degrades significantly due to long eviction chains.
+    While the BFS eviction policy helps with this, the fundamental algorithmic bottleneck persists.
 
-  \item \textbf{Insertion Failures}: Unlike a Bloom filter, which always accepts new items (at the cost of a rising false positive rate), a Cuckoo filter has a non-zero probability of failing to insert an item entirely. This requires the user to implement robust error handling, such as a fallback storage mechanism or a trigger to resize and rebuild the filter.
+  \item \textbf{Insertion Failures}: Unlike a Bloom filter, which always accepts new items (at the cost of a rising false positive rate), a Cuckoo filter has a non-zero probability of failing to insert an item entirely.
+    This requires the user to implement robust error handling, such as a fallback storage mechanism or a trigger to resize and rebuild the filter.
 
-  \item \textbf{False Positive Rate Flexibility}: The Cuckoo filter's error rate is constrained to discrete steps determined by the available integer widths (8, 16, or 32 bits). This lacks the fine-grained control of a Bloom filter, where the error rate can be adjusted arbitrarily by changing the number of hash functions.
+  \item \textbf{False Positive Rate Flexibility}: The Cuckoo filter's error rate is constrained to discrete steps determined by the available integer widths (8, 16, or 32 bits).
+    This lacks the fine-grained control of a Bloom filter, where the error rate can be adjusted arbitrarily by changing the number of hash functions.
 \end{itemize}

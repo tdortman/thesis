@@ -1,12 +1,21 @@
 \subsection{Hardware Utilization}
 \label{sec:eval:sol}
 
-To validate the architectural hypotheses regarding memory-bound versus compute-bound behaviour, the resource utilization of each filter was profiled using NVIDIA Nsight Compute just like in Section \ref{sec:eval:cache}. This analysis measures the achieved throughput as a percentage of the GPU's theoretical peak ("Speed of Light") for three critical subsystems: Compute (SM), Cache (L1/L2), and Global Memory (DRAM). The results are presented in Figures \ref{fig:sol-compute}, \ref{fig:sol-cache-l1}, \ref{fig:sol-cache-l2}, and \ref{fig:sol-dram}.
+To validate the architectural hypotheses regarding memory-bound versus compute-bound behaviour, the resource utilization of each filter was profiled using NVIDIA Nsight Compute just like in Section \ref{sec:eval:cache}.
+This analysis measures the achieved throughput as a percentage of the GPU's theoretical peak ("Speed of Light") for three critical subsystems: Compute (SM), Cache (L1/L2), and Global Memory (DRAM).
+The results are presented in Figures \ref{fig:sol-compute}, \ref{fig:sol-cache-l1}, \ref{fig:sol-cache-l2}, and \ref{fig:sol-dram}.
 
 \subsubsection{Compute Utilization}
-The SM throughput metrics, shown in Figure \ref{fig:sol-compute}, reveal distinct execution characteristics for the different algorithms. The Cuckoo and Blocked Bloom filters exhibit a characteristic "hump" profile. When the filter fits within the L2 cache (up to $2^{24}$ elements), compute utilization rises steadily as the execution is dominated by hash calculations and bitwise manipulation instructions. However, once the capacity exceeds the L2 limit, compute utilization drops sharply. This decline occurs because the SMs begin to stall while waiting for data from global memory, shifting the primary bottleneck from instruction throughput to memory latency.
+The SM throughput metrics, shown in Figure \ref{fig:sol-compute}, reveal distinct execution characteristics for the different algorithms.
+The Cuckoo and Blocked Bloom filters exhibit a characteristic "hump" profile.
+When the filter fits within the L2 cache (up to $2^{24}$ elements), compute utilization rises steadily as the execution is dominated by hash calculations and bitwise manipulation instructions.
+However, once the capacity exceeds the L2 limit, compute utilization drops sharply.
+This decline occurs because the SMs begin to stall while waiting for data from global memory, shifting the primary bottleneck from instruction throughput to memory latency.
 
-In contrast, the TCF shows a steady increase in compute utilization as the filter grows, eventually reaching high levels of SM saturation (up to 80\%). This confirms that the TCF is primarily compute-bound, spending the majority of its cycles executing cooperative group logic and sorting operations within shared memory rather than waiting on external memory. The GQF stands out for consistently low compute utilization, particularly for insertion and deletion. This suggests it is bottlenecked by neither pure compute throughput nor memory bandwidth, but likely by serialization latency within threads, such as branch divergence or dependency stalls.
+In contrast, the TCF shows a steady increase in compute utilization as the filter grows, eventually reaching high levels of SM saturation (up to 80\%).
+This confirms that the TCF is primarily compute-bound, spending the majority of its cycles executing cooperative group logic and sorting operations within shared memory rather than waiting on external memory.
+The GQF stands out for consistently low compute utilization, particularly for insertion and deletion.
+This suggests it is bottlenecked by neither pure compute throughput nor memory bandwidth, but likely by serialization latency within threads, such as branch divergence or dependency stalls.
 
 \begin{figure}[ht!]
   \centering
@@ -20,7 +29,8 @@ In contrast, the TCF shows a steady increase in compute utilization as the filte
 \subsubsection{Cache Throughput}
 The L1 and L2 cache throughput metrics (Figures \ref{fig:sol-cache-l1} and \ref{fig:sol-cache-l2}) mirror the cache hit rate findings from Section \ref{sec:eval:cache}.
 
-The Cuckoo and Blocked Bloom filters effectively utilize cache bandwidth up to the L2 capacity limit, after which throughput declines as requests miss to DRAM. In contrast, the TCF and GQF maintain slowly increasing cache throughput regardless of filter size, reinforcing that their working set for active operations remains largely resident in shared memory/L1.
+The Cuckoo and Blocked Bloom filters effectively utilize cache bandwidth up to the L2 capacity limit, after which throughput declines as requests miss to DRAM.
+In contrast, the TCF and GQF maintain slowly increasing cache throughput regardless of filter size, reinforcing that their working set for active operations remains largely resident in shared memory/L1.
 
 \begin{figure}[htbp]
   \centering
@@ -39,9 +49,16 @@ The Cuckoo and Blocked Bloom filters effectively utilize cache bandwidth up to t
 \FloatBarrier
 
 \subsubsection{DRAM Throughput}
-The DRAM throughput results, presented in Figure \ref{fig:sol-dram}, provide definitive confirmation of the scaling characteristics discussed in Section \ref{sec:eval:throughput}. For the Cuckoo and Blocked Bloom filters, DRAM utilization jumps significantly once the filter size exceeds the L2 cache limit. Notably, the Cuckoo filter's insert operation utilizes nearly 35\% of the peak DRAM bandwidth, while query operations reach over 60\%. This confirms that these algorithms are truly memory-bound for large datasets. Consequently, their performance is directly tied to the available memory bandwidth, ensuring they will continue to benefit from future hardware advancements like HBM3E and HBM4.
+The DRAM throughput results, presented in Figure \ref{fig:sol-dram}, provide definitive confirmation of the scaling characteristics discussed in Section \ref{sec:eval:throughput}.
+For the Cuckoo and Blocked Bloom filters, DRAM utilization jumps significantly once the filter size exceeds the L2 cache limit.
+Notably, the Cuckoo filter's insert operation utilizes nearly 35\% of the peak DRAM bandwidth, while query operations reach over 60\%.
+This confirms that these algorithms are truly memory-bound for large datasets.
+Consequently, their performance is directly tied to the available memory bandwidth, ensuring they will continue to benefit from future hardware advancements like HBM3E and HBM4.
 
-At the same time, the TCF and GQF show negligible DRAM utilization (near 0\%) for insertion and deletion operations, regardless of filter size. This effectively proves that these algorithms are unable to utilize the available global memory bandwidth. Their performance is strictly limited by the speed of the on-chip memory (SRAM). As a result, they are less likely to scale with future improvements in DRAM technology compared to the memory-hungry Cuckoo filter.
+At the same time, the TCF and GQF show negligible DRAM utilization (near 0\%) for insertion and deletion operations, regardless of filter size.
+This effectively proves that these algorithms are unable to utilize the available global memory bandwidth.
+Their performance is strictly limited by the speed of the on-chip memory (SRAM).
+As a result, they are less likely to scale with future improvements in DRAM technology compared to the memory-hungry Cuckoo filter.
 
 \begin{figure}[ht!]
   \centering

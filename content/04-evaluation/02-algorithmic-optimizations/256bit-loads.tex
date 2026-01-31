@@ -7,7 +7,8 @@ With the introduction of the NVIDIA Blackwell architecture (Compute Capability 1
 ld.global.nc.v4.u64 {%0, %1, %2, %3}, [%4];
 \end{verbatim}
 
-This instruction fetches four \texttt{uint64\_t} values in a single operation, bypassing the L1 cache to access the L2 cache or global memory directly. This reduces the total number of issued instructions required to fetch bucket data and lowers pressure on the instruction pipeline.
+This instruction fetches four \texttt{uint64\_t} values in a single operation, bypassing the L1 cache to access the L2 cache or global memory directly.
+This reduces the total number of issued instructions required to fetch bucket data and lowers pressure on the instruction pipeline.
 
 \subsubsection{Throughput Analysis}
 
@@ -23,9 +24,12 @@ Figure \ref{fig:256bit-loads} compares the query throughput of the standard 128-
 The results highlight two distinct scenarios:
 
 \begin{itemize}
-  \item \textbf{L2-Resident}: When the filter fits into the L2 cache (up until $2^{25}$ elements), the 256-bit implementation provides a consistent performance uplift of up to 18\%. By fetching entire buckets with fewer instructions, the kernel reduces execution overhead, allowing the device to better saturate the L2 bandwidth.
+  \item \textbf{L2-Resident}: When the filter fits into the L2 cache (up until $2^{25}$ elements), the 256-bit implementation provides a consistent performance uplift of up to 18\%.
+    By fetching entire buckets with fewer instructions, the kernel reduces execution overhead, allowing the device to better saturate the L2 bandwidth.
 
-  \item \textbf{DRAM-Resident}: As the working set spills into global memory, the performance advantage disappears. In this case, the workload becomes strictly bound by DRAM access times. Regardless of whether the data is requested via 128-bit or 256-bit instructions, the memory controller is already saturated, and the instruction issue rate is no longer the bottleneck.
+  \item \textbf{DRAM-Resident}: As the working set spills into global memory, the performance advantage disappears.
+    In this case, the workload becomes strictly bound by DRAM access times.
+    Regardless of whether the data is requested via 128-bit or 256-bit instructions, the memory controller is already saturated, and the instruction issue rate is no longer the bottleneck.
 \end{itemize}
 
 This shows that while the use of 256-bit vector loads offers a "free" performance boost for L2-resident workloads on supported hardware by improving instruction efficiency, it does not fix the memory bandwidth bottleneck of large, DRAM-resident Cuckoo filters.

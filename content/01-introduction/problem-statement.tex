@@ -1,6 +1,10 @@
 \section{Problem Statement}
 \label{sec:intro:problem}
 
-Despite these advantages, the performance of Cuckoo filters on CPUs can quickly become a bottleneck in high-throughput environments. The sequential nature of the insertion algorithm, which may involve displacing multiple existing items, severely limits scalability.
+Despite these advantages, the performance of Cuckoo filters on CPUs can quickly become a bottleneck in high-throughput environments.
+The sequential nature of the insertion algorithm, which may involve displacing multiple existing items, severely limits scalability.
 
-This performance gap motivates the exploration of massively parallel hardware. However, porting a Cuckoo filter to a GPU is not a straightforward translation, as the algorithm's reliance on sequential eviction chains and random memory accesses conflicts with the GPU's desire for massive parallelism and structured, contiguous memory access patterns. This thesis addresses these architectural mismatches by designing, implementing, and evaluating a GPU-accelerated Cuckoo filter. The main objective is to leverage the massive parallelism of modern GPUs to handle insertions, lookups, and deletions, thereby achieving a significant performance leap over existing CPU-based implementations.
+This performance gap motivates the exploration of massively parallel hardware.
+However, porting a Cuckoo filter to a GPU is not a straightforward translation, as the algorithm's reliance on sequential eviction chains and random memory accesses conflicts with the GPU's desire for massive parallelism and structured, contiguous memory access patterns.
+This thesis addresses these architectural mismatches by designing, implementing, and evaluating a GPU-accelerated Cuckoo filter.
+The main objective is to leverage the massive parallelism of modern GPUs to handle insertions, lookups, and deletions, thereby achieving a significant performance leap over existing CPU-based implementations.

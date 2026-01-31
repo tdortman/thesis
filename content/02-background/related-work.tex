@@ -3,37 +3,68 @@
 \subsection{Two-Choice Filter}
 \label{sec:background:two-choice-filter}
 
-Recent work by McCoy et al. \cite{tcf} introduced the Two-Choice filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs. The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter optimized for the constraints of a GPU.
+Recent work by McCoy et al.
+\cite{tcf} introduced the Two-Choice filter (TCF), a data structure designed specifically for high-throughput, parallel execution on GPUs.
+The TCF shares the same high-level goal as the GPU-accelerated Cuckoo filter presented in this thesis: to provide a deletable, space-efficient filter optimized for the constraints of a GPU.
 
-Structurally, the TCF is similar to a Cuckoo filter. It organizes fingerprints into blocks sized to fit within a GPU cache line (e.g., 128 bytes) to ensure high memory locality. Like the Cuckoo filter, it maps each item to two candidate blocks.
+Structurally, the TCF is similar to a Cuckoo filter.
+It organizes fingerprints into blocks sized to fit within a GPU cache line (e.g., 128 bytes) to ensure high memory locality.
+Like the Cuckoo filter, it maps each item to two candidate blocks.
 
-The fundamental difference lies in the insertion strategy. The authors argue that the eviction chains inherent to Cuckoo hashing result in poor memory coherence on GPUs, as a single insertion may trigger a cascade of random memory reads and writes. To avoid this, the TCF uses a strategy derived from the "power-of-two-choices" paradigm \cite{potc}. The insertion logic is as follows:
+The fundamental difference lies in the insertion strategy.
+The authors argue that the eviction chains inherent to Cuckoo hashing result in poor memory coherence on GPUs, as a single insertion may trigger a cascade of random memory reads and writes.
+To avoid this, the TCF uses a strategy derived from the "power-of-two-choices" paradigm \cite{potc}.
+The insertion logic is as follows:
 
 \begin{itemize}
-  \item \textbf{Shortcut Optimization}: To insert an item, the TCF first checks the primary block. If its occupancy is below 75\%, the item is inserted immediately without checking the second block.
+  \item \textbf{Shortcut Optimization}: To insert an item, the TCF first checks the primary block.
+    If its occupancy is below 75\%, the item is inserted immediately without checking the second block.
 
   \item \textbf{Load Balancing}: If the primary block exceeds this threshold, the secondary block is inspected, and the new fingerprint is placed in whichever of the two blocks is currently less full.
 
-  \item \textbf{No Eviction}: There is no kicking or eviction. If both candidate blocks are completely full, the insertion into the main table fails.
+  \item \textbf{No Eviction}: There is no kicking or eviction.
+    If both candidate blocks are completely full, the insertion into the main table fails.
 \end{itemize}
 
-This approach guarantees a fixed number of memory accesses per insertion. However, because the blocks must be small enough to fit in GPU cache lines, the statistical variance in load distribution increases, leading to premature failures even when the total table is far from full. To address this, the TCF relies on a backing store, a small, secondary hash table to catch these overflows. This hybrid architecture allows the TCF to maintain a high overall occupancy (up to 95\%) while keeping the average case insertion logic simple.
+This approach guarantees a fixed number of memory accesses per insertion.
+However, because the blocks must be small enough to fit in GPU cache lines, the statistical variance in load distribution increases, leading to premature failures even when the total table is far from full.
+To address this, the TCF relies on a backing store, a small, secondary hash table to catch these overflows.
+This hybrid architecture allows the TCF to maintain a high overall occupancy (up to 95\%) while keeping the average case insertion logic simple.
 
-For its implementation, the TCF leverages CUDA Cooperative Groups to coordinate threads within a warp for lock-free operations. Additionally, it offers a "Bulk API" that pre-sorts items before insertion, further maximizing memory coalescing. In summary, the TCF prioritizes a non-evicting strategy to maximize memory bandwidth, trading the complexity of eviction logic for the architectural complexity of managing a secondary overflow structure.
+For its implementation, the TCF leverages CUDA Cooperative Groups to coordinate threads within a warp for lock-free operations.
+Additionally, it offers a "Bulk API" that pre-sorts items before insertion, further maximizing memory coalescing.
+In summary, the TCF prioritizes a non-evicting strategy to maximize memory bandwidth, trading the complexity of eviction logic for the architectural complexity of managing a secondary overflow structure.
 
 \subsection{Quotient Filter}
 \label{sec:background:quotient-filter}
 
-The Quotient filter (QF) is a high-performance probabilistic data structure that improves upon the Bloom filter by supporting dynamic deletions and offering superior space efficiency in many configurations \cite{og-qf}. It compactly stores small fingerprints using a scheme based on \textit{Robin Hood hashing} \cite{robin-hood-hashing}. For a target false positive rate $\epsilon$, a QF uses approximately $1.053(2.125 + \log_2(1/\epsilon))$ bits per item, making it more space-efficient than a space-optimized Bloom filter whenever $\epsilon \le 1/64$ \cite{tcf}.
+The Quotient filter (QF) is a high-performance probabilistic data structure that improves upon the Bloom filter by supporting dynamic deletions and offering superior space efficiency in many configurations \cite{og-qf}.
+It compactly stores small fingerprints using a scheme based on \textit{Robin Hood hashing} \cite{robin-hood-hashing}.
+For a target false positive rate $\epsilon$, a QF uses approximately $1.053(2.125 + \log_2(1/\epsilon))$ bits per item, making it more space-efficient than a space-optimized Bloom filter whenever $\epsilon \le 1/64$ \cite{tcf}.
 
-The core mechanism relies on splitting a $p$-bit hash into a $q$-bit \textit{quotient} and an $r$-bit \textit{remainder}. The quotient determines an item's "canonical slot" in a table of $2^q$ slots, while the remainder is the value actually stored. If the canonical slot is occupied, linear probing is used to find the next empty slot. All remainders sharing the same quotient form a contiguous \textit{run}, and sequences of runs form \textit{clusters}. Three metadata bits per entry (\texttt{is\_occupied}, \texttt{is\_continuation}, \texttt{is\_shifted}) encode the structure of these runs.
+The core mechanism relies on splitting a $p$-bit hash into a $q$-bit \textit{quotient} and an $r$-bit \textit{remainder}.
+The quotient determines an item's "canonical slot" in a table of $2^q$ slots, while the remainder is the value actually stored.
+If the canonical slot is occupied, linear probing is used to find the next empty slot.
+All remainders sharing the same quotient form a contiguous \textit{run}, and sequences of runs form \textit{clusters}.
+Three metadata bits per entry (\texttt{is\_occupied}, \texttt{is\_continuation}, \texttt{is\_shifted}) encode the structure of these runs.
 
-From a GPU design perspective, the Quotient filter presents a specific trade-off. Its linear-probing nature results in high cache locality, a desirable property for GPU architectures. However, the insertion process is fundamentally sequential. Inserting a new remainder often requires shifting a sequence of existing remainders to maintain a sorted order. This shifting operation is difficult to parallelize efficiently and often results in high thread divergence.
+From a GPU design perspective, the Quotient filter presents a specific trade-off.
+Its linear-probing nature results in high cache locality, a desirable property for GPU architectures.
+However, the insertion process is fundamentally sequential.
+Inserting a new remainder often requires shifting a sequence of existing remainders to maintain a sorted order.
+This shifting operation is difficult to parallelize efficiently and often results in high thread divergence.
 
 \subsubsection{GPU-Based Counting Quotient Filter (GQF)}
 
-Early attempts to port the QF to GPUs, such as the work by Geil et al. \cite{gpu-qf}, suffered from significant limitations, including a lack of counting support, high space overhead, and limited scalability (supporting fewer than $2^{26}$ items). To address these issues, McCoy et al. introduced the GPU-based Counting Quotient filter (GQF) \cite{tcf}.
+Early attempts to port the QF to GPUs, such as the work by Geil et al.
+\cite{gpu-qf}, suffered from significant limitations, including a lack of counting support, high space overhead, and limited scalability (supporting fewer than $2^{26}$ items).
+To address these issues, McCoy et al.
+introduced the GPU-based Counting Quotient filter (GQF) \cite{tcf}.
 
-The GQF is a highly optimized implementation designed to overcome the shortcomings of previous GPU quotient filters. It supports a comprehensive feature set, including counting, deletions, and resizing. Notably, it also uses an "even-odd" phased approach for bulk insertions to manage concurrency without the complex locking schemes that typically bottleneck concurrent linear probing.
+The GQF is a highly optimized implementation designed to overcome the shortcomings of previous GPU quotient filters.
+It supports a comprehensive feature set, including counting, deletions, and resizing.
+Notably, it also uses an "even-odd" phased approach for bulk insertions to manage concurrency without the complex locking schemes that typically bottleneck concurrent linear probing.
 
-Despite these advancements, the GQF is still bound by the architectural challenge of element shifting. While optimized for bulk operations, insertions remain difficult to parallelize. The necessity of shifting elements implies that insertion throughput is heavily dependent on the filter's load factor and the distribution of keys, potentially limiting performance compared to bucket-based approaches like the Cuckoo filter which rely on localized atomic swaps.
+Despite these advancements, the GQF is still bound by the architectural challenge of element shifting.
+While optimized for bulk operations, insertions remain difficult to parallelize.
+The necessity of shifting elements implies that insertion throughput is heavily dependent on the filter's load factor and the distribution of keys, potentially limiting performance compared to bucket-based approaches like the Cuckoo filter which rely on localized atomic swaps.

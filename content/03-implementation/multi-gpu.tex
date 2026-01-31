@@ -1,36 +1,55 @@
 \section{Multi-GPU}
 \label{sec:implementation:multi-gpu}
 
-To handle datasets that exceed the memory capacity of a single graphics card, a multi-GPU version of the Cuckoo filter was implemented. This version transparently partitions the data and workload across all available devices, presenting a unified interface to the user. This approach, however, necessitates a shift in the public API, as the input and output buffers must now reside in host memory to accommodate their potentially massive size.
+To handle datasets that exceed the memory capacity of a single graphics card, a multi-GPU version of the Cuckoo filter was implemented.
+This version transparently partitions the data and workload across all available devices, presenting a unified interface to the user.
+This approach, however, necessitates a shift in the public API, as the input and output buffers must now reside in host memory to accommodate their potentially massive size.
 
 \subsection{Architectural Design}
 \label{sec:implementation:multi-gpu-arch}
 
-The core design choice was to instantiate a completely independent Cuckoo filter instance on each GPU, each managing its own dedicated device memory. While a single, logically distributed filter was considered, the practical overhead of managing eviction chains across the high-latency interconnect between GPUs was deemed prohibitive, as it would severely compromise insertion performance.
+The core design choice was to instantiate a completely independent Cuckoo filter instance on each GPU, each managing its own dedicated device memory.
+While a single, logically distributed filter was considered, the practical overhead of managing eviction chains across the high-latency interconnect between GPUs was deemed prohibitive, as it would severely compromise insertion performance.
 
-To distribute items across these independent filters, a deterministic partitioning scheme is used. Each key is assigned to a specific GPU based on the result of $\mathrm{hash}(key) \bmod n$, where $n$ is the number of GPUs. While a uniform hash function would ideally distribute keys perfectly evenly, minor variances are expected in practice. To account for this and prevent premature insertion failures on one device, each GPU's filter is allocated slightly more capacity (2\%) than its proportional share.
+To distribute items across these independent filters, a deterministic partitioning scheme is used.
+Each key is assigned to a specific GPU based on the result of $\mathrm{hash}(key) \bmod n$, where $n$ is the number of GPUs.
+While a uniform hash function would ideally distribute keys perfectly evenly, minor variances are expected in practice.
+To account for this and prevent premature insertion failures on one device, each GPU's filter is allocated slightly more capacity (2\%) than its proportional share.
 
 \subsection{Data Distribution and Processing}
 \label{sec:implementation:multi-gpu-distribution}
 
-Distributing the input data from the host to the correct GPU partition is a complex challenge. A naive approach involving a single "primary" GPU that partitions and distributes all data creates a severe load imbalance. Therefore, a fully parallelized, multi-stage workflow was implemented leveraging the Gossip library \cite{gossip} for optimized communication:
+Distributing the input data from the host to the correct GPU partition is a complex challenge.
+A naive approach involving a single "primary" GPU that partitions and distributes all data creates a severe load imbalance.
+Therefore, a fully parallelized, multi-stage workflow was implemented leveraging the Gossip library \cite{gossip} for optimized communication:
 
 \begin{enumerate}
-  \item \textbf{Initial Data Scatter}: The host-side input array is processed in large chunks. Each GPU copies a distinct and proportional sub-chunk from the host into its own device memory in parallel.
+  \item \textbf{Initial Data Scatter}: The host-side input array is processed in large chunks.
+    Each GPU copies a distinct and proportional sub-chunk from the host into its own device memory in parallel.
 
   \item \textbf{Destination Calculation}: Each GPU launches a lightweight kernel to hash its local keys and determine the target GPU index for each item.
 
-  \item \textbf{Topology-Aware Multisplit and Exchange}: To redistribute the keys to their correct owner GPUs, the implementation utilizes the Gossip library. Unlike a standard all-to-all approach, Gossip performs an efficient \textit{multisplit} operation combined with a topology-aware data exchange. It uses hints for the system's interconnect topology (distinguishing between NVLink and PCIe connections) to generate an optimized transfer plan. This ensures that the data shuffling phase maximizes the available bandwidth and minimizes contention on the interconnect.
+  \item \textbf{Topology-Aware Multisplit and Exchange}: To redistribute the keys to their correct owner GPUs, the implementation utilizes the Gossip library.
+    Unlike a standard all-to-all approach, Gossip performs an efficient \textit{multisplit} operation combined with a topology-aware data exchange.
+    It uses hints for the system's interconnect topology (distinguishing between NVLink and PCIe connections) to generate an optimized transfer plan.
+    This ensures that the data shuffling phase maximizes the available bandwidth and minimizes contention on the interconnect.
 
-  \item \textbf{Parallel Processing}: Once the exchange is complete, each GPU holds all the keys that belong to its partition. At this point, each GPU proceeds to execute the standard single-GPU insertion, lookup, or deletion kernel on its local data, fully in parallel with the other devices.
+  \item \textbf{Parallel Processing}: Once the exchange is complete, each GPU holds all the keys that belong to its partition.
+    At this point, each GPU proceeds to execute the standard single-GPU insertion, lookup, or deletion kernel on its local data, fully in parallel with the other devices.
 \end{enumerate}
 
 \subsection{Result Consolidation}
 \label{sec:implementation:multi-gpu-results}
 
-For operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order. To solve this efficiently, the Gossip library is again utilized to reverse the exchange process, sending results back to the GPUs that originally held the keys (pre-partitioning). This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order.
+For operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order.
+To solve this efficiently, the Gossip library is again utilized to reverse the exchange process, sending results back to the GPUs that originally held the keys (pre-partitioning).
+This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order.
 
 \subsection{Overheads}
 \label{sec:implementation:multi-gpu-overheads}
 
-The use of the Gossip library significantly mitigates the overheads associated with manual partitioning. Previous approaches relying on \texttt{thrust::sort} and standard NCCL collectives often incurred high temporary memory costs and sorting latency. Gossip's optimized multisplit primitive reduces the auxiliary memory footprint and leverages low-level hardware features for faster data movement. However, the fundamental latency of moving data off-chip remains a bottleneck compared to single-GPU execution. The processable chunk size must still be managed to ensure that the input buffers, the exchange buffers, and the filter itself fit within device memory simultaneously.
+The use of the Gossip library significantly mitigates the overheads associated with manual partitioning.
+Previous approaches relying on \texttt{thrust::sort} and standard NCCL collectives often incurred high temporary memory costs and sorting latency.
+Gossip's optimized multisplit primitive reduces the auxiliary memory footprint and leverages low-level hardware features for faster data movement.
+However, the fundamental latency of moving data off-chip remains a bottleneck compared to single-GPU execution.
+The processable chunk size must still be managed to ensure that the input buffers, the exchange buffers, and the filter itself fit within device memory simultaneously.

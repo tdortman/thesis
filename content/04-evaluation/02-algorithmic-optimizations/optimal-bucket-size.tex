@@ -1,26 +1,38 @@
 \subsection{Optimal Bucket Size}
 \label{sec:eval:bucket-size}
 
-The \texttt{bucketSize} parameter, defining the number of fingerprints stored in each bucket, plays an important role in the filter's overall performance. Testing demonstrates that performance degrades at both the lower and upper extremes of bucket sizing, necessitating a careful balance.
+The \texttt{bucketSize} parameter, defining the number of fingerprints stored in each bucket, plays an important role in the filter's overall performance.
+Testing demonstrates that performance degrades at both the lower and upper extremes of bucket sizing, necessitating a careful balance.
 
 \subsubsection{Performance Trade-offs}
 
 \begin{itemize}
-  \item \textbf{Small Buckets}: Configuring the filter with very small buckets negatively impacts performance. With fewer slots per bucket, the likelihood that a primary bucket is full increases significantly. This increases the average number of buckets that must be accessed and loaded from memory to complete an operation, resulting in higher latency.
+  \item \textbf{Small Buckets}: Configuring the filter with very small buckets negatively impacts performance.
+    With fewer slots per bucket, the likelihood that a primary bucket is full increases significantly.
+    This increases the average number of buckets that must be accessed and loaded from memory to complete an operation, resulting in higher latency.
 
-  \item \textbf{Large Buckets}: Conversely, excessively large buckets introduce hardware-level inefficiencies. If a bucket's size exceeds the GPU's cache line size, fetching a single logical bucket requires multiple physical memory transactions. This significantly increases the memory bandwidth used per operation, as the number of cache lines that must be fetched scales with the size of the bucket.
+  \item \textbf{Large Buckets}: Conversely, excessively large buckets introduce hardware-level inefficiencies.
+    If a bucket's size exceeds the GPU's cache line size, fetching a single logical bucket requires multiple physical memory transactions.
+    This significantly increases the memory bandwidth used per operation, as the number of cache lines that must be fetched scales with the size of the bucket.
 \end{itemize}
 
 \subsubsection{Optimal Configuration}
 
-The experiments in Figure \ref{fig:bucket-size} identify distinct optimal configurations for insertion and lookup operations depending on the working set size. Note that deletion is not included in this section, as its memory access pattern (sequentially loading 64-bit atomic words) is identical to insertion.
+The experiments in Figure \ref{fig:bucket-size} identify distinct optimal configurations for insertion and lookup operations depending on the working set size.
+Note that deletion is not included in this section, as its memory access pattern (sequentially loading 64-bit atomic words) is identical to insertion.
 
 \begin{itemize}
-  \item \textbf{Insertion}: A bucket size of 16 fingerprints was found to be the fastest configuration in all tested scenarios. This size appears to offer the optimal trade-off, providing enough slots to minimize eviction chains without incurring the bandwidth penalty of multi-cache-line fetches.
+  \item \textbf{Insertion}: A bucket size of 16 fingerprints was found to be the fastest configuration in all tested scenarios.
+    This size appears to offer the optimal trade-off, providing enough slots to minimize eviction chains without incurring the bandwidth penalty of multi-cache-line fetches.
 
-  \item \textbf{Lookup (L2-Resident)}: When the filter is sized to fit entirely within the GPU's L2 cache, a bucket size of 8 fingerprints yields the highest throughput. This is driven by instruction-level efficiency. A bucket of this size can be represented as two 64-bit words or a single 128-bit vector. This allows the entire bucket to be loaded into registers via a single vectorized machine instruction, maximizing the throughput of the L1/L2 cache hierarchy.
+  \item \textbf{Lookup (L2-Resident)}: When the filter is sized to fit entirely within the GPU's L2 cache, a bucket size of 8 fingerprints yields the highest throughput.
+    This is driven by instruction-level efficiency.
+    A bucket of this size can be represented as two 64-bit words or a single 128-bit vector.
+    This allows the entire bucket to be loaded into registers via a single vectorized machine instruction, maximizing the throughput of the L1/L2 cache hierarchy.
 
-  \item \textbf{Lookup (DRAM-Resident)}: Once the filter size exceeds the L2 cache capacity, the bottleneck shifts to global memory bandwidth. In this case, a bucket size of 16 becomes favourable again. Since fetching data from DRAM creates a significant latency penalty, it is more efficient to process a larger "middle ground" bucket size.
+  \item \textbf{Lookup (DRAM-Resident)}: Once the filter size exceeds the L2 cache capacity, the bottleneck shifts to global memory bandwidth.
+    In this case, a bucket size of 16 becomes favourable again.
+    Since fetching data from DRAM creates a significant latency penalty, it is more efficient to process a larger "middle ground" bucket size.
 \end{itemize}
 
 \begin{figure}[ht]

@@ -2,13 +2,25 @@
 \label{sec:intro:structure}
 
 \textbf{Chapter \ref{sec:background}} \\[0.2em]
-This chapter establishes the foundation for the thesis. It goes over the concepts of approximate membership query structures, tracing the evolution from the classic Bloom filter to the Cuckoo filter. Additionally, it examines alternative modern data structures, such as the Quotient filter and the Two-Choice filter, to contextualize the research landscape. The chapter also introduces the principles of GPU computing and the CUDA programming model, highlighting the specific hardware constraints that influence parallel algorithm design.
+This chapter establishes the foundation for the thesis.
+It goes over the concepts of approximate membership query structures, tracing the evolution from the classic Bloom filter to the Cuckoo filter.
+Additionally, it examines alternative modern data structures, such as the Quotient filter and the Two-Choice filter, to contextualize the research landscape.
+The chapter also introduces the principles of GPU computing and the CUDA programming model, highlighting the specific hardware constraints that influence parallel algorithm design.
 
 \textbf{Chapter \ref{sec:implementation}} \\[0.2em]
-This chapter details the design and implementation of the high-performance GPU Cuckoo filter library. It documents the parallel algorithms developed for insertion, lookup, and deletion, explaining how lock-free atomic operations are utilized to manage parallel accesses. Furthermore, it describes advanced optimizations for memory locality and system-level extensions, including an Inter-Process Communication wrapper and a multi-GPU sharding mechanism.
+This chapter details the design and implementation of the high-performance GPU Cuckoo filter library.
+It documents the parallel algorithms developed for insertion, lookup, and deletion, explaining how lock-free atomic operations are utilized to manage parallel accesses.
+Furthermore, it describes advanced optimizations for memory locality and system-level extensions, including an Inter-Process Communication wrapper and a multi-GPU sharding mechanism.
 
 \textbf{Chapter \ref{sec:evaluation}} \\[0.2em]
-This chapter presents a comprehensive analysis of the implemented data structure. The filter is benchmarked against CPU and GPU baselines across different hardware architectures (GDDR7 and HBM3). Beyond raw throughput, the evaluation scrutinizes architectural scaling behaviours, analysing the impact of the memory hierarchy (L2 vs. DRAM), hardware utilization, and cache efficiency. It also assesses the filter's reliability through an empirical analysis of false positive rates and performance-accuracy trade-offs. Furthermore, it measures the impact of specific algorithmic optimizations, including eviction policies, bucket sizing, sorted insertion, wider memory loads, and alternative bucket placement policies. Finally, it validates the system's real-world usability through multi-GPU scalability tests and a genomic $k$-mer indexing benchmark.
+This chapter presents a comprehensive analysis of the implemented data structure.
+The filter is benchmarked against CPU and GPU baselines across different hardware architectures (GDDR7 and HBM3).
+Beyond raw throughput, the evaluation scrutinizes architectural scaling behaviours, analysing the impact of the memory hierarchy (L2 vs.
+DRAM), hardware utilization, and cache efficiency.
+It also assesses the filter's reliability through an empirical analysis of false positive rates and performance-accuracy trade-offs.
+Furthermore, it measures the impact of specific algorithmic optimizations, including eviction policies, bucket sizing, sorted insertion, wider memory loads, and alternative bucket placement policies.
+Finally, it validates the system's real-world usability through multi-GPU scalability tests and a genomic $k$-mer indexing benchmark.
 
 \textbf{Chapter \ref{sec:conclusion}} \\[0.2em]
-The final chapter highlights the key findings of the research, summarizing the contributions made to the field of parallel probabilistic data structures. It critically assesses the limitations of the current implementation and outlines potential avenues for future research and optimization.
+The final chapter highlights the key findings of the research, summarizing the contributions made to the field of parallel probabilistic data structures.
+It critically assesses the limitations of the current implementation and outlines potential avenues for future research and optimization.

@@ -1,16 +1,27 @@
 \subsection{Cache Efficiency}
 \label{sec:eval:cache}
 
-To understand how each filter interacts with the GPU's memory hierarchy, the L1 and L2 cache hit rates were measured by profiling the relevant kernels using NVIDIA Nsight Compute (ncu) on System B. While cache hit rate is not a direct proxy for overall throughput, it provides insight into the memory access patterns and architectural bottlenecks of each implementation. The results for Insert, Query, and Delete operations are presented in Figures \ref{fig:cache-l1} and \ref{fig:cache-l2}.
+To understand how each filter interacts with the GPU's memory hierarchy, the L1 and L2 cache hit rates were measured by profiling the relevant kernels using NVIDIA Nsight Compute (ncu) on System B.
+While cache hit rate is not a direct proxy for overall throughput, it provides insight into the memory access patterns and architectural bottlenecks of each implementation.
+The results for Insert, Query, and Delete operations are presented in Figures \ref{fig:cache-l1} and \ref{fig:cache-l2}.
 
 \subsubsection{L1 Cache Analysis}
 A consistent trend across all operations is the exceptionally high L1 hit rate (near 100\%) for both the TCF and the GQF.
 
-The TCF achieves this through a specific staging strategy. It utilizes cooperative groups to load entire blocks from global memory into shared memory. Once the data is staged, the vast majority of operations occur within shared memory, which does not interact with the L1 cache lookup pipeline. Consequently, the only interactions with the L1 cache are the initial block loads and final writes. Since these are performed as fully coalesced memory transactions by the cooperative group, they result in a near-perfect L1 hit rate.
+The TCF achieves this through a specific staging strategy.
+It utilizes cooperative groups to load entire blocks from global memory into shared memory.
+Once the data is staged, the vast majority of operations occur within shared memory, which does not interact with the L1 cache lookup pipeline.
+Consequently, the only interactions with the L1 cache are the initial block loads and final writes.
+Since these are performed as fully coalesced memory transactions by the cooperative group, they result in a near-perfect L1 hit rate.
 
-In contrast, the GQF achieves high L1 efficiency through extreme spatial and temporal locality. The implementation assigns individual threads to manage specific, contiguous regions of the filter. As a thread performs operations such as linear probing or shifting elements within a run, it repeatedly accesses the same small range of global memory addresses. This high reuse frequency ensures that the relevant cache lines remain resident in L1, resulting in a high hit rate despite operating directly on global memory.
+In contrast, the GQF achieves high L1 efficiency through extreme spatial and temporal locality.
+The implementation assigns individual threads to manage specific, contiguous regions of the filter.
+As a thread performs operations such as linear probing or shifting elements within a run, it repeatedly accesses the same small range of global memory addresses.
+This high reuse frequency ensures that the relevant cache lines remain resident in L1, resulting in a high hit rate despite operating directly on global memory.
 
-The Cuckoo filter, conversely, exhibits a moderate L1 hit rate (typically between 30\% and 60\%). While some lookups within the same bucket may be served by the L1 cache, the fundamental algorithm requires threads to jump to arbitrary locations in global memory. These random accesses frequently miss the L1 cache, preventing the near-perfect rates seen in the locality-optimized implementations.
+The Cuckoo filter, conversely, exhibits a moderate L1 hit rate (typically between 30\% and 60\%).
+While some lookups within the same bucket may be served by the L1 cache, the fundamental algorithm requires threads to jump to arbitrary locations in global memory.
+These random accesses frequently miss the L1 cache, preventing the near-perfect rates seen in the locality-optimized implementations.
 
 \begin{figure}[htbp]
   \centering
@@ -23,11 +34,20 @@ The Cuckoo filter, conversely, exhibits a moderate L1 hit rate (typically betwee
 
 \subsubsection{L2 Cache Analysis}
 
-The L2 cache hit rates provide a clear visualization of the transition from a cache-resident workload to a DRAM-resident workload. For the Cuckoo filter and the Blocked Bloom filter, the L2 hit rate remains high (approximately 80\% to 90\%) for smaller capacities. However, a sharp decline is observed once the filter size exceeds $2^{24}$ elements. This inflection point roughly corresponds to the physical L2 cache size of the test GPU. The steep drop-off confirms that beyond this point, every operation effectively incurs a global memory access, explaining the shift in performance scaling discussed in Section \ref{sec:eval:throughput}.
+The L2 cache hit rates provide a clear visualization of the transition from a cache-resident workload to a DRAM-resident workload.
+For the Cuckoo filter and the Blocked Bloom filter, the L2 hit rate remains high (approximately 80\% to 90\%) for smaller capacities.
+However, a sharp decline is observed once the filter size exceeds $2^{24}$ elements.
+This inflection point roughly corresponds to the physical L2 cache size of the test GPU.
+The steep drop-off confirms that beyond this point, every operation effectively incurs a global memory access, explaining the shift in performance scaling discussed in Section \ref{sec:eval:throughput}.
 
-The GQF exhibits similar behaviour for its lookups. Because a GQF lookup involves linearly scanning a cluster of slots in memory, it relies heavily on the L2 cache to minimize latency. Once the filter grows too large, these linear scans result in frequent cache misses, aligning its curve with that of the Cuckoo and Bloom filters.
+The GQF exhibits similar behaviour for its lookups.
+Because a GQF lookup involves linearly scanning a cluster of slots in memory, it relies heavily on the L2 cache to minimize latency.
+Once the filter grows too large, these linear scans result in frequent cache misses, aligning its curve with that of the Cuckoo and Bloom filters.
 
-In contrast, the TCF and GQF (specifically for Insertion and Deletion) maintain a consistently high L2 hit rate across all filter sizes. This stability indicates that these algorithms interact with global memory far less frequently than the Cuckoo or Bloom filters. Instead, they perform the vast majority of their work, such as sorting items within a block or managing cooperative groups, using internal registers and shared memory. While this results in high cache statistics, it indicates that these filters are bound by the speed of the GPU's compute units and shared memory (SRAM), preventing them from utilizing the abundant DRAM bandwidth available on modern High-Bandwidth Memory systems.
+In contrast, the TCF and GQF (specifically for Insertion and Deletion) maintain a consistently high L2 hit rate across all filter sizes.
+This stability indicates that these algorithms interact with global memory far less frequently than the Cuckoo or Bloom filters.
+Instead, they perform the vast majority of their work, such as sorting items within a block or managing cooperative groups, using internal registers and shared memory.
+While this results in high cache statistics, it indicates that these filters are bound by the speed of the GPU's compute units and shared memory (SRAM), preventing them from utilizing the abundant DRAM bandwidth available on modern High-Bandwidth Memory systems.
 
 \begin{figure}[htbp]
   \centering

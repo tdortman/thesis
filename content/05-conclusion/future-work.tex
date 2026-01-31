@@ -4,11 +4,14 @@
 The work presented in this thesis opens several avenues for future research and optimization:
 
 \begin{itemize}
-  \item \textbf{Asynchronous APIs}: The current IPC mechanism is blocking. Future iterations could implement an asynchronous command queue, similar to \texttt{io\_uring}, to allow clients to submit batches of requests without stalling, further maximizing GPU occupancy.
+  \item \textbf{Asynchronous APIs}: The current IPC mechanism is blocking.
+    Future iterations could implement an asynchronous command queue, similar to \texttt{io\_uring}, to allow clients to submit batches of requests without stalling, further maximizing GPU occupancy.
 
   \item \textbf{Variable-Length Fingerprints}: Investigating methods to support variable-length fingerprints within the fixed-bucket structure could allow users to fine-tune the space-accuracy trade-off without the coarseness of jumping from 16-bit to 32-bit tags.
 
-  \item \textbf{Integration into High-Throughput Systems}: While micro-benchmarks demonstrate raw speed, the ultimate validation would be integrating the library into real-world systems characterized by high churn. Deploying the filter within network intrusion detection systems, streaming analytics pipelines, or GPU-accelerated database engines would provide valuable insight into its impact on end-to-end application latency and throughput.
+  \item \textbf{Integration into High-Throughput Systems}: While micro-benchmarks demonstrate raw speed, the ultimate validation would be integrating the library into real-world systems characterized by high churn.
+    Deploying the filter within network intrusion detection systems, streaming analytics pipelines, or GPU-accelerated database engines would provide valuable insight into its impact on end-to-end application latency and throughput.
 
-  \item \textbf{Robustness Against Churn}: Future work could explore hybrid architectures, such as attaching a small "overflow stash" or secondary table, to catch items that fail the eviction chain. This would significantly improve stability and reliability for non-terminating, dynamic workloads.
+  \item \textbf{Robustness Against Churn}: Future work could explore hybrid architectures, such as attaching a small "overflow stash" or secondary table, to catch items that fail the eviction chain.
+    This would significantly improve stability and reliability for non-terminating, dynamic workloads.
 \end{itemize}

@@ -6,27 +6,43 @@ Beyond the core algorithm design, some noteworthy optimization strategies were e
 \subsection{Sorted Insertion}
 \label{sec:implementation:optimisation-techniques:sorted}
 
-One version of the insertion algorithm was implemented to enhance memory locality. Before the main insertion kernel is launched, the items are first packed into a temporary structure where the upper bits represent the primary bucket index and the lower bits contain the fingerprint. This array is then sorted in parallel on the GPU using CUB's high-performance radix sort. Doing this ensures that consecutive threads in the subsequent insertion kernel are likely to be working on items that map to the same or nearby buckets. This approach led to a measurable performance increase once the filter size far exceeded the GPU's L2 cache and memory bandwidth is not abundant, as the random memory accesses of the standard approach were more heavily penalized. However, for filters that fit entirely within the L2 cache, the overhead of the initial packing and sorting pass made this version considerably slower and not worth using (see Section \ref{sec:eval:sorted-insertion}).
+One version of the insertion algorithm was implemented to enhance memory locality.
+Before the main insertion kernel is launched, the items are first packed into a temporary structure where the upper bits represent the primary bucket index and the lower bits contain the fingerprint.
+This array is then sorted in parallel on the GPU using CUB's high-performance radix sort.
+Doing this ensures that consecutive threads in the subsequent insertion kernel are likely to be working on items that map to the same or nearby buckets.
+This approach led to a measurable performance increase once the filter size far exceeded the GPU's L2 cache and memory bandwidth is not abundant, as the random memory accesses of the standard approach were more heavily penalized.
+However, for filters that fit entirely within the L2 cache, the overhead of the initial packing and sorting pass made this version considerably slower and not worth using (see Section \ref{sec:eval:sorted-insertion}).
 
 \subsection{Alternative Eviction Strategy}
 \label{sec:implementation:optimisation-techniques:eviction}
 
-The standard eviction process uses a greedy, depth-first-search (DFS) approach, where a thread immediately follows the eviction chain of a single evicted item. An alternative strategy was implemented to reduce the average length of these chains. When an eviction is necessary, instead of picking one random item to evict, the thread first inspects half the bucket at random. For each candidate, it checks if its alternate bucket has an empty slot. If such a "safe" eviction is found, the swap is performed, and the insertion completes in a single step. If all candidates lead to full alternate buckets, the algorithm falls back to the original DFS-style greedy eviction. This method was found to have a negligible impact when inserting into an empty filter, but it provided a moderate speed-up when inserting into a filter with a high load factor (e.g., 70\% or more), where long eviction chains are more common (see Section \ref{sec:eval:eviction-policies}).
+The standard eviction process uses a greedy, depth-first-search (DFS) approach, where a thread immediately follows the eviction chain of a single evicted item.
+An alternative strategy was implemented to reduce the average length of these chains.
+When an eviction is necessary, instead of picking one random item to evict, the thread first inspects half the bucket at random.
+For each candidate, it checks if its alternate bucket has an empty slot.
+If such a "safe" eviction is found, the swap is performed, and the insertion completes in a single step.
+If all candidates lead to full alternate buckets, the algorithm falls back to the original DFS-style greedy eviction.
+This method was found to have a negligible impact when inserting into an empty filter, but it provided a moderate speed-up when inserting into a filter with a high load factor (e.g., 70\% or more), where long eviction chains are more common (see Section \ref{sec:eval:eviction-policies}).
 
 \subsection{Flexible Bucket Placement Policies}
 \label{sec:implementation:optimisation-techniques:bucket-policies}
 
-The standard partial-key Cuckoo hashing scheme relies on the XOR operation to determine alternate bucket locations $(i_2 = i_1 \oplus hash(fp))$. For this to map validly onto the buckets, the number of them must strictly be a power of two \cite{cuckoo-false-negatives}. This constraint introduces a significant memory footprint issue: if a dataset requires slightly more capacity than $2^n$, the filter must be sized to $2^{n+1}$, resulting in nearly 50\% higher memory usage in the worst case.
+The standard partial-key Cuckoo hashing scheme relies on the XOR operation to determine alternate bucket locations $(i_2 = i_1 \oplus hash(fp))$.
+For this to map validly onto the buckets, the number of them must strictly be a power of two \cite{cuckoo-false-negatives}.
+This constraint introduces a significant memory footprint issue: if a dataset requires slightly more capacity than $2^n$, the filter must be sized to $2^{n+1}$, resulting in nearly 50\% higher memory usage in the worst case.
 
-To mitigate this over-provisioning, two alternative bucket placement policies were implemented. These strategies allow for more granular sizing of the filter, decoupling the capacity from powers of two.
+To mitigate this over-provisioning, two alternative bucket placement policies were implemented.
+These strategies allow for more granular sizing of the filter, decoupling the capacity from powers of two.
 
 \subsubsection{Additive and Subtractive Cuckoo Filter (ASCF)}
 
-This policy is based on the work of Huang et al. \cite{add-sub-cuckoo-filter} and relaxes the power-of-two constraint by dividing the filter into two equal-sized blocks (requiring only that the total number of buckets be even).
+This policy is based on the work of Huang et al.
+\cite{add-sub-cuckoo-filter} and relaxes the power-of-two constraint by dividing the filter into two equal-sized blocks (requiring only that the total number of buckets be even).
 
 \begin{itemize}
   \item \textbf{Primary Index}: The primary bucket $i_1$ is always mapped to Block 0.
-  \item \textbf{Alternate Index}: The alternate bucket $i_2$ is located in Block 1. It is calculated by adding a hash of the fingerprint to $i_1$ modulo the block size.
+  \item \textbf{Alternate Index}: The alternate bucket $i_2$ is located in Block 1.
+    It is calculated by adding a hash of the fingerprint to $i_1$ modulo the block size.
   \item \textbf{Inverse Calculation}: To find the alternate bucket for an item currently residing in Block 1, the logic is inverted: the fingerprint hash is subtracted to map back to Block 0.
 \end{itemize}
 
@@ -34,21 +50,28 @@ This arithmetic symmetry replaces the bitwise symmetry of XOR, allowing the filt
 
 \subsubsection{Offset-Based Cuckoo Filter}
 
-The second policy, derived from the work of Schmitz et al. \cite{smaller-cuckoo-filter}, uses an asymmetric offset combined with a "choice bit". In this scheme, one bit of the stored fingerprint is reserved to indicate whether the item is currently in its primary or alternate location.
+The second policy, derived from the work of Schmitz et al.
+\cite{smaller-cuckoo-filter}, uses an asymmetric offset combined with a "choice bit".
+In this scheme, one bit of the stored fingerprint is reserved to indicate whether the item is currently in its primary or alternate location.
 
 \begin{itemize}
-  \item If the choice bit is 0, the item is in its primary bucket $i_1$. The alternate bucket is calculated as:
+  \item If the choice bit is 0, the item is in its primary bucket $i_1$.
+    The alternate bucket is calculated as:
     \[
       i_2 = (i_1 + \text{offset}(fp)) \bmod m
     \]
-  \item If the choice bit is 1, the item is in its alternate bucket $i_2$. The primary bucket is calculated as:
+  \item If the choice bit is 1, the item is in its alternate bucket $i_2$.
+    The primary bucket is calculated as:
     \[
       i_1 = (i_2 - \text{offset}(fp)) \bmod m
     \]
 \end{itemize}
 
-When an item is moved between buckets during an eviction, its choice bit is flipped. This approach supports any number of buckets $m$, offering maximal space efficiency. The trade-off is a reduction in the effective fingerprint size by one bit (increasing the false positive rate slightly) and the need to update the choice bit during evictions.
+When an item is moved between buckets during an eviction, its choice bit is flipped.
+This approach supports any number of buckets $m$, offering maximal space efficiency.
+The trade-off is a reduction in the effective fingerprint size by one bit (increasing the false positive rate slightly) and the need to update the choice bit during evictions.
 
 \subsubsection{Evaluation}
 
-These policies trade computational simplicity for memory flexibility. In Section \ref{sec:eval:bucket-policies}, these three strategies (XOR, ASCF, and Offset-based) are benchmarked against each other to verify potential performance costs from eliminating the power-of-two constraint.
+These policies trade computational simplicity for memory flexibility.
+In Section \ref{sec:eval:bucket-policies}, these three strategies (XOR, ASCF, and Offset-based) are benchmarked against each other to verify potential performance costs from eliminating the power-of-two constraint.

@@ -2,7 +2,11 @@
 \chapter{Implementation}
 \label{sec:implementation}
 
-This chapter details the design and implementation of the high-performance GPU Cuckoo filter library. It documents the parallel algorithms developed for insertion, lookup, and deletion, explaining how lock-free atomic operations are utilized to manage parallel accesses. Furthermore, it describes advanced optimization techniques, including sorted insertion, alternative eviction strategies, and flexible bucket placement policies. It also presents system-level extensions, including an Inter-Process Communication wrapper and a multi-GPU sharding mechanism. Finally, the chapter outlines the comprehensive testing and verification strategies employed to ensure the correctness of the implementation.
+This chapter details the design and implementation of the high-performance GPU Cuckoo filter library.
+It documents the parallel algorithms developed for insertion, lookup, and deletion, explaining how lock-free atomic operations are utilized to manage parallel accesses.
+Furthermore, it describes advanced optimization techniques, including sorted insertion, alternative eviction strategies, and flexible bucket placement policies.
+It also presents system-level extensions, including an Inter-Process Communication wrapper and a multi-GPU sharding mechanism.
+Finally, the chapter outlines the comprehensive testing and verification strategies employed to ensure the correctness of the implementation.
 
 \input{content/03-implementation/challenges}
 \input{content/03-implementation/data-structure-design}

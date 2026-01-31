@@ -1,16 +1,28 @@
 \section{GPU Computing}
 \label{sec:background:gpu-computing}
 
-This section introduces the relevant concepts of GPU architectures and the CUDA programming model. An understanding of these principles is essential for contextualizing the design decisions and performance optimizations discussed in the subsequent implementation of the parallel Cuckoo filter. While this thesis targets NVIDIA GPUs using the CUDA framework, the core concepts of massively parallel processing are applicable to other GPU architectures and, to a large extent, modern multicore CPUs as well.
+This section introduces the relevant concepts of GPU architectures and the CUDA programming model.
+An understanding of these principles is essential for contextualizing the design decisions and performance optimizations discussed in the subsequent implementation of the parallel Cuckoo filter.
+While this thesis targets NVIDIA GPUs using the CUDA framework, the core concepts of massively parallel processing are applicable to other GPU architectures and, to a large extent, modern multicore CPUs as well.
 
 \subsection{The GPU as a Parallel Processor}
 \label{sec:background:gpu-parallel-processor}
 
-At its core, a GPU is a specialized processor designed for massive data parallelism. Originally developed to accelerate the computationally intensive task of rendering graphics, its architecture has evolved to become highly effective for general-purpose computing.
+At its core, a GPU is a specialized processor designed for massive data parallelism.
+Originally developed to accelerate the computationally intensive task of rendering graphics, its architecture has evolved to become highly effective for general-purpose computing.
 
-The primary architectural difference between a CPU and a GPU lies in their design philosophies. A CPU is optimized for low-latency execution of a single or a few sequential instruction streams (threads). It dedicates a significant portion of its silicon to sophisticated flow control and large data caches to minimize the execution time of a single task. In contrast, a GPU is designed for high-throughput computing. It makes up for slower single-thread performance by executing thousands of threads in parallel, dedicating far more of its transistors to data processing rather than to data caching and flow control. Figure \ref{fig:cpu-vs-gpu} highlights this difference. For example, a modern NVIDIA Blackwell architecture GPU can feature over 24,000 cores. This design results in much higher instruction throughput and memory bandwidth, which is ideal for problems that can be broken down into many independent sub-problems.
+The primary architectural difference between a CPU and a GPU lies in their design philosophies.
+A CPU is optimized for low-latency execution of a single or a few sequential instruction streams (threads).
+It dedicates a significant portion of its silicon to sophisticated flow control and large data caches to minimize the execution time of a single task.
+In contrast, a GPU is designed for high-throughput computing.
+It makes up for slower single-thread performance by executing thousands of threads in parallel, dedicating far more of its transistors to data processing rather than to data caching and flow control.
+Figure \ref{fig:cpu-vs-gpu} highlights this difference.
+For example, a modern NVIDIA Blackwell architecture GPU can feature over 24,000 cores.
+This design results in much higher instruction throughput and memory bandwidth, which is ideal for problems that can be broken down into many independent sub-problems.
 
-It is important to note that not all parts of a program can be effectively parallelized. The portions that can are typically isolated and rewritten as GPU kernels, which are functions compiled separately for the GPU's instruction set. A typical workflow for a GPU-accelerated program looks as follows:
+It is important to note that not all parts of a program can be effectively parallelized.
+The portions that can are typically isolated and rewritten as GPU kernels, which are functions compiled separately for the GPU's instruction set.
+A typical workflow for a GPU-accelerated program looks as follows:
 
 \begin{enumerate}
   \item Allocate memory on the device (GPU).
@@ -32,46 +44,66 @@ This data transfer overhead means that GPUs are most effective for problems wher
 \subsection{CUDA Programming Model}
 \label{sec:background:cuda-programming-model}
 
-To manage the massive parallelism of the hardware, NVIDIA developed CUDA (Compute Unified Device Architecture), a parallel computing platform and programming model. CUDA provides a set of extensions to the C++ language that allow developers to write host and device code within the same environment, simplifying the development process. It also abstracts the hardware into a logical hierarchy that is more manageable for the programmer.
+To manage the massive parallelism of the hardware, NVIDIA developed CUDA (Compute Unified Device Architecture), a parallel computing platform and programming model.
+CUDA provides a set of extensions to the C++ language that allow developers to write host and device code within the same environment, simplifying the development process.
+It also abstracts the hardware into a logical hierarchy that is more manageable for the programmer.
 
-The basic unit of execution in CUDA is a thread. When a kernel is launched, it is executed by a vast number of these threads on the GPU. They are organized into a three-dimensional hierarchy:
+The basic unit of execution in CUDA is a thread.
+When a kernel is launched, it is executed by a vast number of these threads on the GPU.
+They are organized into a three-dimensional hierarchy:
 
 \begin{itemize}
-  \item \textbf{Threads}: The smallest execution unit. Each thread executes the same kernel code but usually operates on different data, identified by its unique coordinates within a block.
+  \item \textbf{Threads}: The smallest execution unit.
+    Each thread executes the same kernel code but usually operates on different data, identified by its unique coordinates within a block.
 
   \item \textbf{Blocks}: Each block can contain up to 1024 threads, which can work together by sharing data through fast on-chip shared memory and synchronizing their progress.
 
-  \item \textbf{Grid}: Blocks are organized into a grid. All blocks in a grid execute the same kernel. Blocks are assumed to execute independently and in any order, and there is no guaranteed synchronization mechanism between them during a single kernel launch. \footnote{Hopper GPUs and newer support Thread Block Clusters, which allows this to an extent}
+  \item \textbf{Grid}: Blocks are organized into a grid.
+    All blocks in a grid execute the same kernel.
+    Blocks are assumed to execute independently and in any order, and there is no guaranteed synchronization mechanism between them during a single kernel launch.
+    \footnote{Hopper GPUs and newer support Thread Block Clusters, which allows this to an extent}
 \end{itemize}
 
-This hierarchical grid structure makes it easy to map threads to data. For example, when processing an image, one might assign a single thread to each pixel, group threads for a tile of the image into a block, and have the entire grid of blocks process the full image.
+This hierarchical grid structure makes it easy to map threads to data.
+For example, when processing an image, one might assign a single thread to each pixel, group threads for a tile of the image into a block, and have the entire grid of blocks process the full image.
 
 \subsection{Hardware Architecture}
 \label{sec:background:hardware-architecture}
 
-This logical hierarchy maps onto the physical hardware of the GPU. A GPU is composed of multiple Streaming Multiprocessors (SMs). A global scheduler assigns thread blocks to available SMs for execution, and a key challenge in GPU programming is keeping these SMs saturated with work.
+This logical hierarchy maps onto the physical hardware of the GPU.
+A GPU is composed of multiple Streaming Multiprocessors (SMs).
+A global scheduler assigns thread blocks to available SMs for execution, and a key challenge in GPU programming is keeping these SMs saturated with work.
 
 Each SM is a powerful parallel processor in its own right, containing several components (there are more components, but they are omitted here as they are largely irrelevant to the thesis):
 
 \begin{itemize}
   \item \textbf{CUDA Cores}: The basic arithmetic logic units (ALUs) that perform integer and floating-point calculations.
   \item \textbf{Warp Schedulers}: Decides which group of threads gets to execute on each clock cycle.
-  \item \textbf{Register File}: The fastest storage on the GPU, holding thread-specific data and intermediate results. While each thread has its own unlimited logical set of registers, the physical register file is a limited resource shared across all active threads on an SM.
+  \item \textbf{Register File}: The fastest storage on the GPU, holding thread-specific data and intermediate results.
+    While each thread has its own unlimited logical set of registers, the physical register file is a limited resource shared across all active threads on an SM.
   \item \textbf{Shared Memory/L1 Cache}: A low-latency memory space used for user-managed data sharing within a thread block.
   \item \textbf{Load/Store Units}: Manage the movement of data between memory spaces.
 \end{itemize}
 
-Threads are not only grouped into blocks but are also managed by the SM in groups of 32 called \textit{warps}. A warp is the fundamental unit of scheduling on the GPU. All 32 threads in a warp execute in a Single-Instruction-Multiple-Thread (SIMT) fashion, meaning they run in lockstep and execute the same instruction at the same time. This SIMT execution model is the root cause of some of the most important performance considerations in GPU programming.
+Threads are not only grouped into blocks but are also managed by the SM in groups of 32 called \textit{warps}.
+A warp is the fundamental unit of scheduling on the GPU.
+All 32 threads in a warp execute in a Single-Instruction-Multiple-Thread (SIMT) fashion, meaning they run in lockstep and execute the same instruction at the same time.
+This SIMT execution model is the root cause of some of the most important performance considerations in GPU programming.
 
 \subsection{Memory Hierarchy}
 \label{sec:background:memory-hierarchy}
 
-Performance in GPU programming is directly linked to memory access patterns. A deep understanding of the memory hierarchy is crucial for writing efficient code, as the primary goal of many optimizations is to maximize the use of fast memory and minimize traffic to slower memory.
+Performance in GPU programming is directly linked to memory access patterns.
+A deep understanding of the memory hierarchy is crucial for writing efficient code, as the primary goal of many optimizations is to maximize the use of fast memory and minimize traffic to slower memory.
 
 \begin{itemize}
-  \item \textbf{Registers}: The fastest memory on the GPU. Each thread has its own private registers for its local variables.
-  \item \textbf{Shared Memory}: A small, low-latency memory space shared by all threads within a single block. It is essential for intra-block communication and is primarily used as a user-managed cache to avoid redundant reads from the much slower global memory.
-  \item \textbf{Global Memory}: The largest memory space on the GPU (the device's VRAM), accessible to every running thread. It has the highest latency and serves as the medium for data transfer between the host and the device. Access to global memory should be minimized and carefully organized whenever possible.
+  \item \textbf{Registers}: The fastest memory on the GPU.
+    Each thread has its own private registers for its local variables.
+  \item \textbf{Shared Memory}: A small, low-latency memory space shared by all threads within a single block.
+    It is essential for intra-block communication and is primarily used as a user-managed cache to avoid redundant reads from the much slower global memory.
+  \item \textbf{Global Memory}: The largest memory space on the GPU (the device's VRAM), accessible to every running thread.
+    It has the highest latency and serves as the medium for data transfer between the host and the device.
+    Access to global memory should be minimized and carefully organized whenever possible.
 \end{itemize}
 
 \subsection{Performance Considerations}
@@ -79,12 +111,37 @@ Performance in GPU programming is directly linked to memory access patterns. A d
 
 The SIMT execution model of warps and the tiered memory hierarchy lead to several critical performance considerations.
 
-Access to global memory is often the most significant performance bottleneck. To mitigate this, the GPU hardware attempts to coalesce memory requests. This is a technique to improve memory bandwidth utilization by servicing multiple logical memory reads from a warp in a single physical memory transaction. Modern NVIDIA GPUs have a cache line size of 128 bytes \cite{nvidia-cuda-guide}. If the 32 threads in a warp access 32 consecutive 4-byte words in global memory, this 128-byte request can be satisfied with a single DRAM burst, achieving maximum bandwidth. Conversely, if the memory accesses are scattered and random, the hardware may require up to 32 separate transactions, drastically reducing performance.
+Access to global memory is often the most significant performance bottleneck.
+To mitigate this, the GPU hardware attempts to coalesce memory requests.
+This is a technique to improve memory bandwidth utilization by servicing multiple logical memory reads from a warp in a single physical memory transaction.
+Modern NVIDIA GPUs have a cache line size of 128 bytes \cite{nvidia-cuda-guide}.
+If the 32 threads in a warp access 32 consecutive 4-byte words in global memory, this 128-byte request can be satisfied with a single DRAM burst, achieving maximum bandwidth.
+Conversely, if the memory accesses are scattered and random, the hardware may require up to 32 separate transactions, drastically reducing performance.
 
-A similar principle applies to shared memory, which is organized into 32 memory banks \cite{nvidia-cuda-guide}. Each bank can service one request per cycle. If all 32 threads in a warp access data in different banks, the entire request can be satisfied in a single cycle. However, if multiple threads access the same bank, a bank conflict occurs, and the accesses are serialized, reducing throughput. Coalesced memory access guarantees there are no bank conflicts.
+A similar principle applies to shared memory, which is organized into 32 memory banks \cite{nvidia-cuda-guide}.
+Each bank can service one request per cycle.
+If all 32 threads in a warp access data in different banks, the entire request can be satisfied in a single cycle.
+However, if multiple threads access the same bank, a bank conflict occurs, and the accesses are serialized, reducing throughput.
+Coalesced memory access guarantees there are no bank conflicts.
 
-At a higher level, a modern GPU can execute multiple operations concurrently, such as copying data from the host while a kernel is running. A key technique for maximizing utilization is to use CUDA streams with async operations. A stream is essentially a work queue that is processed in order. By using multiple streams, a programmer can enqueue work on the GPU in smaller, independent chunks. This allows the GPU scheduler to more aggressively overlap memory transfers with computation (latency hiding). For example, the GPU can be copying the next chunk of data from the host while simultaneously processing the current chunk, effectively hiding the latency of the PCIe bus transfer and keeping the compute cores busy.
+At a higher level, a modern GPU can execute multiple operations concurrently, such as copying data from the host while a kernel is running.
+A key technique for maximizing utilization is to use CUDA streams with async operations.
+A stream is essentially a work queue that is processed in order.
+By using multiple streams, a programmer can enqueue work on the GPU in smaller, independent chunks.
+This allows the GPU scheduler to more aggressively overlap memory transfers with computation (latency hiding).
+For example, the GPU can be copying the next chunk of data from the host while simultaneously processing the current chunk, effectively hiding the latency of the PCIe bus transfer and keeping the compute cores busy.
 
-The physical resources on each SM are finite, and their management directly impacts performance. While the programming model exposes a nearly unlimited number of registers to each thread, in reality, there is still a limited, physical register file that all threads active on an SM must share. High register usage by a kernel can have two detrimental effects. First, if a single thread requires more registers than the hardware can allocate, some of its variables will "spill" into global memory, adding massive latency to every access. Second, even if there is no spilling, if the total register demand of all threads in a block is too high, the hardware scheduler will be forced to launch fewer concurrent warps on the SM. This reduction in occupancy (the ratio of active warps to the maximum supported warps) hurts the SM's ability to hide memory latency by switching to other warps, leading to lower overall utilization.
+The physical resources on each SM are finite, and their management directly impacts performance.
+While the programming model exposes a nearly unlimited number of registers to each thread, in reality, there is still a limited, physical register file that all threads active on an SM must share.
+High register usage by a kernel can have two detrimental effects.
+First, if a single thread requires more registers than the hardware can allocate, some of its variables will "spill" into global memory, adding massive latency to every access.
+Second, even if there is no spilling, if the total register demand of all threads in a block is too high, the hardware scheduler will be forced to launch fewer concurrent warps on the SM.
+This reduction in occupancy (the ratio of active warps to the maximum supported warps) hurts the SM's ability to hide memory latency by switching to other warps, leading to lower overall utilization.
 
-Finally, any operation that forces parallel threads to execute sequentially undermines the benefits of parallelism and degrades performance. Branch divergence is a classic example: since all threads in a warp execute the same instruction, if-else statements can cause serialization. If threads in a warp take different paths, the hardware executes each path serially while idling the threads on the other path. A similar and often more severe bottleneck arises from atomic contention. When many threads in a block attempt to perform an atomic operation on the same memory location simultaneously, the hardware is forced to serialize these requests. In cases of extreme contention, the performance can degrade to the point where a traditional lock-based critical section might even be faster. Therefore, minimizing both control-flow divergence and high-contention atomic operations is important for writing efficient, scalable GPU code.
+Finally, any operation that forces parallel threads to execute sequentially undermines the benefits of parallelism and degrades performance.
+Branch divergence is a classic example: since all threads in a warp execute the same instruction, if-else statements can cause serialization.
+If threads in a warp take different paths, the hardware executes each path serially while idling the threads on the other path.
+A similar and often more severe bottleneck arises from atomic contention.
+When many threads in a block attempt to perform an atomic operation on the same memory location simultaneously, the hardware is forced to serialize these requests.
+In cases of extreme contention, the performance can degrade to the point where a traditional lock-based critical section might even be faster.
+Therefore, minimizing both control-flow divergence and high-contention atomic operations is important for writing efficient, scalable GPU code.

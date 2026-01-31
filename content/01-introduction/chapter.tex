@@ -2,9 +2,15 @@
 \chapter{Introduction}
 \label{sec:intro}
 
-In the era of big data, the ability to perform set membership queries is a fundamental requirement for applications ranging from network traffic analysis \cite{bloom-network} to large-scale distributed systems \cite{bloom-distributed-systems}. Determining whether an element belongs to a set is a frequent and performance-critical operation. While exact data structures provide definitive answers, their memory footprint and computational overhead can make them impractical for massive datasets. This has led to the widespread adoption of probabilistic data structures, which trade a small, manageable false positive probability for significant gains in space and time efficiency.
+In the era of big data, the ability to perform set membership queries is a fundamental requirement for applications ranging from network traffic analysis \cite{bloom-network} to large-scale distributed systems \cite{bloom-distributed-systems}.
+Determining whether an element belongs to a set is a frequent and performance-critical operation.
+While exact data structures provide definitive answers, their memory footprint and computational overhead can make them impractical for massive datasets.
+This has led to the widespread adoption of probabilistic data structures, which trade a small, manageable false positive probability for significant gains in space and time efficiency.
 
-For years, the Bloom filter has been the standard probabilistic data structure for approximate set membership. Its primary limitation, however, is the inability to delete elements, making it unsuitable for dynamic datasets. While there are variations that do support deletion, they incur prohibitive space overheads that often negate their practical viability. Due to this the Cuckoo filter has emerged as a powerful alternative, offering native support for deletions and often superior space efficiency, particularly at low false positive rates.
+For years, the Bloom filter has been the standard probabilistic data structure for approximate set membership.
+Its primary limitation, however, is the inability to delete elements, making it unsuitable for dynamic datasets.
+While there are variations that do support deletion, they incur prohibitive space overheads that often negate their practical viability.
+Due to this the Cuckoo filter has emerged as a powerful alternative, offering native support for deletions and often superior space efficiency, particularly at low false positive rates.
 
 \input{content/01-introduction/problem-statement}
 \input{content/01-introduction/use-cases}
