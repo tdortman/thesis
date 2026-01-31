@@ -6,7 +6,7 @@
 
 To evaluate the reliability of the implemented filters, the empirical false positive rate was measured across a range of filter capacities.
 For each test, the filters were populated to a constant 95\% load factor using random keys.
-The total memory size was varied from $2^{15}$ to $2^{30}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint.
+The total memory size was varied from $2^{15}$ to $2^{28}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint.
 The results are presented in Figure \ref{fig:fpr-vs-memory}:
 
 \begin{itemize}
@@ -20,14 +20,15 @@ The results are presented in Figure \ref{fig:fpr-vs-memory}:
 
   \item \textbf{CPU vs. GPU Cuckoo filters}: A distinction remains visible between the CPU and GPU Cuckoo filter implementations.
     The CPU version achieves a very low false positive rate, hovering near 0.005\%.
-    The GPU Cuckoo filter, while still highly accurate, exhibits a higher rate of approximately 0.045\%.
+    The GPU Cuckoo filter, while still highly accurate, has a higher rate of approximately 0.045\%.
     This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}.
     To maximize parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4.
     As established in Equation \ref{eq:cuckoo-space-bound}, a larger bucket size directly increases the collision probability for a fixed fingerprint size.
-    On top of that, the partitioned Cuckoo filter exhibits a similar clustering effect to the Blocked Bloom filter, albeit to a much lesser degree.
+    On top of that, the partitioned Cuckoo filter has a similar clustering effect to the Blocked Bloom filter, albeit to a much lesser degree.
+    It is important to note that, unlike the CPU versions, the GPU Cuckoo filter allows for flexible bucket sizes to tune the false positive rate.
 
   \item \textbf{Comparison with TCF}: The GPU Cuckoo filter significantly outperforms the TCF regarding accuracy.
-    The TCF exhibits an error rate roughly an order of magnitude higher (ranging between 0.2\% and 0.5\%).
+    The TCF has an error rate roughly an order of magnitude higher (ranging between 0.35\% and 0.55\%).
     While the TCF is more accurate than the Blocked Bloom filter, the Cuckoo filter and GQF designs offer superior accuracy for this workload.
 \end{itemize}
 
