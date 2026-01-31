@@ -1,0 +1,215 @@
+name: Build and Deploy Thesis PDF
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    container:
+      image: texlive/texlive
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 3
+
+      - name: Get project properties
+        id: properties
+        run: |
+          COMMIT_DATE=$(date -d "${{ github.event.head_commit.timestamp }}" +%Y%m%d 2>/dev/null || date +%Y%m%d)
+          PROJECT_TITLE="thesis"
+          FILE_NAME="${COMMIT_DATE}_${PROJECT_TITLE}"
+          SHORT_SHA="${{ github.sha }}"
+          SHORT_SHA="${SHORT_SHA:0:7}"
+
+          echo "file_name=$FILE_NAME" >> $GITHUB_OUTPUT
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "commit_date=$COMMIT_DATE" >> $GITHUB_OUTPUT
+
+          echo "Commit Date: $COMMIT_DATE"
+          echo "Short SHA: $SHORT_SHA"
+          echo "File Name: $FILE_NAME"
+
+      - name: Build PDF
+        run: |
+          export TERM=xterm
+          # First run of pdflatex
+          pdflatex -jobname=my-thesis -shell-escape -interaction=nonstopmode "\def\thesisVersion{${{ steps.properties.outputs.short_sha }}}\input{my-thesis.tex}" || true
+
+          # Run biber for bibliography
+          biber my-thesis || true
+
+          # Second run of pdflatex for references
+          pdflatex -jobname=my-thesis -interaction=nonstopmode "\def\thesisVersion{${{ steps.properties.outputs.short_sha }}}\input{my-thesis.tex}" || true
+
+          # Third run of pdflatex for final references
+          pdflatex -jobname=my-thesis -interaction=nonstopmode "\def\thesisVersion{${{ steps.properties.outputs.short_sha }}}\input{my-thesis.tex}" || true
+
+          # Rename PDF with dated filename
+          mv my-thesis.pdf "${{ steps.properties.outputs.file_name }}.pdf"
+
+      - name: Prepare Pages artifacts
+        run: |
+          mkdir -p _site
+          cp "${{ steps.properties.outputs.file_name }}.pdf" _site/thesis.pdf
+
+          # Create index.html with embedded PDF viewer
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Thesis PDF</title>
+              <style>
+                  * {
+                      margin: 0;
+                      padding: 0;
+                      box-sizing: border-box;
+                  }
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+                      background: #f5f5f5;
+                      min-height: 100vh;
+                  }
+                  .header {
+                      background: #2c3e50;
+                      color: white;
+                      padding: 1.5rem 2rem;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  }
+                  .header h1 {
+                      font-size: 1.5rem;
+                      font-weight: 500;
+                  }
+                  .header .meta {
+                      font-size: 0.875rem;
+                      opacity: 0.8;
+                      margin-top: 0.5rem;
+                  }
+                  .container {
+                      max-width: 1200px;
+                      margin: 0 auto;
+                      padding: 2rem;
+                  }
+                  .actions {
+                      margin-bottom: 1.5rem;
+                      display: flex;
+                      gap: 1rem;
+                      flex-wrap: wrap;
+                  }
+                  .btn {
+                      display: inline-flex;
+                      align-items: center;
+                      gap: 0.5rem;
+                      padding: 0.75rem 1.5rem;
+                      background: #3498db;
+                      color: white;
+                      text-decoration: none;
+                      border-radius: 6px;
+                      font-weight: 500;
+                      transition: background 0.2s;
+                  }
+                  .btn:hover {
+                      background: #2980b9;
+                  }
+                  .btn-secondary {
+                      background: #95a5a6;
+                  }
+                  .btn-secondary:hover {
+                      background: #7f8c8d;
+                  }
+                  .pdf-container {
+                      background: white;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                      overflow: hidden;
+                  }
+                  .pdf-viewer {
+                      width: 100%;
+                      height: calc(100vh - 250px);
+                      min-height: 600px;
+                      border: none;
+                  }
+                  .fallback {
+                      padding: 3rem;
+                      text-align: center;
+                      color: #666;
+                  }
+                  @media (max-width: 768px) {
+                      .container {
+                          padding: 1rem;
+                      }
+                      .pdf-viewer {
+                          height: 500px;
+                      }
+                  }
+              </style>
+          </head>
+          <body>
+              <header class="header">
+                  <h1>📄 Thesis PDF</h1>
+                  <div class="meta">Built from commit ${{ github.sha }}</div>
+              </header>
+              <div class="container">
+                  <div class="actions">
+                      <a href="thesis.pdf" class="btn" download>
+                          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                              <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                          </svg>
+                          Download PDF
+                      </a>
+                      <a href="https://github.com/${{ github.repository }}" class="btn btn-secondary">
+                          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                          </svg>
+                          View on GitHub
+                      </a>
+                  </div>
+                  <div class="pdf-container">
+                      <embed
+                          class="pdf-viewer"
+                          src="thesis.pdf"
+                          type="application/pdf"
+                          title="Thesis PDF">
+                      <div class="fallback" style="display: none;">
+                          <p>Your browser cannot display the PDF directly.</p>
+                          <p><a href="thesis.pdf">Click here to download the PDF.</a></p>
+                      </div>
+                  </div>
+              </div>
+          </body>
+          </html>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build-pdf
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
