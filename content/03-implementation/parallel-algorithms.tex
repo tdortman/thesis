@@ -33,7 +33,7 @@ To maintain an accurate count of the total items in the filter without creating 
 
       \LComment{Phase 1: Try direct insertion}
       \If{\Call{TryInsert}{$i_1$, \texttt{fp}} \textbf{or} \Call{TryInsert}{$i_2$, \texttt{fp}}}
-        \State \textbf{return} \texttt{Success}
+        \State \Return \texttt{Success}
       \EndIf
 
       \LComment{Phase 2: Eviction Chain}
@@ -57,13 +57,13 @@ To maintain an accurate count of the total items in the filter without creating 
         \State \texttt{b} $\gets$ \Call{AlternateIndex}{\texttt{b}, \texttt{tag}}
 
         \If{\Call{TryInsert}{\texttt{buckets}[\texttt{b}], \texttt{tag}}}
-          \State \textbf{return} \texttt{Success}
+          \State \Return \texttt{Success}
         \EndIf
       \EndFor
 
       \LComment{Table too full}
       \LComment{Caller will have to rebuild}
-      \State \textbf{return} \texttt{Failure}
+      \State \Return \texttt{Failure}
     \EndFunction
     \Statex
    \Function{TryInsert}{bucket, tag}
@@ -78,14 +78,14 @@ To maintain an accurate count of the total items in the filter without creating 
           \State \texttt{slot} $\gets$ \Call{FindFirstSet}{\texttt{mask}}
           \State \texttt{desired} $\gets$ \Call{ReplaceTag}{\texttt{word}, \texttt{slot}, \texttt{tag}}
           \If{\Call{AtomicCAS}{\&\texttt{bucket}[\texttt{idx}], \texttt{word}, \texttt{desired}}}
-            \State \textbf{return} \texttt{Success}
+            \State \Return \texttt{Success}
           \EndIf
           \LComment{Reload on CAS failure}
           \State \texttt{word} $\gets$ \texttt{bucket}[\texttt{idx}]
           \State \texttt{mask} $\gets$ \Call{ZeroMask}{\texttt{word}}
         \EndWhile
       \EndFor
-      \State \textbf{return} \texttt{Failure}
+      \State \Return \texttt{Failure}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
@@ -112,7 +112,7 @@ The key optimization is vectorized, non-atomic memory loads combined with SWAR c
       \State $i_2$ $\gets$ \Call{AlternateIndex}{$i_1$, \texttt{fp}}
 
       \LComment{Check both buckets (read-only, no locking needed)}
-      \State \textbf{return} \Call{Find}{$i_1$, \texttt{fp}} \textbf{or} \Call{Find}{$i_2$, \texttt{fp}}
+      \State \Return \Call{Find}{$i_1$, \texttt{fp}} \textbf{or} \Call{Find}{$i_2$, \texttt{fp}}
     \EndFunction
     \Statex
     \Function{Find}{\texttt{bucket}, \texttt{tag}}
@@ -129,10 +129,10 @@ The key optimization is vectorized, non-atomic memory loads combined with SWAR c
         \LComment{Use SWAR to check for matches in parallel}
         \If{\Call{HasZeroSegment}{$w_1 \oplus \texttt{pattern}$} \textbf{or} \\
             \phantom{\textbf{if} }\Call{HasZeroSegment}{$w_2 \oplus \texttt{pattern}$} \\}
-          \State \hspace{-\algorithmicindent}\phantom{\textbf{if} }\textbf{return} \texttt{Success}
+          \State \hspace{-\algorithmicindent}\phantom{\textbf{if} }\Return \texttt{Success}
         \EndIf
       \EndFor
-      \State \textbf{return} \texttt{Failure}
+      \State \Return \texttt{Failure}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
@@ -159,7 +159,7 @@ The thread broadcasts the target tag and uses SWAR to find matches. If a match i
       \State $i_2$ $\gets$ \Call{AlternateIndex}{$i_1$, \texttt{fp}}
 
       \LComment{Attempt to remove from either valid location}
-      \State \textbf{return} \Call{TryRemove}{$i_1$, \texttt{fp}} \textbf{or} \Call{TryRemove}{$i_2$, \texttt{fp}}
+      \State \Return \Call{TryRemove}{$i_1$, \texttt{fp}} \textbf{or} \Call{TryRemove}{$i_2$, \texttt{fp}}
     \EndFunction
     \Statex
     \Function{TryRemove}{\texttt{bucket}, \texttt{targetTag}}
@@ -177,7 +177,7 @@ The thread broadcasts the target tag and uses SWAR to find matches. If a match i
           \State \texttt{desired} $\gets$ \Call{ReplaceTag}{\texttt{word}, \texttt{slot}, \texttt{EMPTY}}
 
           \If{\Call{AtomicCAS}{\&\texttt{bucket}[\texttt{idx}], \texttt{word}, \texttt{desired}}}
-            \State \textbf{return} \texttt{Success}
+            \State \Return \texttt{Success}
           \EndIf
 
           \LComment{Reload on CAS failure}
@@ -185,7 +185,7 @@ The thread broadcasts the target tag and uses SWAR to find matches. If a match i
           \State \texttt{mask} $\gets$ \Call{ZeroMask}{\texttt{word} $\oplus$ \texttt{pattern}}
         \EndWhile
       \EndFor
-      \State \textbf{return} \texttt{Failure}
+      \State \Return \texttt{Failure}
     \EndFunction
   \end{algorithmic}
 \end{algorithm}
