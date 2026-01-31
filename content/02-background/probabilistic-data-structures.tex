@@ -206,8 +206,7 @@ The design of the Cuckoo filter leads to several practical advantages over Bloom
     The original paper demonstrates that with a bucket size of 4, the filter can consistently reach an occupancy of over 95\% \cite{og-cuckoo-filter}.
     The GPU implementation in this thesis generally prefers slightly larger bucket sizes for performance reasons, thus consistently reaching a load factor of over 99\%.
 
-  \item \textbf{Space Efficiency vs.
-    False Positive Rate}: The false positive rate $\epsilon$ of a Cuckoo filter is directly tied to the fingerprint size $f$ and the bucket size $b$.
+  \item \textbf{Space Efficiency vs. False Positive Rate}: The false positive rate $\epsilon$ of a Cuckoo filter is directly tied to the fingerprint size $f$ and the bucket size $b$.
     Because a lookup must check up to $2b$ fingerprints in the worst case, the false positive rate can be approximated by:
 
     \begin{equation}

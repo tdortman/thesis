@@ -1,5 +1,4 @@
-\subsection{Sorted vs.
-Unsorted Insertion}
+\subsection{Sorted vs. Unsorted Insertion}
 \label{sec:eval:sorted-insertion}
 
 To investigate the potential for enhancing insertion throughput by improving memory locality, an alternative insertion strategy was implemented and evaluated.
@@ -17,24 +16,21 @@ Figures \ref{fig:sorted:system-a}, \ref{fig:sorted:system-b}, and \ref{fig:sorte
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{images/sorted_insertion/system_a.pdf}
-  \caption{Throughput comparison of sorted vs.
-  unsorted insertion on System A (GDDR7)}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System A (GDDR7)}
   \label{fig:sorted:system-a}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{images/sorted_insertion/system_b.pdf}
-  \caption{Throughput comparison of sorted vs.
-  unsorted insertion on System B (HBM3)}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System B (HBM3)}
   \label{fig:sorted:system-b}
 \end{figure}
 
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=\textwidth]{images/sorted_insertion/system_c.pdf}
-  \caption{Throughput comparison of sorted vs.
-  unsorted insertion on System C (GDDR7)}
+  \caption{Throughput comparison of sorted vs. unsorted insertion on System C (GDDR7)}
   \label{fig:sorted:system-c}
 \end{figure}
 
@@ -69,12 +65,10 @@ The speedup provided by pre-sorting depends heavily on the memory technology and
 
 \subsubsection{Trade-offs and Limitations}
 
-The breakdown of sorted vs.
-unsorted performance leads to some conclusions regarding viability:
+The breakdown of sorted vs. unsorted performance leads to some conclusions regarding viability:
 
 \begin{itemize}
-  \item \textbf{Overhead vs.
-    Gain}: While memory locality theoretically solves the random-access bottleneck, the current cost of the sorting and packing step is too high to realize these gains in an end-to-end pipeline.
+  \item \textbf{Overhead vs. Gain}: While memory locality theoretically solves the random-access bottleneck, the current cost of the sorting and packing step is too high to realize these gains in an end-to-end pipeline.
     Unless the sorting cost can be amortized over other operations, the standard unsorted insertion remains superior for general use.
 
   \item \textbf{Memory Overhead}: The sorting process requires auxiliary buffers, doubling the peak memory usage during insertion.

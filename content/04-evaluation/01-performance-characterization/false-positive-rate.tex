@@ -18,8 +18,7 @@ The results are presented in Figure \ref{fig:fpr-vs-memory}:
   \item \textbf{Quotient filter Accuracy}: The GQF exhibits the lowest false positive rate among all candidates, maintaining an error rate below 0.002\%.
     This confirms the theoretical space efficiency of quotient filters, which handle collisions via Robin Hood hashing and metadata encoding.
 
-  \item \textbf{CPU vs.
-    GPU Cuckoo filters}: A distinction remains visible between the CPU and GPU Cuckoo filter implementations.
+  \item \textbf{CPU vs. GPU Cuckoo filters}: A distinction remains visible between the CPU and GPU Cuckoo filter implementations.
     The CPU version achieves a very low false positive rate, hovering near 0.005\%.
     The GPU Cuckoo filter, while still highly accurate, exhibits a higher rate of approximately 0.045\%.
     This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}.
@@ -41,8 +40,7 @@ The results are presented in Figure \ref{fig:fpr-vs-memory}:
 
 \FloatBarrier
 
-\subsubsection{Performance vs.
-Accuracy Trade-off}
+\subsubsection{Performance vs. Accuracy Trade-off}
 \label{sec:eval:fpr:tradeoff}
 
 In real-world applications, filters are often chosen based on strict False Positive Rate requirements (e.g.
