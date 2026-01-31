@@ -2,9 +2,8 @@
 Das Template basiert auf der Arbeit von https://github.com/derric/cleanthesis und wird in diesem Repository an die Bedürfnisse der JGU und des Instituts für Informatik angepasst.
 Insbesondere zählt dazu die Integration der JGU Farbe (rot), des JGU Logos und der Schriftart Noto. Die Titelseite wird für Bachelor-, Master- und Doktorarbeit je nach Einstellung angepasst.
 
-[![pipeline status](https://gitlab.rlp.net/tdortman/thesis/badges/main/pipeline.svg)](hhttps://gitlab.rlp.net/tdortman/thesis/-/jobs/artifacts/main/browse?job=build_pdf)
 
-[Link to the artifacts page of the last successful pipeline run with the final built thesis PDF](https://gitlab.rlp.net/tdortman/thesis/-/jobs/artifacts/main/browse?job=build_pdf)
+[![View PDF](https://img.shields.io/badge/View-PDF-blue)](https://tdortman.github.io/thesis/thesis.pdf)
 
 ## Hinweise
 - Metainformationen in der my-thesis-setup.tex anpassen.
