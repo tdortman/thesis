@@ -33,8 +33,7 @@ jobs:
           COMMIT_DATE=$(date -d "${{ github.event.head_commit.timestamp }}" +%Y%m%d 2>/dev/null || date +%Y%m%d)
           PROJECT_TITLE="thesis"
           FILE_NAME="${COMMIT_DATE}_${PROJECT_TITLE}"
-          SHORT_SHA="${{ github.sha }}"
-          SHORT_SHA="${SHORT_SHA:0:7}"
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
 
           echo "file_name=$FILE_NAME" >> $GITHUB_OUTPUT
           echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
