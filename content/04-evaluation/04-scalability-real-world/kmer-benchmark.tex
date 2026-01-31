@@ -17,7 +17,7 @@ The throughput results for the $k$-mer benchmark are presented in Figure \ref{fi
 
 \begin{figure}[ht!]
   \centering
-  \includegraphics[width=1.0\textwidth]{images/kmer_benchmark.pdf}
+  \includegraphics[width=\textwidth]{images/kmer-benchmark.pdf}
   \caption{Throughput comparison for inserting, querying, and deleting 31-mers from the full T2T-CHM13 human genome on System B.}
   \label{fig:kmer-benchmark}
 \end{figure}
@@ -25,11 +25,11 @@ The throughput results for the $k$-mer benchmark are presented in Figure \ref{fi
 The results confirm that the Cuckoo filter's high performance translates well to real-world workloads:
 
 \begin{itemize}
-  \item \textbf{Query Performance}: While the Cuckoo filter does not fully match the Blocked Bloom filter, it maintains a significant lead over other dynamic alternatives. It is approximately 72\% faster than the GQF and roughly 10$\times$ faster than the TCF.
+  \item \textbf{Query Performance}: While the Cuckoo filter does not fully match the Blocked Bloom filter, it maintains a notable lead over other dynamic alternatives. It is 68\% faster than the GQF and 10.3$\times$ faster than the TCF.
 
-  \item \textbf{Insertion Performance}: While the Cuckoo filter trails the append-only Blocked Bloom filter in this high-bandwidth scenario, it remains the fastest among dynamic data structures, outperforming the TCF by 19\% and the GQF by 3.8$\times$.
+  \item \textbf{Insertion Performance}: While the Cuckoo filter trails the append-only Blocked Bloom filter in this high-bandwidth scenario, it remains the fastest among dynamic data structures, outperforming the TCF by 2.4$\times$ and the GQF by 6.2$\times$.
 
-  \item \textbf{Deletion Performance}: In deletion throughput, the Cuckoo filter demonstrates superior performance. It is 2.1$\times$ faster than the GQF and nearly 35$\times$ faster than the TCF.
+  \item \textbf{Deletion Performance}: In deletion throughput, the Cuckoo filter demonstrates superior performance. It is 2.1$\times$ faster than the GQF and 39.2$\times$ faster than the TCF.
 \end{itemize}
 
 \subsubsection{Conclusion}
