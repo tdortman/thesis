@@ -74,7 +74,7 @@ In this bandwidth-abundant, low-latency environment, the computational cost of t
 In the \textbf{DRAM-resident} scenario (Figure \ref{fig:evict:large}), the performance dynamics become highly dependent on the specific balance between compute resources and memory subsystems:
 
 \begin{itemize}
-  \item \textbf{System A}: On the RTX Pro 6000, the BFS policy offers negligible benefits.
+  \item \textbf{System A}: On the RTX PRO 6000 Blackwell, the BFS policy offers negligible benefits.
     This system features the highest core count of all testbeds, and its massive parallelism allows the GPU to effectively hide the latency of the sequential DFS memory accesses by aggressively switching between warps.
     Because the hardware is already mitigating the penalty of the DFS chains via parallelism, the BFS strategy yields barely any gain.
 
