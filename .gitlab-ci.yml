@@ -26,7 +26,7 @@ get_project_properties:
 
 build_pdf:
   stage: build
-  image: texlive/texlive
+  image: texlive/texlive:TL2023-historic
   script:
     - apt-get update -qy
     - pdflatex -jobname=my-thesis -shell-escape -interaction=nonstopmode "\def\thesisVersion{${CI_COMMIT_SHORT_SHA}}\input{my-thesis.tex}"
