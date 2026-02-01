@@ -138,8 +138,4 @@ The following utility functions are provided for filter maintenance and verifica
     This operation does not deallocate any device memory.
 
   \item \texttt{float loadFactor()}: Returns the current load factor of the filter, calculated as the number of occupied slots divided by the total capacity.
-
-  \item \texttt{size\_t countOccupiedSlots()}: A debugging utility that provides a ground-truth count of occupied slots.
-    It operates by copying the entire filter data to the host and manually counting every non-zero fingerprint.
-    As this is an extremely slow, synchronous operation, it should only be used for verification purposes if the internal atomic counter is suspected to be inaccurate.
 \end{itemize}
