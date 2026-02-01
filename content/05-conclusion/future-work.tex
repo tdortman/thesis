@@ -14,6 +14,7 @@ The work presented in this thesis opens several avenues for future research and 
 
   \item \textbf{Robustness Against Churn}: Future work could explore hybrid architectures, such as attaching a small "overflow stash" or secondary table, to catch items that fail the eviction chain.
     This would significantly improve stability and reliability for non-terminating, dynamic workloads.
+
   \item \textbf{Optimisation for Heterogeneous Systems}: With the increasing prevalence of heterogeneous systems like the NVIDIA GH200, future work could investigate optimising the Cuckoo filter for such architectures.
     Specifically, leveraging unified memory to lower the cost of CPU-to-GPU data transfers could yield significant performance improvements.
 \end{itemize}
