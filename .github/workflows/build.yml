@@ -72,8 +72,8 @@ jobs:
           <html>
           <head>
               <meta charset="UTF-8">
-              <meta http-equiv="refresh" content="0; url=thesis.pdf">
               <title>Thesis PDF</title>
+              <script>window.location.replace("thesis.pdf");</script>
           </head>
           <body>
               <p>Redirecting to <a href="thesis.pdf">thesis.pdf</a>...</p>
