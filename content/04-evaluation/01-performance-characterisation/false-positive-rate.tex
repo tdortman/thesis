@@ -6,7 +6,7 @@
 
 To evaluate the reliability of the implemented filters, the empirical false positive rate was measured across a range of filter capacities.
 For each test, the filters were populated to a constant 95\% load factor using random keys.
-The total memory size was varied from $2^{15}$ to $2^{28}$ bytes, allowing each implementation to optimize its internal layout within that fixed memory constraint.
+The total memory size was varied from $2^{15}$ to $2^{28}$ bytes, allowing each implementation to optimise its internal layout within that fixed memory constraint.
 The results are presented in Figure \ref{fig:fpr-vs-memory}:
 
 \begin{itemize}
@@ -22,7 +22,7 @@ The results are presented in Figure \ref{fig:fpr-vs-memory}:
     The CPU version achieves a very low false positive rate, hovering near 0.005\%.
     The GPU Cuckoo filter, while still highly accurate, has a higher rate of approximately 0.045\%.
     This difference is a direct consequence of the bucket size trade-off discussed in Section \ref{sec:eval:bucket-size}.
-    To maximize parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4.
+    To maximise parallel throughput, the GPU implementation uses a bucket size of 16, whereas the CPU versions use a standard bucket size of 4.
     As established in Equation \ref{eq:cuckoo-space-bound}, a larger bucket size directly increases the collision probability for a fixed fingerprint size.
     On top of that, the partitioned Cuckoo filter has a similar clustering effect to the Blocked Bloom filter, albeit to a much lesser degree.
     It is important to note that, unlike the CPU versions, the GPU Cuckoo filter allows for flexible bucket sizes to tune the false positive rate.
@@ -52,20 +52,20 @@ These tests were performed on System B (HBM3) with capacities of $2^{22}$ (L2-re
 The CPU implementations are excluded from this comparison as their throughput is simply insufficient.
 To represent a realistic workload where the presence of items is uncertain, the query throughput is reported as a weighted average of positive and negative lookups, with a 50\% hit rate.
 
-The results, visualized in Figure \ref{fig:throughput-by-fpr}, highlight the strengths of the Cuckoo filter as a general-purpose structure:
+The results, visualised in Figure \ref{fig:throughput-by-fpr}, highlight the strengths of the Cuckoo filter as a general-purpose structure:
 
 \begin{itemize}
   \item \textbf{L2-Resident Superiority}: In the L2-resident scenario, the GPU Cuckoo filter demonstrates exceptional efficiency.
     For target FPRs of $\leq 10\%$, $\leq 1\%$ and $\leq 0.1\%$, it surpasses the Blocked Bloom filter in query throughput.
-    This indicates that when memory latency is neutralized by the cache, the Cuckoo filter's retrieval logic is computationally more efficient than the multiple hashing and bitwise operations required by the Blocked Bloom filter.
-    Furthermore, the performance gap between the Cuckoo filter and the other dynamic filters (TCF, GQF) widens significantly in this scenario, as the latter struggle to fully utilize the L2 bandwidth due to their complex internal synchronization.
+    This indicates that when memory latency is neutralised by the cache, the Cuckoo filter's retrieval logic is computationally more efficient than the multiple hashing and bitwise operations required by the Blocked Bloom filter.
+    Furthermore, the performance gap between the Cuckoo filter and the other dynamic filters (TCF, GQF) widens significantly in this scenario, as the latter struggle to fully utilise the L2 bandwidth due to their complex internal synchronisation.
 
   \item \textbf{Baseline Comparison}: As expected for the DRAM-resident case, the Blocked Bloom filter generally offers the highest raw throughput due to its linear memory access patterns.
     However, its inability to support deletions rules it out for dynamic applications.
     Among the dynamic filters, the Cuckoo filter remains the closest competitor to the Bloom filter's performance across all sizes.
 
   \item \textbf{Dynamic Operation Performance}: While the GQF can match the Cuckoo filter in query throughput for specific configurations, it suffers a catastrophic penalty in dynamic operations.
-    Its insertion and deletion throughputs are orders of magnitude lower due to the complex synchronization required to shift elements.
+    Its insertion and deletion throughputs are orders of magnitude lower due to the complex synchronisation required to shift elements.
     Similarly, the TCF, while faster than the GQF for updates, still lags significantly behind the Cuckoo filter in deletion throughput.
 
   \item \textbf{Conclusion}: The GPU Cuckoo filter emerges as the most robust and well-rounded solution for high-throughput dynamic workloads.

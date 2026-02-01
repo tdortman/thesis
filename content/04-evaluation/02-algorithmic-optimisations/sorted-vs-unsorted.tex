@@ -3,7 +3,7 @@
 
 To investigate the potential for enhancing insertion throughput by improving memory locality, an alternative insertion strategy was implemented and evaluated.
 This strategy, detailed in Section \ref{sec:implementation:optimisation-techniques:sorted}, pre-sorts the input keys by their primary bucket index before launching the insertion kernel.
-The goal is to maximize coalesced memory accesses by ensuring that adjacent threads target the same or nearby buckets.
+The goal is to maximise coalesced memory accesses by ensuring that adjacent threads target the same or nearby buckets.
 
 To strictly isolate the benefits of memory locality from the overhead of the pre-processing step, a \textit{Presorted} metric was also introduced.
 This metric measures the throughput of the insertion kernel assuming the data has already been sorted "for free", whereas \textit{Sorted} reflects the end-to-end throughput including the radix sort and packing overhead.
@@ -60,7 +60,7 @@ The speedup provided by pre-sorting depends heavily on the memory technology and
 
   \item \textbf{HBM3 System (B)}: On System B, the high-bandwidth memory already absorbs much of the random access penalty inherent to the unsorted approach.
     Consequently, while pre-sorting still yields a performance improvement, the speedup is less dramatic.
-    Because the speedup factor is smaller, it fails to amortize the cost of the sort, resulting in a net loss in total throughput (including sort) compared to the standard unsorted method.
+    Because the speedup factor is smaller, it fails to amortise the cost of the sort, resulting in a net loss in total throughput (including sort) compared to the standard unsorted method.
 \end{itemize}
 
 \subsubsection{Trade-offs and Limitations}
@@ -68,8 +68,8 @@ The speedup provided by pre-sorting depends heavily on the memory technology and
 The breakdown of sorted vs. unsorted performance leads to some conclusions regarding viability:
 
 \begin{itemize}
-  \item \textbf{Overhead vs. Gain}: While memory locality theoretically solves the random-access bottleneck, the current cost of the sorting and packing step is too high to realize these gains in an end-to-end pipeline.
-    Unless the sorting cost can be amortized over other operations, the standard unsorted insertion remains superior for general use.
+  \item \textbf{Overhead vs. Gain}: While memory locality theoretically solves the random-access bottleneck, the current cost of the sorting and packing step is too high to realise these gains in an end-to-end pipeline.
+    Unless the sorting cost can be amortised over other operations, the standard unsorted insertion remains superior for general use.
 
   \item \textbf{Memory Overhead}: The sorting process requires auxiliary buffers, doubling the peak memory usage during insertion.
     This effectively halves the maximum batch size.

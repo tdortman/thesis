@@ -21,7 +21,7 @@ To account for this and prevent premature insertion failures on one device, each
 
 Distributing the input data from the host to the correct GPU partition is a complex challenge.
 A naive approach involving a single "primary" GPU that partitions and distributes all data creates a severe load imbalance.
-Therefore, a fully parallelized, multi-stage workflow was implemented leveraging the Gossip library \cite{gossip} for optimized communication:
+Therefore, a fully parallelised, multi-stage workflow was implemented leveraging the Gossip library \cite{gossip} for optimised communication:
 
 \begin{enumerate}
   \item \textbf{Initial Data Scatter}: The host-side input array is processed in large chunks.
@@ -29,10 +29,10 @@ Therefore, a fully parallelized, multi-stage workflow was implemented leveraging
 
   \item \textbf{Destination Calculation}: Each GPU launches a lightweight kernel to hash its local keys and determine the target GPU index for each item.
 
-  \item \textbf{Topology-Aware Multisplit and Exchange}: To redistribute the keys to their correct owner GPUs, the implementation utilizes the Gossip library.
+  \item \textbf{Topology-Aware Multisplit and Exchange}: To redistribute the keys to their correct owner GPUs, the implementation utilises the Gossip library.
     Unlike a standard all-to-all approach, Gossip performs an efficient \textit{multisplit} operation combined with a topology-aware data exchange.
-    It uses hints for the system's interconnect topology (distinguishing between NVLink and PCIe connections) to generate an optimized transfer plan.
-    This ensures that the data shuffling phase maximizes the available bandwidth and minimizes contention on the interconnect.
+    It uses hints for the system's interconnect topology (distinguishing between NVLink and PCIe connections) to generate an optimised transfer plan.
+    This ensures that the data shuffling phase maximises the available bandwidth and minimises contention on the interconnect.
 
   \item \textbf{Parallel Processing}: Once the exchange is complete, each GPU holds all the keys that belong to its partition.
     At this point, each GPU proceeds to execute the standard single-GPU insertion, lookup, or deletion kernel on its local data, fully in parallel with the other devices.
@@ -42,7 +42,7 @@ Therefore, a fully parallelized, multi-stage workflow was implemented leveraging
 \label{sec:implementation:multi-gpu-results}
 
 For operations that require an output array, the results generated on each GPU must be consolidated and reordered to match the original input order.
-To solve this efficiently, the Gossip library is again utilized to reverse the exchange process, sending results back to the GPUs that originally held the keys (pre-partitioning).
+To solve this efficiently, the Gossip library is again utilised to reverse the exchange process, sending results back to the GPUs that originally held the keys (pre-partitioning).
 This allows each GPU to perform a parallel scatter operation, writing its portion of the results into the final host output buffer in the correct order.
 
 \subsection{Overheads}
@@ -50,6 +50,6 @@ This allows each GPU to perform a parallel scatter operation, writing its portio
 
 The use of the Gossip library significantly mitigates the overheads associated with manual partitioning.
 Previous approaches relying on \texttt{thrust::sort} and standard NCCL collectives often incurred high temporary memory costs and sorting latency.
-Gossip's optimized multisplit primitive reduces the auxiliary memory footprint and leverages low-level hardware features for faster data movement.
+Gossip's optimised multisplit primitive reduces the auxiliary memory footprint and leverages low-level hardware features for faster data movement.
 However, the fundamental latency of moving data off-chip remains a bottleneck compared to single-GPU execution.
 The processable chunk size must still be managed to ensure that the input buffers, the exchange buffers, and the filter itself fit within device memory simultaneously.

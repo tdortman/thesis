@@ -29,7 +29,7 @@ The results for both L2-resident and DRAM-resident scenarios are presented in Fi
 In the L2-resident scenario (Figure \ref{fig:policy:l2}), the filters are primarily bound by instruction latency and cache bandwidth.
 The results show that the XOR policy maintains a notable performance advantage specifically for positive queries, where it achieves approximately 34\% higher throughput than the alternatives.
 
-The alternative policies require integer modulo operations to calculate bucket indices, whereas the XOR policy utilizes simple bitwise masking.
+The alternative policies require integer modulo operations to calculate bucket indices, whereas the XOR policy utilises simple bitwise masking.
 In this low-latency environment, the computational overhead of these modulo instructions becomes visible.
 Given that memory capacity is rarely a bottleneck for small, cache-sized filters, the performance penalty of the alternative policies outweighs the benefit of flexible sizing.
 Therefore, for small datasets, the standard XOR policy remains the optimal choice.
@@ -53,4 +53,4 @@ In the DRAM-resident scenario (Figure \ref{fig:policy:dram}), where performance 
 
 For massive, memory-bound datasets, the Offset policy is a highly attractive alternative.
 It delivers throughput equivalent to the XOR baseline while eliminating the power-of-two restriction, allowing users to fit significantly larger datasets into a fixed VRAM budget (e.g., fitting a 5 GB filter into 6 GB of VRAM, which would require 8 GB with the XOR policy).
-This memory saving comes at the minor cost of a slightly increased false positive rate (due to the choice bit reducing the effective fingerprint size by 1 bit), a trade-off that is often acceptable for maximizing capacity.
+This memory saving comes at the minor cost of a slightly increased false positive rate (due to the choice bit reducing the effective fingerprint size by 1 bit), a trade-off that is often acceptable for maximising capacity.

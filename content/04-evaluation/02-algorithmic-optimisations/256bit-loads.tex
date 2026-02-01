@@ -1,7 +1,7 @@
 \subsection{Impact of Wider Memory Loads}
 \label{sec:eval:256bit-loads}
 
-With the introduction of the NVIDIA Blackwell architecture (Compute Capability 10.0), new instructions have been added to the Parallel Thread Execution (PTX) ISA to allow for wider memory transactions.\footnote{NVIDIA PTX ISA Documentation: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html\#data-movement-and-conversion-instructions-ld} To evaluate the impact of instruction-level parallelism on query throughput, a special case utilizing the 256-bit non-coherent load instruction was added to the lookup kernel:
+With the introduction of the NVIDIA Blackwell architecture (Compute Capability 10.0), new instructions have been added to the Parallel Thread Execution (PTX) ISA to allow for wider memory transactions.\footnote{NVIDIA PTX ISA Documentation: https://docs.nvidia.com/cuda/parallel-thread-execution/index.html\#data-movement-and-conversion-instructions-ld} To evaluate the impact of instruction-level parallelism on query throughput, a special case utilising the 256-bit non-coherent load instruction was added to the lookup kernel:
 
 \begin{verbatim}
 ld.global.nc.v4.u64 {%0, %1, %2, %3}, [%4];
@@ -12,7 +12,7 @@ This reduces the total number of issued instructions required to fetch bucket da
 
 \subsubsection{Throughput Analysis}
 
-Figure \ref{fig:256bit-loads} compares the query throughput of the standard 128-bit load implementation against the optimized 256-bit variant on System A (Blackwell architecture).
+Figure \ref{fig:256bit-loads} compares the query throughput of the standard 128-bit load implementation against the optimised 256-bit variant on System A (Blackwell architecture).
 
 \begin{figure}[ht!]
   \centering

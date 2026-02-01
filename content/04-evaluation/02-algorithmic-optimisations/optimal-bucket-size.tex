@@ -23,12 +23,12 @@ Note that deletion is not included in this section, as its memory access pattern
 
 \begin{itemize}
   \item \textbf{Insertion}: A bucket size of 16 fingerprints was found to be the fastest configuration in all tested scenarios.
-    This size appears to offer the optimal trade-off, providing enough slots to minimize eviction chains without incurring the bandwidth penalty of multi-cache-line fetches.
+    This size appears to offer the optimal trade-off, providing enough slots to minimise eviction chains without incurring the bandwidth penalty of multi-cache-line fetches.
 
   \item \textbf{Lookup (L2-Resident)}: When the filter is sized to fit entirely within the GPU's L2 cache, a bucket size of 8 fingerprints yields the highest throughput.
     This is driven by instruction-level efficiency.
     A bucket of this size can be represented as two 64-bit words or a single 128-bit vector.
-    This allows the entire bucket to be loaded into registers via a single vectorized machine instruction, maximizing the throughput of the L1/L2 cache hierarchy.
+    This allows the entire bucket to be loaded into registers via a single vectorised machine instruction, maximising the throughput of the L1/L2 cache hierarchy.
 
   \item \textbf{Lookup (DRAM-Resident)}: Once the filter size exceeds the L2 cache capacity, the bottleneck shifts to global memory bandwidth.
     In this case, a bucket size of 16 becomes favourable again.
@@ -38,7 +38,7 @@ Note that deletion is not included in this section, as its memory access pattern
 \begin{figure}[ht]
   \centering
   \includegraphics[width=\textwidth]{images/bucket-size.pdf}
-  \caption{Normalized throughput of the GPU Cuckoo filter for different bucket sizes on System A.}
+  \caption{Normalised throughput of the GPU Cuckoo filter for different bucket sizes on System A.}
   \label{fig:bucket-size}
 \end{figure}
 

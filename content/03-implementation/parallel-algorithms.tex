@@ -20,7 +20,7 @@ The process for each thread is as follows:
     To distribute items evenly and reduce contention on the first slots of a bucket, the thread does not start scanning at index 0.
     Instead, it uses the item's fingerprint to calculate a pseudo-random starting word index.
     It then iterates through the bucket's words, wrapping around to the beginning.
-    For each word, it utilizes a bitwise SWAR algorithm \cite{bit-twiddling-hacks} to generate a mask of empty slots.
+    For each word, it utilises a bitwise SWAR algorithm \cite{bit-twiddling-hacks} to generate a mask of empty slots.
     If a slot is found, an atomic Compare-And-Swap (CAS) attempts to insert the fingerprint.
 
   \item \textbf{Eviction Process}: If both candidate buckets are full, the thread initiates the eviction process.
@@ -111,13 +111,13 @@ These values are first summed efficiently at the warp level using shuffle instru
 \subsection{Lookup}
 \label{sec:implementation:lookup}
 
-The parallel lookup algorithm is a read-only operation optimized for memory access.
+The parallel lookup algorithm is a read-only operation optimised for memory access.
 Each thread calculates the fingerprint and two bucket indices.
 Similar to insertion, the thread determines a random starting word based on the fingerprint to avoid checking the same memory locations first for every query.
 
-The key optimization is vectorized, non-atomic memory loads combined with SWAR comparisons.
+The key optimisation is vectorised, non-atomic memory loads combined with SWAR comparisons.
 Modern GPU hardware can load 128 bits (16 bytes) in a single instruction.
-The kernel loads two 64-bit words simultaneously starting from the randomized offset.
+The kernel loads two 64-bit words simultaneously starting from the randomised offset.
 It then broadcasts the query fingerprint and XORs it with the loaded data to check for matches in parallel using constant-time arithmetic, eliminating branching loops.
 
 % tex-fmt: off

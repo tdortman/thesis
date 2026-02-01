@@ -85,7 +85,7 @@ The advantage over the CPU remains massive, with a 559$\times$ speedup.
 Despite the narrowing gap, the Cuckoo filter remains the fastest option due to fundamental algorithmic differences:
 
 \begin{itemize}
-  \item \textbf{Cuckoo filter}: Deletion is a simple, localized atomic operation (CAS).
+  \item \textbf{Cuckoo filter}: Deletion is a simple, localised atomic operation (CAS).
   \item \textbf{GQF}: Requires shifting elements within a run to maintain sorted order.
     While efficient in bulk, this serial operation limits peak throughput.
   \item \textbf{TCF}: Requires complex coordination within cooperative groups to update block state, which scales poorly compared to independent atomic accesses.

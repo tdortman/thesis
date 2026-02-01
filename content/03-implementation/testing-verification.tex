@@ -8,7 +8,7 @@ The following sections detail the methodologies used for unit testing and the em
 \subsection{Unit Testing}
 \label{sec:implementation:testing:unit}
 
-The Googletest framework is utilized to implement a comprehensive suite of unit tests.
+The Googletest framework is utilised to implement a comprehensive suite of unit tests.
 These tests are designed to validate the correctness of individual components in isolation.
 The test suite covers common use cases and known edge cases (such as empty inputs, full filters, and operations on zero-capacity filters).
 This low-level validation provides a strong foundation of correctness upon which the larger system is built.
@@ -17,13 +17,13 @@ This low-level validation provides a strong foundation of correctness upon which
 \label{sec:implementation:testing:functional}
 
 Beyond unit tests, a dedicated test binary was created for each primary output artifact to empirically verify its end-to-end functionality.
-A standardized test flow was developed to rigorously validate the correctness of the filter implementations.
+A standardised test flow was developed to rigorously validate the correctness of the filter implementations.
 This procedure was then adapted for the specific contexts of the single-GPU, IPC, and multi-GPU versions.
 
 \subsubsection{Standard Verification Procedure}
 \label{sec:implementation:testing:std-proc}
 
-The core empirical validation follows a standardized, multi-stage procedure using random 64-bit integer keys:
+The core empirical validation follows a standardised, multi-stage procedure using random 64-bit integer keys:
 
 \begin{enumerate}
   \item \textbf{Insertion}: Random keys from the range $[0, 2^{32}-1]$ are inserted into an empty filter until a specified target load factor is reached.
@@ -61,7 +61,7 @@ This test serves as an empirical proof-of-concept for the IPC mechanism, validat
 \label{sec:implementation:testing:multi-gpu}
 
 The multi-GPU implementation was also validated against the standard verification procedure.
-The test binary for this artifact allows for command-line configuration of the filter's capacity and the number of GPUs to utilize.
+The test binary for this artifact allows for command-line configuration of the filter's capacity and the number of GPUs to utilise.
 A key difference from the single-GPU test is that all input and output data buffers reside in host memory.
 This setup rigorously exercises the entire data pipeline: from the initial scatter from the host, through the inter-GPU data exchange via Gossip, to the final consolidation of results back to the host.
 The tests are specifically designed to run on datasets that exceed the memory capacity of a single GPU, thereby validating the primary use case of this implementation.

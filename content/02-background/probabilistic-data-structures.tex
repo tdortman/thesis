@@ -3,7 +3,7 @@
 
 At the heart of this thesis is the need for a dynamic and efficient data structure for approximate set membership.
 This section reviews the key structures that form the basis of the work presented.
-The analysis begins with the classic Bloom filter and its locality-optimized variant, which serves as an important performance baseline.
+The analysis begins with the classic Bloom filter and its locality-optimised variant, which serves as an important performance baseline.
 Following this is an explanation of the mechanics of Cuckoo hashing, the eviction-based strategy that enables the dynamic properties of the target data structure.
 Finally, the Cuckoo filter is detailed, showing how it combines these concepts to create a powerful alternative.
 
@@ -32,12 +32,12 @@ The false positive rate $\epsilon$ of a Bloom filter after inserting $n$ items i
   \label{eq:bloom-fpr}
 \end{equation}
 
-This rate is optimized by choosing the optimal number of hash functions, which for a given $n$ and $m$ is:
+This rate is optimised by choosing the optimal number of hash functions, which for a given $n$ and $m$ is:
 \begin{equation}
   k = \frac{m}{n} \ln 2
 \end{equation}
 
-Given a target false positive rate $\epsilon$, the number of hash functions used by a space-optimized Bloom filter is given by:
+Given a target false positive rate $\epsilon$, the number of hash functions used by a space-optimised Bloom filter is given by:
 
 \begin{equation}
   k = \log_2(1/\epsilon)
@@ -87,7 +87,7 @@ Then, the standard $k$ hash functions are used to set or check bits only within 
 The primary advantage of this design is a dramatic improvement in memory locality.
 All $k$ memory accesses for a single item are now confined to a small, contiguous memory region.
 This is highly beneficial for modern CPU caches and, more importantly for this thesis, is extremely well-suited to the parallel memory access patterns of GPUs.
-When multiple threads process items that map to the same block, their memory requests can be coalesced into a single transaction, significantly improving memory bandwidth utilization.
+When multiple threads process items that map to the same block, their memory requests can be coalesced into a single transaction, significantly improving memory bandwidth utilisation.
 
 However, this performance gain comes at the cost of a higher false positive rate.
 By partitioning the filter, the Blocked Bloom filter loses the "averaging" effect of the classic design.
@@ -179,7 +179,7 @@ This significantly reduces the memory footprint.
 A direct consequence, however, is that traditional rehashing is not an option, as the original items are not available to be re-inserted.
 Therefore, the filter's size and parameters are typically static once it is created.
 
-To further maximize space efficiency, the filter is structured as an array of buckets.
+To further maximise space efficiency, the filter is structured as an array of buckets.
 Rather than mapping an item to a single slot, each index in the array corresponds to a bucket capable of holding a fixed number of fingerprints, denoted as $b$ (typically $b=4$).
 This design allows the filter to achieve high load factors by reducing the probability of insertion failures caused by collisions, a significant improvement over the $\approx 50\%$ limit of standard Cuckoo hashing with single-item slots.
 
@@ -202,7 +202,7 @@ This allows an evicted fingerprint to calculate its alternate location from its 
 The design of the Cuckoo filter leads to several practical advantages over Bloom filters and their variants.
 
 \begin{itemize}
-  \item \textbf{High Space Utilization}: By allowing items to be relocated during insertion, Cuckoo filters can achieve very high load factors.
+  \item \textbf{High Space Utilisation}: By allowing items to be relocated during insertion, Cuckoo filters can achieve very high load factors.
     The original paper demonstrates that with a bucket size of 4, the filter can consistently reach an occupancy of over 95\% \cite{og-cuckoo-filter}.
     The GPU implementation in this thesis generally prefers slightly larger bucket sizes for performance reasons, thus consistently reaching a load factor of over 99\%.
 
@@ -213,14 +213,14 @@ The design of the Cuckoo filter leads to several practical advantages over Bloom
       \epsilon \approx 2b/2^f
     \end{equation}
 
-    The actual amortized space cost per item, $C$, is the fingerprint size $f$ divided by the filter's load factor $\alpha$, since the cost of the unoccupied slots must be distributed among the stored items.
+    The actual amortised space cost per item, $C$, is the fingerprint size $f$ divided by the filter's load factor $\alpha$, since the cost of the unoccupied slots must be distributed among the stored items.
     The minimal fingerprint size required to achieve a target rate $\epsilon$ is approximately
 
     \begin{equation}
       f \ge \log_2(2b/\epsilon) = \log_2(1/\epsilon) + \log_2(2b)
     \end{equation}
 
-    By substituting this minimal required value for $f$ into the cost definition, an upper bound for the amortized space cost can be established:
+    By substituting this minimal required value for $f$ into the cost definition, an upper bound for the amortised space cost can be established:
 
     \begin{equation}
       C \le \frac{\log_2(1/\epsilon) + \log_2(2b)}{\alpha}
@@ -228,11 +228,11 @@ The design of the Cuckoo filter leads to several practical advantages over Bloom
     \end{equation}
 
     This equation is important as it decomposes the cost into the information-theoretic lower bound ($\log_2(1/\epsilon)$), an overhead term related to the bucket size ($\log_2(2b)$), and an efficiency penalty from the load factor ($1/\alpha$).
-    It reveals the central trade-off: a larger bucket size $b$ improves the load factor $\alpha$ but also increases the overhead term, requiring careful tuning to optimize space.
-    For a target $\epsilon < 3\%$, the authors show that a well-configured Cuckoo filter is more space-efficient than a space-optimized Bloom filter \cite{og-cuckoo-filter}.
+    It reveals the central trade-off: a larger bucket size $b$ improves the load factor $\alpha$ but also increases the overhead term, requiring careful tuning to optimise space.
+    For a target $\epsilon < 3\%$, the authors show that a well-configured Cuckoo filter is more space-efficient than a space-optimised Bloom filter \cite{og-cuckoo-filter}.
 
   \item \textbf{Performance}: A key performance advantage is that any lookup, positive or negative, always reads a fixed number of buckets, resulting in (at most) two cache line misses.
     This is a significant improvement over standard Bloom filters, where the number of memory probes $k$ scales with the desired false positive rate and can be much larger than two.
     This theoretical efficiency translates to exceptional practical performance.
-    As demonstrated later in the evaluation in Section \ref{sec:eval:throughput}, the GPU Cuckoo filter effectively matches the throughput of the highly cache-optimized Blocked Bloom filter in cache-resident scenarios and even surpasses it for positive lookups on high-bandwidth architectures, while simultaneously outperforming all other tested dynamic filters by orders of magnitude.
+    As demonstrated later in the evaluation in Section \ref{sec:eval:throughput}, the GPU Cuckoo filter effectively matches the throughput of the highly cache-optimised Blocked Bloom filter in cache-resident scenarios and even surpasses it for positive lookups on high-bandwidth architectures, while simultaneously outperforming all other tested dynamic filters by orders of magnitude.
 \end{itemize}

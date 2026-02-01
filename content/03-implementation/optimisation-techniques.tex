@@ -1,7 +1,7 @@
-\section{Optimization Techniques}
+\section{Optimisation Techniques}
 \label{sec:implementation:optimisation-techniques}
 
-Beyond the core algorithm design, some noteworthy optimization strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
+Beyond the core algorithm design, some noteworthy optimisation strategies were explored to further improve insertion performance, particularly in cases where the filter is too large to fit into the device's L2 cache or under high load factors.
 
 \subsection{Sorted Insertion}
 \label{sec:implementation:optimisation-techniques:sorted}
@@ -10,7 +10,7 @@ One version of the insertion algorithm was implemented to enhance memory localit
 Before the main insertion kernel is launched, the items are first packed into a temporary structure where the upper bits represent the primary bucket index and the lower bits contain the fingerprint.
 This array is then sorted in parallel on the GPU using CUB's high-performance radix sort.
 Doing this ensures that consecutive threads in the subsequent insertion kernel are likely to be working on items that map to the same or nearby buckets.
-This approach led to a measurable performance increase once the filter size far exceeded the GPU's L2 cache and memory bandwidth is not abundant, as the random memory accesses of the standard approach were more heavily penalized.
+This approach led to a measurable performance increase once the filter size far exceeded the GPU's L2 cache and memory bandwidth is not abundant, as the random memory accesses of the standard approach were more heavily penalised.
 However, for filters that fit entirely within the L2 cache, the overhead of the initial packing and sorting pass made this version considerably slower and not worth using (see Section \ref{sec:eval:sorted-insertion}).
 
 \subsection{Alternative Eviction Strategy}

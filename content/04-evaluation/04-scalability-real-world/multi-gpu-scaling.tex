@@ -29,7 +29,7 @@ For this test, the total filter capacity was fixed at $2^{30}$ slots (approx.
   \centering
   \includegraphics[width=\textwidth]{./images/multi-scaling/strong.pdf}
   \caption{Strong Scaling on System D with a fixed capacity.
-  The Y-axis represents normalized execution time (lower is better), relative to the 2-GPU baseline.}
+  The Y-axis represents normalised execution time (lower is better), relative to the 2-GPU baseline.}
   \label{fig:multigpu-strong}
 \end{figure}
 
@@ -41,7 +41,7 @@ The results in Figure \ref{fig:multigpu-strong} reveal distinct behaviours for d
     This indicates that the latency of the All-to-All exchange via NVLink prevents perfect scaling when the work performed by each GPU decreases.
   \item \textbf{Insertion}: Insertion performance is largely flat, showing minimal improvement as GPUs are added.
     This suggests that for a fixed dataset of this size, the insertion process is dominated by the communication and partitioning phase (hashing keys, calculating destinations, and shuffling data via Gossip) rather than the insertion kernel itself.
-    As more GPUs are added, the complexity of the All-to-All exchange increases, negating the benefit of parallelizing the insertion logic.
+    As more GPUs are added, the complexity of the All-to-All exchange increases, negating the benefit of parallelising the insertion logic.
 \end{itemize}
 
 \FloatBarrier
@@ -50,14 +50,14 @@ The results in Figure \ref{fig:multigpu-strong} reveal distinct behaviours for d
 \label{sec:eval:multigpu:weak}
 
 Weak scaling measures how throughput changes as the number of GPUs increases while the workload per GPU remains fixed.
-Ideally, the normalized throughput should scale linearly with the number of GPUs (e.g., 8 GPUs should provide 4$\times$ the throughput of 2 GPUs).
+Ideally, the normalised throughput should scale linearly with the number of GPUs (e.g., 8 GPUs should provide 4$\times$ the throughput of 2 GPUs).
 For this test, the capacity was fixed at $2^{30}$ slots per GPU, meaning the 8-GPU test processed a massive dataset of $2^{33}$ slots (over 8 billion items).
 
 \begin{figure}[ht!]
   \centering
   \includegraphics[width=\textwidth]{images/multi-scaling/weak.pdf}
   \caption{Weak Scaling on System D with a fixed capacity of $2^{30}$ slots per GPU.
-  The Y-axis represents normalized total throughput relative to the 2-GPU baseline.}
+  The Y-axis represents normalised total throughput relative to the 2-GPU baseline.}
   \label{fig:multigpu-weak}
 \end{figure}
 

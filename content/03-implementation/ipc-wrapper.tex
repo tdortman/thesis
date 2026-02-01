@@ -29,7 +29,7 @@ An additional Thrust wrapper is also provided to allow for seamless interaction 
 This architecture could be enhanced in several ways in the future:
 
 \begin{itemize}
-  \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximize throughput in high-concurrency scenarios.
+  \item The blocking communication model could be evolved into a fully asynchronous interface, inspired by modern APIs like Linux's \texttt{io\_uring}, to maximise throughput in high-concurrency scenarios.
   \item Support could be added for multiple worker threads managing filters on different GPUs to enable further load balancing.
   \item The filter could be exposed over a network by leveraging technologies like RDMA (Remote Direct Memory Access) to preserve the zero-copy transfer properties.
 \end{itemize}

@@ -1,13 +1,13 @@
 \section{Data Structure Design}
 \label{sec:implementation:data-structure-design}
 
-The design of the GPU-accelerated Cuckoo filter emphasizes compile-time configuration and a memory layout optimized for cache-friendly access patterns.
+The design of the GPU-accelerated Cuckoo filter emphasises compile-time configuration and a memory layout optimised for cache-friendly access patterns.
 This section details these design choices, from the high-level configuration structure down to the public-facing API.
 
 \subsection{Compile-Time Configuration}
 \label{sec:implementation:data-structure-design:comptime-config}
 
-To maximize performance by allowing the compiler to generate highly specialized code, the filter's core parameters are defined at compile-time as template parameters.
+To maximise performance by allowing the compiler to generate highly specialised code, the filter's core parameters are defined at compile-time as template parameters.
 They are consolidated into a single configuration structure, \texttt{CuckooConfig}, which provides a clean and explicit way to instantiate the filter.
 The primary configuration options are:
 
@@ -23,7 +23,7 @@ The primary configuration options are:
     The default value of 500 was taken from \cite{og-cuckoo-filter}.
 
   \item \texttt{blockSize}: Configures the thread block size for the internal CUDA kernels.
-    This parameter can be tuned to optimize GPU occupancy for different hardware architectures.
+    This parameter can be tuned to optimise GPU occupancy for different hardware architectures.
     A default of 256 was chosen through empirical testing.
 
   \item \texttt{AltBucketPolicy}: A class which encapsulates the logic for hashing items, calculating the required number of buckets, and deriving an item's alternate bucket.
@@ -32,7 +32,7 @@ The primary configuration options are:
   \item \texttt{evictionPolicy}: The policy used to handle insertions into full buckets.
     The default implementation employs a Breadth-First Search (BFS) strategy.
     Unlike the traditional greedy (DFS) approach which immediately evicts a random victim, the BFS policy first scans the alternate buckets of the existing items to find an empty slot.
-    This strategy minimizes the length of eviction chains and reduces global memory traffic (See Sections \ref{sec:implementation:optimisation-techniques:eviction} \& \ref{sec:eval:eviction-policies}).
+    This strategy minimises the length of eviction chains and reduces global memory traffic (See Sections \ref{sec:implementation:optimisation-techniques:eviction} \& \ref{sec:eval:eviction-policies}).
 
   \item \texttt{WordType}: Specifies the underlying integer type used for atomic operations and fingerprint storage.
     The default is \texttt{uint64\_t}, which is generally optimal for modern GPU architectures.
@@ -46,7 +46,7 @@ Throughout the implementation, static assertions are used to enforce important i
 \label{sec:implementation:mem-layout-state}
 
 The filter's primary data storage is a single, contiguous array of fixed-size buckets allocated in the GPU's global memory.
-To maximize memory bandwidth and avoid misaligned access, the internal layout is carefully structured:
+To maximise memory bandwidth and avoid misaligned access, the internal layout is carefully structured:
 
 \begin{itemize}
   \item Each bucket is composed of an array of 64-bit unsigned integer words.
@@ -56,7 +56,7 @@ To maximize memory bandwidth and avoid misaligned access, the internal layout is
 \end{itemize}
 
 While this packed layout necessitates the use of bitwise shift and mask operations to extract individual fingerprints, the additional computational cost of these operations is negligible compared to the latency of memory access, making this a highly beneficial trade-off.
-Figure \ref{fig:memory-layout} visualizes this hierarchical memory layout.
+Figure \ref{fig:memory-layout} visualises this hierarchical memory layout.
 
 \input{content/03-implementation/figures/memory-layout}
 
@@ -66,7 +66,7 @@ This eliminates the need for branching loops when scanning slots within a word.
 
 The filter's state is maintained by a single global atomic counter that tracks the total number of occupied slots.
 This counter resides in device memory and is updated atomically by the insertion and deletion kernels.
-Its value is only lazily copied to the host when an explicit query is made, minimizing host-device communication.
+Its value is only lazily copied to the host when an explicit query is made, minimising host-device communication.
 
 \subsection{Public API}
 \label{sec:implementation:api}
@@ -74,7 +74,7 @@ Its value is only lazily copied to the host when an explicit query is made, mini
 The filter exposes a comprehensive public interface for easy integration.
 Two sets of APIs are provided: a traditional C-style API that operates on raw device pointers and item counts, and, as well as a set of overloaded methods that accept \texttt{thrust::device\_vector} objects.
 
-\subsubsection{Initialization}
+\subsubsection{Initialisation}
 
 \begin{verbatim}
 explicit CuckooFilter(size_t capacity)
