@@ -25,7 +25,7 @@ To validate this hypothesis, the average number of evictions performed per inser
 
 Figure \ref{fig:eviction-reduction} shows that the BFS policy successfully lowers the eviction rate compared to the greedy DFS approach.
 
-As the filter fills ups, the DFS strategy (which picks a random victim immediately) sees a quick increase in evictions.
+As the filter fills up, the DFS strategy (which picks a random victim immediately) sees a quick increase in evictions.
 In contrast, the BFS strategy delays this spike significantly.
 By checking up to half the bucket before resorting to an eviction, the BFS approach resolves many collisions locally.
 
