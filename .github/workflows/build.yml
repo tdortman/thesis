@@ -73,10 +73,15 @@ jobs:
           <head>
               <meta charset="UTF-8">
               <title>Thesis PDF</title>
-              <script>window.location.replace("thesis.pdf");</script>
+              <style>
+                  body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+                  iframe { width: 100%; height: 100%; border: none; }
+              </style>
           </head>
           <body>
-              <p>Redirecting to <a href="thesis.pdf">thesis.pdf</a>...</p>
+              <iframe src="thesis.pdf" title="Thesis PDF">
+                  <p>Your browser does not support iframes. <a href="thesis.pdf">Click here to view the PDF.</a></p>
+              </iframe>
           </body>
           </html>
           EOF
