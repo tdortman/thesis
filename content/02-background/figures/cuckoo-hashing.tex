@@ -1,0 +1,129 @@
+\definecolor{textDark}{RGB}{40, 40, 40}
+\definecolor{bitSetFill}{RGB}{235, 242, 250}
+
+\begin{figure}[ht!]
+  \centering
+  \begin{tikzpicture}[
+      every node/.style={text=textDark},
+      slot/.style={
+        draw=gray!80,
+        line width=0.6pt,
+        minimum width=0.85cm,
+        minimum height=0.85cm,
+        inner sep=0pt,
+        font=\normalsize,
+        fill=white,
+      },
+      slotfilled/.style={
+        slot,
+        fill=bitSetFill,
+      },
+      insertarr/.style={
+        line width=0.7pt,
+        -{Stealth[length=4pt, width=3.5pt]},
+      },
+      evictdot/.style={
+        line width=0.9pt,
+        densely dotted,
+        textDark,
+      },
+      evictdotarr/.style={
+        evictdot,
+        -{Stealth[length=4pt, width=3.5pt]},
+      },
+      evictlabel/.style={
+        font=\scriptsize,
+        text=textDark,
+        fill=white,
+        draw=gray!60,
+        line width=0.4pt,
+        circle,
+        inner sep=1pt,
+        minimum size=0pt,
+        text height=1ex,
+        text depth=0.05ex,
+      },
+      hashlabel/.style={
+        font=\footnotesize,
+        text=textDark,
+      },
+      titlelabel/.style={
+        font=\normalsize,
+        text=textDark,
+      },
+    ]
+
+    \def\cw{0.85}  % cell size
+    \def\hc{0.425} % half cell
+    \def\sep{5.0}  % horizontal separation between the two tables
+    \def\vo{0.15}  % vertical offset for shared slots
+
+    % LEFT TABLE: Before insertion
+    \node[slot]       (L0) at (0, {0*-\cw}) {};
+    \node[slotfilled] (L1) at (0, {1*-\cw}) {$d$};
+    \node[slot]       (L2) at (0, {2*-\cw}) {};
+    \node[slotfilled] (L3) at (0, {3*-\cw}) {$c$};
+    \node[slot]       (L4) at (0, {4*-\cw}) {};
+    \node[slotfilled] (L5) at (0, {5*-\cw}) {$b$};
+    \node[slot]       (L6) at (0, {6*-\cw}) {};
+    \node[slotfilled] (L7) at (0, {7*-\cw}) {$a$};
+
+    % Incoming item x
+    \node[font=\normalsize] (xlabel) at (-1.8, {-3.5*\cw}) {$x$};
+
+    \draw[line width=0.7pt] (xlabel.north) -- (-1.8, {-1*\cw});
+    \draw[line width=0.7pt] (xlabel.south) -- (-1.8, {-7*\cw});
+
+    % h₂(x) → slot 1
+    \draw[insertarr] (-1.8, {-1*\cw}) -- (-\hc, {-1*\cw})
+    node[hashlabel, midway, above=1pt] {$h_2(x)$};
+
+    % h₁(x) → slot 7
+    \draw[insertarr] (-1.8, {-7*\cw}) -- (-\hc, {-7*\cw})
+    node[hashlabel, midway, above=1pt] {$h_1(x)$};
+
+    % Staggered x-offsets in the gap between tables
+    \pgfmathsetmacro{\ea}{\hc + 1.375}    % same distance as insertion arrows
+    \pgfmathsetmacro{\eb}{\hc + 1.375}    % same as \ea
+    \pgfmathsetmacro{\ec}{\sep/2 + 0.2}   % channel 3
+
+    % Eviction 1: a (slot 7) → b (slot 5)
+    \draw[evictdot] (\hc, {-7*\cw}) -- (\ea, {-7*\cw})
+    -- (\ea, {-5*\cw - \vo});
+    \node[evictlabel] at (\ea, {-6*\cw - \vo/2}) {1};
+    \draw[evictdotarr] (\ea, {-5*\cw - \vo}) -- (\hc, {-5*\cw - \vo});
+
+    % Eviction 2: b (slot 5) → d (slot 1)
+    \draw[evictdot] (\hc, {-5*\cw + \vo}) -- (\eb, {-5*\cw + \vo})
+    -- (\eb, {-1*\cw - \vo});
+    \node[evictlabel] at (\eb, {-3*\cw}) {2};
+    \draw[evictdotarr] (\eb, {-1*\cw - \vo}) -- (\hc, {-1*\cw - \vo});
+
+    % Eviction 3: d (slot 1) → free slot 4
+    \draw[evictdot] (\hc, {-1*\cw + \vo}) -- (\ec, {-1*\cw + \vo})
+    -- (\ec, {-4*\cw});
+    \node[evictlabel] at (\ec, {-2.5*\cw + \vo/2}) {3};
+    \draw[evictdotarr] (\ec, {-4*\cw}) -- (\hc, {-4*\cw});
+
+    % Left Table Title
+    \node[titlelabel] at (0, {-8.5*\cw}) {Before insertion};
+
+    % RIGHT TABLE: After insertion
+    \node[slot]       (R0) at (\sep, {0*-\cw}) {};
+    \node[slotfilled] (R1) at (\sep, {1*-\cw}) {$b$};
+    \node[slot]       (R2) at (\sep, {2*-\cw}) {};
+    \node[slotfilled] (R3) at (\sep, {3*-\cw}) {$c$};
+    \node[slotfilled] (R4) at (\sep, {4*-\cw}) {$d$};
+    \node[slotfilled] (R5) at (\sep, {5*-\cw}) {$a$};
+    \node[slot]       (R6) at (\sep, {6*-\cw}) {};
+    \node[slotfilled] (R7) at (\sep, {7*-\cw}) {$x$};
+
+    % Right Table Title
+    \node[titlelabel] at (\sep, {-8.5*\cw}) {After insertion};
+
+  \end{tikzpicture}
+  \caption{Illustration of a Cuckoo hashing insertion in a single-table variant.
+    The incoming item $x$ finds both of its candidate slots occupied.
+  It evicts item $a$, triggering a cascading eviction chain until item $d$ is moved to a free slot, resulting in a new stable arrangement of items in the table.}
+  \label{fig:cuckoo-hashing}
+\end{figure}

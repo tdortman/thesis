@@ -1,0 +1,88 @@
+\definecolor{hashRed}{RGB}{210, 40, 40}
+\definecolor{hashGreen}{RGB}{0, 140, 60}
+\definecolor{hashBlue}{RGB}{40, 90, 200}
+\definecolor{bitSetFill}{RGB}{235, 242, 250}
+\definecolor{textDark}{RGB}{40, 40, 40}
+
+\begin{figure}[ht!]
+  \centering
+  \begin{tikzpicture}[
+      every node/.style={text=textDark},
+      cell/.style={
+        draw=gray!80,
+        line width=0.6pt,
+        minimum size=0.85cm,
+        inner sep=0pt,
+        font=\large,
+        fill=white,
+      },
+      cellset/.style={
+        cell,
+        fill=bitSetFill,
+      },
+      stem/.style={line width=0.7pt},
+      arr/.style={line width=0.7pt, -{Stealth[length=4pt, width=3.5pt]}},
+    ]
+
+    \def\cw{0.85}
+    \def\hc{0.425}  % half cell size
+
+    % Bit array
+    \node[cellset] (c0)  at (0,        0) {1};
+    \node[cell]    (c1)  at ({1*\cw},  0) {0};
+    \node[cellset] (c2)  at ({2*\cw},  0) {1};
+    \node[cellset] (c3)  at ({3*\cw},  0) {1};
+    \node[cell]    (c4)  at ({4*\cw},  0) {0};
+    \node[cellset] (c5)  at ({5*\cw},  0) {1};
+    \node[cellset] (c6)  at ({6*\cw},  0) {1};
+    \node[cell]    (c7)  at ({7*\cw},  0) {0};
+    \node[cellset] (c8)  at ({8*\cw},  0) {1};
+    \node[cellset] (c9)  at ({9*\cw},  0) {1};
+    \node[cell]    (c10) at ({10*\cw}, 0) {0};
+
+    % Set label
+    \node[font=\large] (setlabel) at ({5*\cw}, 3.6) {$\{x,\, y,\, z\}$};
+
+    % Origin points just below the label, positioned under each letter
+    \coordinate (ox) at ($(setlabel.south) + (-0.55, -0.15)$);
+    \coordinate (oy) at ($(setlabel.south) + ( 0.0,  -0.15)$);
+    \coordinate (oz) at ($(setlabel.south) + ( 0.55, -0.15)$);
+
+    % Rail height references (for perpendicular coordinate syntax)
+    % Each element branches at a different height for visual clarity
+    \coordinate (rR) at (0, 2.3);    % x rail   — highest
+    \coordinate (rB) at (0, 1.675);  % z rail  — middle
+    \coordinate (rG) at (0, 1.05);   % y rail — lowest
+    \coordinate (rW) at (0, -1.0);   % w rail — below array
+
+    % x → cells 0, 2, 9
+    \draw[hashRed, stem] (ox) -- (ox |- rR);
+    \draw[hashRed, arr]  (ox |- rR) -| ({0*\cw}, \hc);
+    \draw[hashRed, arr]  (ox |- rR) -| ({2*\cw + 0.15}, \hc);
+    \draw[hashRed, arr]  (ox |- rR) -| ({9*\cw - 0.15}, \hc);
+
+    % z → cells 2, 6, 8
+    \draw[hashBlue, stem] (oz) -- (oz |- rB);
+    \draw[hashBlue, arr]  (oz |- rB) -| ({2*\cw - 0.15}, \hc);
+    \draw[hashBlue, arr]  (oz |- rB) -| ({6*\cw}, \hc);
+    \draw[hashBlue, arr]  (oz |- rB) -| ({8*\cw}, \hc);
+
+    % y → cells 3, 5, 9
+    \draw[hashGreen, stem] (oy) -- (oy |- rG);
+    \draw[hashGreen, arr]  (oy |- rG) -| ({3*\cw}, \hc);
+    \draw[hashGreen, arr]  (oy |- rG) -| ({5*\cw}, \hc);
+    \draw[hashGreen, arr]  (oy |- rG) -| ({9*\cw + 0.15}, \hc);
+
+    % w → cells 1, 5, 9
+    \node[font=\large] (wlabel) at ({5*\cw}, -1.8) {$w$};
+    \draw[textDark, stem] (wlabel.north) -- (wlabel.north |- rW);
+    \draw[textDark, arr]  (wlabel.north |- rW) -| ({1*\cw}, -\hc);
+    \draw[textDark, arr]  (wlabel.north |- rW) -| ({5*\cw}, -\hc);
+    \draw[textDark, arr]  (wlabel.north |- rW) -| ({9*\cw}, -\hc);
+
+  \end{tikzpicture}
+  \caption{An illustration of a Bloom filter's insertion and lookup mechanism with $m=11$ slots and $k=3$ hash functions.
+    The set $\{x, y, z\}$ has been inserted, setting the corresponding bits in the array to 1.
+  A membership query for a new item $w$ returns a definitive "no" (guaranteeing no false negatives) because one of the bits it maps to is 0.}
+  \label{fig:bloom-filter}
+\end{figure}

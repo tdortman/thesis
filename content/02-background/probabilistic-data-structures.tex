@@ -17,14 +17,7 @@ To query for an item's membership, the item is again hashed $k$ times.
 If all corresponding bits in the array are 1, the item is considered to possibly be in the set.
 However, if even one bit is 0, the item is definitively not in the set, as illustrated in Figure \ref{fig:bloom-filter}.
 
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=0.7\textwidth]{images/bloom-filter.pdf}
-  \caption{An illustration of a Bloom filter's insertion and lookup mechanism with $m=11$ slots and $k=3$ hash functions.
-    The set $\{x, y, z\}$ has been inserted, setting the corresponding bits in the array to 1.
-  A membership query for a new item $w$ returns a definitive "no" (guaranteeing no false negatives) because one of the bits it maps to is 0.}
-  \label{fig:bloom-filter}
-\end{figure}
+\input{content/02-background/figures/bloom-filter.tex}
 
 The false positive rate $\epsilon$ of a Bloom filter after inserting $n$ items is approximately:
 \begin{equation}
@@ -74,15 +67,7 @@ Each block is typically sized to fit within a single CPU cache line (e.g., 64 by
 The hashing scheme is modified: a single hash function is first used to map an incoming item to a specific block.
 Then, the standard $k$ hash functions are used to set or check bits only within that selected block, as shown in Figure \ref{fig:blocked-bloom-filter}.
 
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=0.7\textwidth]{images/blocked-bloom-filter.pdf}
-  \caption{An illustration of a Blocked Bloom filter.
-    Each item is first mapped to a single block (e.g., item $y$ maps to Block 0, while $x$ and $z$ map to Block 1).
-    The $k$ hash functions then operate only within that selected block, improving memory locality.
-  A query for item $w$, which maps to Block 0, returns a definitive "no" as one of its target bits is 0.}
-  \label{fig:blocked-bloom-filter}
-\end{figure}
+\input{content/02-background/figures/blocked-bloom-filter.tex}
 
 The primary advantage of this design is a dramatic improvement in memory locality.
 All $k$ memory accesses for a single item are now confined to a small, contiguous memory region.
@@ -130,14 +115,7 @@ The steps are as follows:
     If this limit is reached, the table is considered full, and all items must be rehashed with a new pair of hash functions, potentially into larger tables.
 \end{enumerate}
 
-\begin{figure}[ht!]
-  \centering
-  \includegraphics[width=0.7\textwidth]{images/cuckoo-hashing.pdf}
-  \caption{Illustration of a Cuckoo hashing insertion in a single-table variant.
-    The incoming item $x$ finds both of its candidate slots occupied.
-  It evicts item $a$, triggering a cascading eviction chain until item $d$ is moved to a free slot, resulting in a new stable arrangement of items in the table.}
-  \label{fig:cuckoo-hashing}
-\end{figure}
+\input{content/02-background/figures/cuckoo-hashing.tex}
 
 The success of this probabilistic scheme hinges on the load factor, the theory guarantees that if the tables are kept sufficiently sparse.
 Specifically, if $r$ is greater than $(1+\epsilon)n$, where $n$ is the number of items, the probability of an insertion failing and requiring a rehash is very low \cite{pagh2001cell}.
